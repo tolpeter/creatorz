@@ -18,10 +18,10 @@ export function NicheBrowser() {
         <div className="mb-2">
           <h2 className="text-3xl font-bold sm:text-4xl">
             Keresd meg a legjobb tartalomgyártókat{" "}
-            <span className="text-accent">niche szerint</span>
+            <span className="text-accent">kategóriák szerint</span>
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Fedezd fel a legjobb tartalomgyártókat minden réspiacon és kategóriában.
+            Fedezd fel a legjobb tartalomgyártókat minden kategóriában.
           </p>
         </div>
 

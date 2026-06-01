@@ -50,9 +50,9 @@ export default async function LandingPage() {
   ]);
 
   const steps = [
-    { icon: UserPlus, title: "1. Regisztrálj", desc: "Ingyenes, 2 perc. Tartalomgyártóként vagy márkaként." },
-    { icon: Search, title: "2. Találd meg a párost", desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz hirdetésre." },
-    { icon: Handshake, title: "3. Kezdj el dolgozni", desc: "Közvetlen kapcsolatfelvétel, együttműködés, értékelés." },
+    { icon: UserPlus, title: "Regisztrálj", desc: "Ingyenes, 2 perc. Tartalomgyártóként vagy márkaként." },
+    { icon: Search, title: "Találd meg a párost", desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz hirdetésre." },
+    { icon: Handshake, title: "Kezdj el dolgozni", desc: "Közvetlen kapcsolatfelvétel, együttműködés, értékelés." },
   ];
 
   return (
@@ -136,10 +136,11 @@ export default async function LandingPage() {
           <div className="relative hidden lg:block">
             <div className="relative mx-auto aspect-[9/16] w-[300px] overflow-hidden rounded-[2.2rem] border-[3px] border-white/15 bg-black shadow-2xl">
               <Image
-                src="/images/generated/hero-phone.webp"
+                src="/images/generated/hero-phone.webp?v=2"
                 alt="Tartalomgyártó UGC videót forgat"
                 fill
                 priority
+                unoptimized
                 className="object-cover"
               />
               {/* phone notch */}
@@ -150,25 +151,6 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* HOGYAN MŰKÖDIK */}
-      <section id="hogyan" className="mx-auto w-full max-w-6xl px-6 py-20">
-        <h2 className="mb-12 text-center text-3xl font-bold">Hogyan működik?</h2>
-        <div className="grid gap-8 md:grid-cols-3">
-          {steps.map((s) => (
-            <div key={s.title} className="rounded-xl border p-6 text-center">
-              <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-accent/15">
-                <s.icon className="h-6 w-6 text-accent" />
-              </div>
-              <h3 className="mb-2 text-lg font-semibold">{s.title}</h3>
-              <p className="text-sm text-muted-foreground">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* NICHE BÖNGÉSZŐ */}
-      <NicheBrowser />
 
       {/* KIEMELT TARTALOMGYÁRTÓK */}
       {featured.length > 0 && (
@@ -188,6 +170,89 @@ export default async function LandingPage() {
           </div>
         </section>
       )}
+
+      {/* HOGYAN MŰKÖDIK — animált */}
+      <section
+        id="hogyan"
+        className="relative overflow-hidden py-24"
+        style={{
+          background:
+            "radial-gradient(80% 60% at 50% 0%, rgba(163,230,53,0.12), transparent), linear-gradient(180deg, transparent, rgba(10,10,10,0.04))",
+        }}
+      >
+        {/* lebegő háttér-pontok */}
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <span className="absolute left-[8%] top-[20%] h-2 w-2 animate-float rounded-full bg-accent/70" />
+          <span
+            className="absolute right-[12%] top-[40%] h-1.5 w-1.5 animate-float rounded-full bg-accent/50"
+            style={{ animationDelay: "1.2s" }}
+          />
+          <span
+            className="absolute left-[20%] bottom-[18%] h-2.5 w-2.5 animate-float rounded-full bg-accent/40"
+            style={{ animationDelay: "0.6s" }}
+          />
+          <span
+            className="absolute right-[25%] bottom-[28%] h-1 w-1 animate-float rounded-full bg-accent/60"
+            style={{ animationDelay: "1.8s" }}
+          />
+        </div>
+
+        <div className="relative mx-auto w-full max-w-6xl px-6">
+          <div className="mb-14 text-center">
+            <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+              3 egyszerű lépés
+            </span>
+            <h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+              Hogyan működik?
+            </h2>
+            <p className="mt-3 text-muted-foreground">
+              Pár perc alatt indulhatsz — regisztrálj és máris dolgozhatsz.
+            </p>
+          </div>
+
+          <div className="relative">
+            {/* Háttér-vonal a desktopon (a 3 lépést összekötő szaggatott neon vonal) */}
+            <div
+              aria-hidden
+              className="pointer-events-none absolute left-[16%] right-[16%] top-[68px] hidden md:block"
+            >
+              <div className="animate-line h-px w-full bg-gradient-to-r from-accent/0 via-accent/70 to-accent/0" />
+            </div>
+
+            <div className="relative grid gap-10 md:grid-cols-3">
+              {steps.map((s, i) => (
+                <div
+                  key={s.title}
+                  className="animate-slide-up group relative flex flex-col items-center text-center"
+                  style={{ animationDelay: `${i * 160}ms` }}
+                >
+                  {/* Sorszám-badge + ikon — kettős kör pulzáló glow-val */}
+                  <div className="relative mb-6">
+                    <div className="animate-glow relative flex h-32 w-32 items-center justify-center rounded-full border border-accent/30 bg-gradient-to-br from-accent/15 via-card to-card shadow-lg transition-transform duration-300 group-hover:scale-105">
+                      <s.icon className="h-12 w-12 text-accent transition-transform duration-300 group-hover:scale-110" />
+                    </div>
+                    <span className="absolute -right-1 -top-1 flex h-10 w-10 items-center justify-center rounded-full bg-accent text-base font-bold text-accent-foreground shadow-lg">
+                      {i + 1}
+                    </span>
+                  </div>
+
+                  <h3 className="mb-2 text-xl font-bold">{s.title}</h3>
+                  <p className="max-w-xs text-sm text-muted-foreground">{s.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="mt-14 flex justify-center">
+            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link href="/register">Indítsd el most →</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* KATEGÓRIA BÖNGÉSZŐ */}
+      <NicheBrowser />
 
       {/* KÉT OLDAL */}
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-20 md:grid-cols-2">
