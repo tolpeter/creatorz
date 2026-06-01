@@ -1,9 +1,18 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq, ne, sql, asc } from "drizzle-orm";
+import { and, eq, ne, sql, asc, desc } from "drizzle-orm";
 import { Star, MapPin, Crown } from "lucide-react";
 import { db } from "@/lib/db";
-import { creatorProfiles, portfolioItems, savedCreators } from "@/lib/db/schema";
+import {
+  creatorProfiles,
+  portfolioItems,
+  savedCreators,
+  reviews,
+  reviewResponses,
+  brandProfiles,
+} from "@/lib/db/schema";
+import { RatingDistribution } from "@/components/shared/rating-distribution";
+import { ReviewCard, type ReviewView } from "@/components/shared/review-card";
 import { getCurrentBrand } from "@/lib/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -108,6 +117,39 @@ export default async function CreatorDetailPage({
       isFeatured: r.isFeatured || r.isAdminFeatured,
     }));
   }
+
+  // Értékelések (Modell A)
+  const reviewRows = await db
+    .select({
+      id: reviews.id,
+      overallRating: reviews.overallRating,
+      communicationRating: reviews.communicationRating,
+      qualityRating: reviews.qualityRating,
+      deadlineRating: reviews.deadlineRating,
+      text: reviews.text,
+      createdAt: reviews.createdAt,
+      brandName: brandProfiles.companyName,
+      brandLogo: brandProfiles.logoUrl,
+      responseText: reviewResponses.text,
+    })
+    .from(reviews)
+    .innerJoin(brandProfiles, eq(brandProfiles.id, reviews.brandId))
+    .leftJoin(reviewResponses, eq(reviewResponses.reviewId, reviews.id))
+    .where(and(eq(reviews.creatorId, p.id), eq(reviews.hidden, false)))
+    .orderBy(desc(reviews.createdAt));
+
+  const reviewViews: ReviewView[] = reviewRows.map((r) => ({
+    id: r.id,
+    overallRating: r.overallRating,
+    communicationRating: r.communicationRating,
+    qualityRating: r.qualityRating,
+    deadlineRating: r.deadlineRating,
+    text: r.text,
+    createdAt: r.createdAt,
+    brandName: r.brandName,
+    brandLogo: r.brandLogo,
+    responseText: r.responseText,
+  }));
 
   // TikTok oEmbed (ha a creator megadott TikTok linket)
   const tiktokEmbed = p.tiktokUrl ? await getTikTokEmbed(p.tiktokUrl) : null;
@@ -252,13 +294,32 @@ export default async function CreatorDetailPage({
         <PortfolioGallery items={gallery} />
       </section>
 
-      {/* 5. ÉRTÉKELÉSEK (Modell A — a 7. fázisban) */}
-      <section className="space-y-3">
+      {/* 5. ÉRTÉKELÉSEK (Modell A) */}
+      <section className="space-y-4">
         <h2 className="text-xl font-bold">Értékelések</h2>
-        <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
-          Értékelést csak elfogadott együttműködés után lehet írni. A
-          megjelenítés a 7. fázisban érkezik.
-        </p>
+        {reviewViews.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-6 text-sm text-muted-foreground">
+            Még nincs értékelés. Értékelést csak elfogadott együttműködés után lehet
+            írni.
+          </p>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-[260px_1fr]">
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-bold">{p.averageRating ?? "—"}</span>
+                <span className="text-sm text-muted-foreground">
+                  / {p.reviewCount} értékelés
+                </span>
+              </div>
+              <RatingDistribution reviews={reviewViews} />
+            </div>
+            <div className="space-y-4">
+              {reviewViews.map((r) => (
+                <ReviewCard key={r.id} review={r} />
+              ))}
+            </div>
+          </div>
+        )}
       </section>
 
       {/* 6. HASONLÓ CREATOROK */}
