@@ -173,7 +173,7 @@ export default async function CreatorsBrowsePage({
             Nincs a szűrőknek megfelelő tartalomgyártó.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {creators.map((c) => (
               <BrowseCreatorCard key={c.username} c={c} />
             ))}

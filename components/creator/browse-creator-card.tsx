@@ -32,8 +32,8 @@ export function BrowseCreatorCard({ c }: { c: BrowseCard }) {
         c.isFeatured && "ring-2 ring-accent"
       )}
     >
-      {/* Nagy hero kép */}
-      <div className="relative aspect-[4/5] w-full overflow-hidden bg-muted">
+      {/* Hero kép */}
+      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
         {c.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
@@ -48,31 +48,27 @@ export function BrowseCreatorCard({ c }: { c: BrowseCard }) {
         )}
 
         {/* Felül lebegő badge-ek */}
-        <div className="absolute left-3 top-3 flex flex-col gap-1.5">
+        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1.5">
           {c.hasVideo && (
-            <Badge className="rounded-full bg-primary text-primary-foreground shadow">
-              <PlayCircle className="mr-1 h-3.5 w-3.5" /> Pitch videó
+            <Badge className="rounded-full bg-primary px-2.5 py-1 text-xs text-primary-foreground shadow">
+              <PlayCircle className="mr-1 h-3 w-3" /> Pitch videó
             </Badge>
           )}
           {c.isFeatured && (
-            <Badge className="rounded-full bg-accent text-accent-foreground shadow">
+            <Badge className="rounded-full bg-accent px-2.5 py-1 text-xs text-accent-foreground shadow">
               ★ Kiemelt
             </Badge>
           )}
         </div>
 
-        {/* Alsó gombok */}
-        <div className="absolute inset-x-3 bottom-3 flex items-center gap-2">
-          <button
-            type="button"
-            tabIndex={-1}
-            className="flex-1 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-lg pointer-events-none"
-          >
-            Megnézem a profilt
-          </button>
+        {/* Alsó gomb */}
+        <div className="absolute inset-x-2.5 bottom-2.5 flex items-center gap-2">
+          <span className="flex-1 rounded-full bg-primary px-3 py-2 text-center text-xs font-semibold text-primary-foreground shadow-lg">
+            Profil megtekintése
+          </span>
           <span
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg"
-            title="Portfólió megtekintése"
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg"
+            aria-hidden
           >
             <Eye className="h-4 w-4" />
           </span>
@@ -80,38 +76,41 @@ export function BrowseCreatorCard({ c }: { c: BrowseCard }) {
       </div>
 
       {/* Adatok */}
-      <div className="space-y-2 p-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold">{c.displayName}</h3>
-          {(c.city || loc) && (
-            <span className="flex items-center gap-1 text-xs text-muted-foreground">
+      <div className="space-y-2 p-3">
+        <div className="flex items-start justify-between gap-2">
+          <h3 className="truncate text-base font-semibold">{c.displayName}</h3>
+          {c.city && (
+            <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
               <MapPin className="h-3 w-3" /> {c.city}
-              {loc && <>, {loc}</>}
             </span>
           )}
         </div>
 
         {c.categories.length > 0 && (
           <div className="flex flex-wrap gap-1">
-            {c.categories.slice(0, 3).map((cat) => (
-              <Badge key={cat} variant="secondary" className="text-xs">
+            {c.categories.slice(0, 2).map((cat) => (
+              <Badge key={cat} variant="secondary" className="text-[10px] font-medium">
                 {CREATOR_CATEGORIES.find((x) => x.value === cat)?.label ?? cat}
               </Badge>
             ))}
+            {c.categories.length > 2 && (
+              <Badge variant="secondary" className="text-[10px] font-medium">
+                +{c.categories.length - 2}
+              </Badge>
+            )}
           </div>
         )}
 
-        <div className="flex items-center justify-between border-t pt-3 text-sm">
-          <div className="flex items-center gap-1.5">
-            <Star className="h-4 w-4 fill-accent text-accent" />
+        <div className="flex items-center justify-between border-t pt-2 text-sm">
+          <div className="flex items-center gap-1">
+            <Star className="h-3.5 w-3.5 fill-accent text-accent" />
             <span className="font-semibold">{c.averageRating ?? "—"}</span>
-            <span className="text-xs text-muted-foreground">Értékelés</span>
           </div>
-          <div className="text-right">
-            <span className="font-semibold">{formatNumber(totalFollowers || c.reviewCount)}</span>
-            <span className="ml-1 text-xs text-muted-foreground">
-              {totalFollowers > 0 ? "követő" : "értékelés"}
-            </span>
+          <div className="text-xs text-muted-foreground">
+            <span className="font-semibold text-foreground">
+              {formatNumber(totalFollowers || c.reviewCount)}
+            </span>{" "}
+            {totalFollowers > 0 ? "követő" : "értékelés"}
           </div>
         </div>
       </div>

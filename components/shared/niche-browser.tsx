@@ -37,7 +37,7 @@ export function NicheBrowser() {
                 className={cn(
                   "group relative flex h-72 items-end justify-center overflow-hidden rounded-2xl border bg-card transition-all",
                   isActive
-                    ? "lg:col-span-3 ring-2 ring-accent"
+                    ? "ring-2 ring-accent sm:col-span-2 lg:col-span-3"
                     : "hover:border-accent/60"
                 )}
               >
@@ -55,7 +55,7 @@ export function NicheBrowser() {
                       </span>
                       <Link
                         href={url}
-                        className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90"
+                        className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground hover:bg-accent/90"
                       >
                         Fedezze fel <ArrowRight className="h-3 w-3" />
                       </Link>
@@ -63,7 +63,11 @@ export function NicheBrowser() {
                   </>
                 ) : (
                   <span
-                    className="origin-bottom-left p-3 text-left text-sm font-semibold text-foreground transition-colors lg:absolute lg:bottom-3 lg:left-3 lg:-rotate-90 lg:whitespace-nowrap"
+                    className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-foreground"
+                    style={{
+                      writingMode: "vertical-rl",
+                      transform: "rotate(180deg)",
+                    }}
                   >
                     {n.label}
                   </span>
