@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/layout/logo";
 
 export default async function PublicLayout({
   children,
@@ -14,8 +15,8 @@ export default async function PublicLayout({
       <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
           <div className="flex items-center gap-6">
-            <Link href="/" className="text-lg font-bold tracking-tight">
-              Creatorz
+            <Link href="/">
+              <Logo className="text-lg" />
             </Link>
             <Link
               href="/creators"

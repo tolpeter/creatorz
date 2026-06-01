@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     siteName: "Creatorz",
     images: [
       {
-        url: "/og-image.png",
+        url: "/images/generated/og-image.webp",
         width: 1200,
         height: 630,
         alt: "Creatorz",

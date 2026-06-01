@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Logo } from "@/components/layout/logo";
 
 export function SiteFooter() {
   const cols = [
@@ -39,9 +40,7 @@ export function SiteFooter() {
     <footer className="border-t bg-[#0A0A0A] text-white/70">
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 sm:grid-cols-2 md:grid-cols-5">
         <div className="md:col-span-1">
-          <span className="text-xl font-bold text-white">
-            creatorz<span className="text-accent">.</span>
-          </span>
+          <Logo variant="light" className="text-xl" />
           <p className="mt-2 text-sm">Magyar UGC tartalomgyártó platform.</p>
         </div>
         {cols.map((c) => (

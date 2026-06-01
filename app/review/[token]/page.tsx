@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ReviewForm } from "@/components/review-form";
+import { Logo } from "@/components/layout/logo";
 
 export const metadata = { title: "Értékelés" };
 
@@ -39,8 +40,8 @@ export default async function ReviewPage({
     <div className="flex min-h-screen items-center justify-center px-4 py-12">
       <Card className="w-full max-w-lg">
         <CardHeader>
-          <Link href="/" className="mb-2 text-xl font-bold tracking-tight">
-            Creatorz
+          <Link href="/" className="mb-2 inline-block">
+            <Logo className="text-xl" />
           </Link>
           {valid ? (
             <>

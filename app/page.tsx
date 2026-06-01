@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { or, eq, sql } from "drizzle-orm";
 import { Search, UserPlus, Handshake, Check } from "lucide-react";
 import { db } from "@/lib/db";
@@ -8,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreatorCard, type CreatorCardData } from "@/components/creator/creator-card";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { Logo } from "@/components/layout/logo";
 
 export default async function LandingPage() {
   const current = await getCurrentUser();
@@ -64,9 +66,7 @@ export default async function LandingPage() {
       {/* NAV */}
       <header className="absolute inset-x-0 top-0 z-20">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <span className="text-xl font-bold text-white">
-            creatorz<span className="text-accent">.</span>
-          </span>
+          <Logo variant="light" className="text-xl" />
           <nav className="hidden items-center gap-6 text-sm text-white/80 md:flex">
             <Link href="/creators" className="hover:text-accent">Creatorok</Link>
             <Link href="/ads" className="hover:text-accent">Hirdetések</Link>
@@ -99,30 +99,40 @@ export default async function LandingPage() {
             "radial-gradient(60% 50% at 50% 0%, rgba(163,230,53,0.18), transparent), radial-gradient(40% 40% at 80% 80%, rgba(163,230,53,0.10), transparent), linear-gradient(180deg, #0A0A0A, #0f0f0f)",
         }}
       >
-        <Badge className="mb-6 border-accent/40 bg-accent/20 text-accent">
-          ✨ Magyar UGC tartalomgyártók új otthona
-        </Badge>
-        <h1 className="mb-6 text-balance text-5xl font-bold tracking-tight md:text-7xl">
-          Találd meg a tökéletes
-          <span className="block text-accent">UGC creatort</span>
-          a márkádhoz
-        </h1>
-        <p className="mb-10 max-w-2xl text-balance text-lg text-white/70 md:text-xl">
-          Magyar tartalomgyártók és márkák találkozóhelye. Regisztrálj ingyen,
-          böngéssz portfóliókat, vagy add fel a hirdetésed.
-        </p>
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-            <Link href="/register">Creator vagyok →</Link>
-          </Button>
-          <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
-            <Link href="/register">Brandet képviselek →</Link>
-          </Button>
-        </div>
-        <div className="mt-20 grid grid-cols-3 gap-8">
-          <Stat value={`${cN[0]?.n ?? 0}`} label="Creator" />
-          <Stat value={`${bN[0]?.n ?? 0}`} label="Márka" />
-          <Stat value="100%" label="Magyar" />
+        <Image
+          src="/images/generated/hero-bg.webp"
+          alt=""
+          fill
+          priority
+          className="object-cover opacity-30"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/85" />
+        <div className="relative z-10 flex flex-col items-center">
+          <Badge className="mb-6 border-accent/40 bg-accent/20 text-accent">
+            ✨ Magyar UGC tartalomgyártók új otthona
+          </Badge>
+          <h1 className="mb-6 text-balance text-5xl font-bold tracking-tight md:text-7xl">
+            Találd meg a tökéletes
+            <span className="block text-accent">UGC creatort</span>
+            a márkádhoz
+          </h1>
+          <p className="mb-10 max-w-2xl text-balance text-lg text-white/70 md:text-xl">
+            Magyar tartalomgyártók és márkák találkozóhelye. Regisztrálj ingyen,
+            böngéssz portfóliókat, vagy add fel a hirdetésed.
+          </p>
+          <div className="flex flex-col gap-4 sm:flex-row">
+            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
+              <Link href="/register">Creator vagyok →</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              <Link href="/register">Brandet képviselek →</Link>
+            </Button>
+          </div>
+          <div className="mt-20 grid grid-cols-3 gap-8">
+            <Stat value={`${cN[0]?.n ?? 0}`} label="Creator" />
+            <Stat value={`${bN[0]?.n ?? 0}`} label="Márka" />
+            <Stat value="100%" label="Magyar" />
+          </div>
         </div>
       </section>
 
@@ -165,11 +175,13 @@ export default async function LandingPage() {
       <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-20 md:grid-cols-2">
         <SideCard
           title="Márka vagy?"
+          image="/images/generated/feature-brand.webp"
           perks={["Ingyenes böngészés és kapcsolatfelvétel", "Hirdetésfeladás díjmentesen", "Szűrés kategória, követőszám, ár szerint", "Ellenőrzött, értékelt creatorok"]}
           cta="Márkaként kezdem"
         />
         <SideCard
           title="Creator vagy?"
+          image="/images/generated/feature-creator.webp"
           perks={["Ingyenes profil és portfólió", "Pályázz márkák hirdetéseire", "Építsd a hírneved értékelésekkel", "Opcionális kiemelés a directoryban"]}
           cta="Creatorként csatlakozom"
           highlight
@@ -217,14 +229,22 @@ function SideCard({
   perks,
   cta,
   highlight,
+  image,
 }: {
   title: string;
   perks: string[];
   cta: string;
   highlight?: boolean;
+  image?: string;
 }) {
   return (
-    <div className={`rounded-2xl border p-8 ${highlight ? "border-accent ring-1 ring-accent" : ""}`}>
+    <div className={`overflow-hidden rounded-2xl border ${highlight ? "border-accent ring-1 ring-accent" : ""}`}>
+      {image && (
+        <div className="relative h-40 w-full">
+          <Image src={image} alt="" fill className="object-cover" />
+        </div>
+      )}
+      <div className="p-8">
       <h3 className="mb-4 text-2xl font-bold">{title}</h3>
       <ul className="mb-6 space-y-2">
         {perks.map((p) => (
@@ -236,6 +256,7 @@ function SideCard({
       <Button asChild variant={highlight ? "default" : "outline"}>
         <Link href="/register">{cta}</Link>
       </Button>
+      </div>
     </div>
   );
 }
