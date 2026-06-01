@@ -9,6 +9,7 @@ import {
   Megaphone,
   MessageSquare,
   Building2,
+  Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -19,6 +20,7 @@ const navItems = [
   { href: "/brand/ads", label: "Hirdetéseim", icon: Megaphone },
   { href: "/brand/messages", label: "Üzenetek", icon: MessageSquare },
   { href: "/brand/profile", label: "Cég profil", icon: Building2 },
+  { href: "/brand/settings", label: "Beállítások", icon: Settings },
 ];
 
 export function BrandSidebar() {

@@ -29,9 +29,10 @@ export function SiteFooter() {
     {
       title: "Jogi",
       links: [
-        { href: "/about", label: "Adatvédelem" },
-        { href: "/about", label: "ÁSZF" },
-        { href: "/about", label: "Kapcsolat" },
+        { href: "/adatvedelem", label: "Adatvédelem" },
+        { href: "/aszf", label: "ÁSZF" },
+        { href: "/cookies", label: "Cookie" },
+        { href: "/kapcsolat", label: "Kapcsolat" },
       ],
     },
   ];

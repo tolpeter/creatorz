@@ -3,6 +3,7 @@ import { Inter, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { CookieBanner } from "@/components/shared/cookie-banner";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -61,6 +62,7 @@ export default function RootLayout({
     <html lang="hu" className={`${inter.variable} ${geistMono.variable}`}>
       <body className="min-h-screen font-sans">
         <TooltipProvider>{children}</TooltipProvider>
+        <CookieBanner />
         <Toaster richColors position="top-right" />
       </body>
     </html>
