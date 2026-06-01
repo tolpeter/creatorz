@@ -20,7 +20,7 @@ const navItems = [
   { href: "/creator/profile", label: "Profil szerkesztése", icon: User },
   { href: "/creator/portfolio", label: "Portfolio", icon: ImageIcon },
   { href: "/creator/applications", label: "Pályázataim", icon: FileText },
-  { href: "/creator/ads", label: "Hirdetések", icon: Megaphone },
+  { href: "/ads", label: "Hirdetések", icon: Megaphone },
   { href: "/creator/messages", label: "Üzenetek", icon: MessageSquare },
   { href: "/creator/reviews", label: "Értékelések", icon: Star },
   { href: "/creator/subscription", label: "Előfizetés", icon: CreditCard },
