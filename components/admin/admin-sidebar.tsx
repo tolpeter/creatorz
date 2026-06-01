@@ -19,7 +19,7 @@ const navItems = [
   { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true },
   { href: "/admin/settings", label: "Beállítások", icon: Settings },
   { href: "/admin/users", label: "Felhasználók", icon: Users },
-  { href: "/admin/creators", label: "Creatorok", icon: UserCheck },
+  { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck },
   { href: "/admin/brands", label: "Márkák", icon: Building2 },
   { href: "/admin/ads", label: "Hirdetések", icon: Megaphone },
   { href: "/admin/reviews", label: "Értékelések", icon: Star },

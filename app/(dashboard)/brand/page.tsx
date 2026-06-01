@@ -29,7 +29,7 @@ export default async function BrandOverviewPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Heart className="h-5 w-5 text-accent" /> Mentett creatorok
+              <Heart className="h-5 w-5 text-accent" /> Mentett tartalomgyártók
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -39,7 +39,7 @@ export default async function BrandOverviewPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
-              <Search className="h-5 w-5 text-accent" /> Creatorok keresése
+              <Search className="h-5 w-5 text-accent" /> Tartalomgyártók keresése
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -57,7 +57,7 @@ export default async function BrandOverviewPage() {
           </Link>
         </Button>
         <Button asChild variant="outline">
-          <Link href="/brand/saved">Mentett creatorok</Link>
+          <Link href="/brand/saved">Mentett tartalomgyártók</Link>
         </Button>
       </div>
     </div>

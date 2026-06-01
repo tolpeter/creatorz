@@ -56,6 +56,21 @@ export const GENDER_OPTIONS = [
   { value: "nem_mondom", label: "Nem mondom meg" },
 ] as const;
 
+/**
+ * Magasabb szintű niche-csoportok a főoldali böngészőhöz. Mindegyik niche
+ * 1+ kategóriához tartozik (`CREATOR_CATEGORIES` value-k).
+ */
+export const NICHES = [
+  { slug: "beauty", label: "Szépségápolás és testápolás", image: "/images/generated/niche-beauty.webp", categories: ["beauty", "wellness"] },
+  { slug: "fashion", label: "Ruházat és kiegészítők", image: "/images/generated/niche-fashion.webp", categories: ["divat"] },
+  { slug: "food", label: "Étel és ital", image: "/images/generated/niche-food.webp", categories: ["gasztro", "vendeglatas"] },
+  { slug: "home", label: "Háztartási termékek", image: "/images/generated/niche-home.webp", categories: ["otthon"] },
+  { slug: "health", label: "Egészség", image: "/images/generated/niche-health.webp", categories: ["fitness", "wellness"] },
+  { slug: "baby", label: "Baba, gyermek és kismama", image: "/images/generated/niche-baby.webp", categories: ["anyukak", "gyerek"] },
+  { slug: "travel", label: "Utazási", image: "/images/generated/niche-travel.webp", categories: ["utazas"] },
+  { slug: "pets", label: "Háziállatok", image: "/images/generated/niche-pets.webp", categories: ["allatok"] },
+] as const;
+
 export const INDUSTRIES = [
   "Szépségápolás",
   "Divat",

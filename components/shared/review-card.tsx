@@ -42,7 +42,7 @@ export function ReviewCard({ review }: { review: ReviewView }) {
 
       {review.responseText && (
         <div className="mt-4 rounded-lg bg-muted p-3">
-          <p className="text-xs font-semibold text-muted-foreground">Creator válasza:</p>
+          <p className="text-xs font-semibold text-muted-foreground">Tartalomgyártó válasza:</p>
           <p className="mt-1 whitespace-pre-wrap text-sm">{review.responseText}</p>
         </div>
       )}

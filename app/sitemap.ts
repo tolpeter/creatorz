@@ -3,6 +3,9 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, ads } from "@/lib/db/schema";
 
+// Runtime-os: nem build-időben generálódik (DB kapcsolat kell hozzá).
+export const dynamic = "force-dynamic";
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 

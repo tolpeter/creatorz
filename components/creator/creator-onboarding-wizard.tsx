@@ -163,7 +163,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
         </div>
         <CardTitle>{STEPS[step]}</CardTitle>
         <CardDescription>
-          {step + 1}. lépés a {STEPS.length}-ből — creator profil beállítása
+          {step + 1}. lépés a {STEPS.length}-ből — tartalomgyártó profil beállítása
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">

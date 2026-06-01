@@ -5,7 +5,7 @@ import {
   type OnboardingInitial,
 } from "@/components/creator/creator-onboarding-wizard";
 
-export const metadata = { title: "Creator onboarding" };
+export const metadata = { title: "Tartalomgyártó onboarding" };
 
 export default async function CreatorOnboardingPage() {
   const current = await getCurrentUser();

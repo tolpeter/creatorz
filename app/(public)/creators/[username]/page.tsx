@@ -325,7 +325,7 @@ export default async function CreatorDetailPage({
       {/* 6. HASONLÓ CREATOROK */}
       {similar.length > 0 && (
         <section className="space-y-4">
-          <h2 className="text-xl font-bold">Hasonló creatorok</h2>
+          <h2 className="text-xl font-bold">Hasonló tartalomgyártók</h2>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {similar.map((c) => (
               <CreatorCard key={c.username} creator={c} />

@@ -95,7 +95,7 @@ export default function RegisterPage() {
               <Sparkles className="h-6 w-6 text-accent" />
             </span>
             <span>
-              <span className="block text-lg font-semibold">Creator vagyok</span>
+              <span className="block text-lg font-semibold">Tartalomgyártó vagyok</span>
               <span className="block text-sm text-muted-foreground">
                 Tartalmat gyártok és márkákkal szeretnék dolgozni
               </span>
@@ -112,7 +112,7 @@ export default function RegisterPage() {
             <span>
               <span className="block text-lg font-semibold">Márka vagyok</span>
               <span className="block text-sm text-muted-foreground">
-                Creatorokat keresek a tartalmaim elkészítéséhez
+                Tartalomgyártókat keresek a tartalmaim elkészítéséhez
               </span>
             </span>
           </button>
@@ -138,7 +138,7 @@ export default function RegisterPage() {
           <ArrowLeft className="h-4 w-4" /> Vissza
         </button>
         <CardTitle>
-          {role === "creator" ? "Creator regisztráció" : "Márka regisztráció"}
+          {role === "creator" ? "Tartalomgyártó regisztráció" : "Márka regisztráció"}
         </CardTitle>
         <CardDescription>Add meg az adataidat a fiók létrehozásához</CardDescription>
       </CardHeader>

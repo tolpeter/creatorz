@@ -6,7 +6,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CreatorAdminActions } from "@/components/admin/creator-admin-actions";
 
-export const metadata = { title: "Admin — Creatorok" };
+export const metadata = { title: "Admin — Tartalomgyártók" };
 
 export default async function AdminCreatorsPage() {
   const rows = await db
@@ -32,9 +32,9 @@ export default async function AdminCreatorsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Creatorok</h1>
+        <h1 className="text-2xl font-bold">Tartalomgyártók</h1>
         <p className="text-muted-foreground">
-          {rows.length} creator · {pending.length} jóváhagyásra vár
+          {rows.length} tartalomgyártó · {pending.length} jóváhagyásra vár
         </p>
       </div>
 

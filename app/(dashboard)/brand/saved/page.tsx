@@ -5,7 +5,7 @@ import { savedCreators, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
 import { CreatorCard, type CreatorCardData } from "@/components/creator/creator-card";
 
-export const metadata = { title: "Mentett creatorok" };
+export const metadata = { title: "Mentett tartalomgyártók" };
 
 export default async function BrandSavedPage() {
   const brand = await getCurrentBrand();
@@ -41,12 +41,12 @@ export default async function BrandSavedPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Mentett creatorok</h1>
-        <p className="text-muted-foreground">{creators.length} mentett creator</p>
+        <h1 className="text-2xl font-bold">Mentett tartalomgyártók</h1>
+        <p className="text-muted-foreground">{creators.length} mentett tartalomgyártó</p>
       </div>
       {creators.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-          Még nincs mentett creator. A creator profilján a „Mentés" gombbal
+          Még nincs mentett tartalomgyártó. A tartalomgyártó profilján a „Mentés" gombbal
           adhatsz hozzá.
         </div>
       ) : (

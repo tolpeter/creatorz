@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 
 const navItems = [
   { href: "/brand", label: "Áttekintés", icon: LayoutDashboard, exact: true },
-  { href: "/creators", label: "Creatorok böngészése", icon: Search },
-  { href: "/brand/saved", label: "Mentett creatorok", icon: Heart },
+  { href: "/creators", label: "Tartalomgyártók böngészése", icon: Search },
+  { href: "/brand/saved", label: "Mentett tartalomgyártók", icon: Heart },
   { href: "/brand/ads", label: "Hirdetéseim", icon: Megaphone },
   { href: "/brand/messages", label: "Üzenetek", icon: MessageSquare },
   { href: "/brand/profile", label: "Cég profil", icon: Building2 },

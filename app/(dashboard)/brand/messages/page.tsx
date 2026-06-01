@@ -35,7 +35,7 @@ export default async function BrandMessagesPage() {
       </div>
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-          Még nem küldtél üzenetet. Egy creator profilján a „Üzenetet küldök"
+          Még nem küldtél üzenetet. Egy tartalomgyártó profilján a „Üzenetet küldök"
           gombbal indíthatsz beszélgetést.
         </div>
       ) : (

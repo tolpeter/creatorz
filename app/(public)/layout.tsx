@@ -22,7 +22,7 @@ export default async function PublicLayout({
               href="/creators"
               className="text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Creatorok
+              Tartalomgyártók
             </Link>
           </div>
           <div className="flex items-center gap-2">

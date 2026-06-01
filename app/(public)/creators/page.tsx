@@ -1,12 +1,12 @@
-import { and, or, eq, gte, lte, ilike, desc, sql, type SQL } from "drizzle-orm";
+import { and, or, eq, gte, lte, ilike, desc, sql, inArray, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { creatorProfiles, users } from "@/lib/db/schema";
-import { CreatorCard, type CreatorCardData } from "@/components/creator/creator-card";
+import { creatorProfiles, users, portfolioItems } from "@/lib/db/schema";
+import { BrowseCreatorCard, type BrowseCard } from "@/components/creator/browse-creator-card";
 import { BrowseFilters } from "@/components/creator/browse-filters";
 import { SortSelect } from "@/components/creator/sort-select";
 
 export const metadata = {
-  title: "Creatorok böngészése",
+  title: "Tartalomgyártók böngészése",
   description: "Találd meg a tökéletes magyar UGC tartalomgyártót a márkádhoz.",
 };
 
@@ -107,15 +107,15 @@ export default async function CreatorsBrowsePage({
 
   const rows = await db
     .select({
+      id: creatorProfiles.id,
       username: creatorProfiles.username,
       displayName: creatorProfiles.displayName,
       avatarUrl: creatorProfiles.avatarUrl,
       city: creatorProfiles.city,
+      county: creatorProfiles.county,
       categories: creatorProfiles.categories,
       instagramFollowers: creatorProfiles.instagramFollowers,
-      instagramVerified: creatorProfiles.instagramVerified,
       tiktokFollowers: creatorProfiles.tiktokFollowers,
-      tiktokVerified: creatorProfiles.tiktokVerified,
       isFeatured: creatorProfiles.isFeatured,
       isAdminFeatured: creatorProfiles.isAdminFeatured,
       averageRating: creatorProfiles.averageRating,
@@ -127,19 +127,29 @@ export default async function CreatorsBrowsePage({
     .orderBy(...orderBy)
     .limit(60);
 
-  const creators: CreatorCardData[] = rows.map((r) => ({
+  // Megnézzük, kinek van portfolió videója (a "Pitch videó" badge-hez)
+  const ids = rows.map((r) => r.id);
+  const videoOwners = ids.length
+    ? await db
+        .selectDistinct({ creatorId: portfolioItems.creatorId })
+        .from(portfolioItems)
+        .where(and(inArray(portfolioItems.creatorId, ids), eq(portfolioItems.type, "video")))
+    : [];
+  const hasVideoSet = new Set(videoOwners.map((v) => v.creatorId));
+
+  const creators: BrowseCard[] = rows.map((r) => ({
     username: r.username,
     displayName: r.displayName,
     avatarUrl: r.avatarUrl,
     city: r.city,
+    county: r.county,
     categories: r.categories ?? [],
     instagramFollowers: r.instagramFollowers,
-    instagramVerified: r.instagramVerified,
     tiktokFollowers: r.tiktokFollowers,
-    tiktokVerified: r.tiktokVerified,
     isFeatured: r.isFeatured || r.isAdminFeatured,
     averageRating: r.averageRating,
     reviewCount: r.reviewCount,
+    hasVideo: hasVideoSet.has(r.id),
   }));
 
   return (
@@ -152,7 +162,7 @@ export default async function CreatorsBrowsePage({
       <div>
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-2xl font-bold">Creatorok</h1>
+            <h1 className="text-2xl font-bold">Tartalomgyártók</h1>
             <p className="text-sm text-muted-foreground">{creators.length} találat</p>
           </div>
           <SortSelect />
@@ -160,12 +170,12 @@ export default async function CreatorsBrowsePage({
 
         {creators.length === 0 ? (
           <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-            Nincs a szűrőknek megfelelő creator.
+            Nincs a szűrőknek megfelelő tartalomgyártó.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {creators.map((c) => (
-              <CreatorCard key={c.username} creator={c} />
+              <BrowseCreatorCard key={c.username} c={c} />
             ))}
           </div>
         )}

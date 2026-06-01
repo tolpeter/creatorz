@@ -6,7 +6,7 @@ export function SiteFooter() {
     {
       title: "Termék",
       links: [
-        { href: "/creators", label: "Creatorok" },
+        { href: "/creators", label: "Tartalomgyártók" },
         { href: "/ads", label: "Hirdetések" },
         { href: "/#hogyan", label: "Hogyan működik" },
       ],
@@ -15,12 +15,12 @@ export function SiteFooter() {
       title: "Cégeknek",
       links: [
         { href: "/register", label: "Regisztráció" },
-        { href: "/creators", label: "Creator keresés" },
+        { href: "/creators", label: "Tartalomgyártó keresés" },
         { href: "/ads", label: "Hirdetésfeladás" },
       ],
     },
     {
-      title: "Creatoroknak",
+      title: "Tartalomgyártóknak",
       links: [
         { href: "/register", label: "Csatlakozás" },
         { href: "/ads", label: "Pályázható hirdetések" },

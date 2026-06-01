@@ -32,9 +32,9 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
   }
 
   const toggles: Array<{ key: keyof SettingsMap; label: string; desc: string }> = [
-    { key: "creator_subscription_enabled", label: "Creator előfizetés kötelező", desc: "Ha be van kapcsolva, a creatoroknak fizetniük kell." },
+    { key: "creator_subscription_enabled", label: "Tartalomgyártó előfizetés kötelező", desc: "Ha be van kapcsolva, a tartalomgyártóknak fizetniük kell." },
     { key: "registration_enabled", label: "Regisztráció engedélyezve", desc: "Új fiókok létrehozása." },
-    { key: "auto_approve_creators", label: "Creatorok automatikus jóváhagyása", desc: "" },
+    { key: "auto_approve_creators", label: "Tartalomgyártók automatikus jóváhagyása", desc: "" },
     { key: "auto_approve_brands", label: "Márkák automatikus jóváhagyása", desc: "" },
     { key: "auto_approve_ads", label: "Hirdetések automatikus jóváhagyása", desc: "" },
   ];
