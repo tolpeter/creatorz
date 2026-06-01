@@ -125,14 +125,20 @@ export async function signInAction(input: z.input<typeof signInSchema>) {
     return { error: "Hibás email vagy jelszó" };
   }
 
-  // role lekérése a users táblából a redirecthez
+  // role + suspended lekérése
   let redirectTo = "/dashboard";
   if (data.user) {
     const rows = await db
-      .select({ role: users.role })
+      .select({ role: users.role, suspended: users.suspended })
       .from(users)
       .where(eq(users.authId, data.user.id))
       .limit(1);
+
+    if (rows[0]?.suspended) {
+      await supabase.auth.signOut();
+      return { error: "A fiókod fel van függesztve. Vedd fel a kapcsolatot a támogatással." };
+    }
+
     if (rows[0]) {
       redirectTo = dashboardPathForRole(rows[0].role);
     }

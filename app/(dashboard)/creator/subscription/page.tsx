@@ -4,6 +4,7 @@ import { Crown, Sparkles } from "lucide-react";
 import { db } from "@/lib/db";
 import { subscriptions, featurePurchases } from "@/lib/db/schema";
 import { getCurrentUser, getCurrentCreator } from "@/lib/auth";
+import { getAllSettings } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatHuf, formatHuDate } from "@/lib/utils/format";
@@ -14,11 +15,6 @@ import {
 } from "@/components/creator/billing-buttons";
 
 export const metadata = { title: "Előfizetés" };
-
-const MONTHLY = Number(process.env.NEXT_PUBLIC_CREATOR_SUBSCRIPTION_PRICE_HUF ?? 2990);
-const F7 = Number(process.env.NEXT_PUBLIC_FEATURE_7DAY_PRICE_HUF ?? 3990);
-const F30 = Number(process.env.NEXT_PUBLIC_FEATURE_30DAY_PRICE_HUF ?? 5990);
-const SUB_REQUIRED = process.env.NEXT_PUBLIC_CREATOR_SUBSCRIPTION_ENABLED === "true";
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Aktív",
@@ -47,6 +43,12 @@ export default async function SubscriptionPage() {
     .from(featurePurchases)
     .where(eq(featurePurchases.creatorId, creator.profile.id))
     .orderBy(desc(featurePurchases.createdAt));
+
+  const cfg = await getAllSettings();
+  const MONTHLY = Number(cfg.creator_subscription_price_huf);
+  const F7 = Number(cfg.feature_7day_price_huf);
+  const F30 = Number(cfg.feature_30day_price_huf);
+  const SUB_REQUIRED = cfg.creator_subscription_enabled === true;
 
   const isFeatured = creator.profile.isFeatured;
   const featuredUntil = creator.profile.featuredUntil;

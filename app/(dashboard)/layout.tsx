@@ -10,6 +10,7 @@ export default async function DashboardLayout({
 }) {
   const current = await getCurrentUser();
   if (!current) redirect("/login");
+  if (current.dbUser?.suspended) redirect("/login?suspended=1");
 
   return (
     <div className="flex min-h-screen flex-col">
