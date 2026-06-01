@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/shared/cookie-banner";
+import "@/lib/env";
 
 const inter = Inter({
   subsets: ["latin", "latin-ext"],
@@ -40,7 +41,7 @@ export const metadata: Metadata = {
     siteName: "Creatorz",
     images: [
       {
-        url: "/images/generated/og-image.webp",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "Creatorz",
