@@ -1,16 +1,9 @@
 import { db } from "@/lib/db";
 import { creatorProfiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { generateUsername } from "@/lib/utils/slug";
 
-export function generateUsername(displayName: string): string {
-  return displayName
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "") // ékezetek levétele
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .substring(0, 50);
-}
+export { generateUsername };
 
 /**
  * Egyedi username-et ad vissza: ha a kért alap foglalt, szám-suffixet ragaszt hozzá.

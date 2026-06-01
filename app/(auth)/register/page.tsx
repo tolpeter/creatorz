@@ -59,7 +59,7 @@ export default function RegisterPage() {
 
   if (confirmSent) {
     return (
-      <Card>
+      <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>Ellenőrizd az email fiókod</CardTitle>
           <CardDescription>
@@ -78,7 +78,7 @@ export default function RegisterPage() {
 
   if (step === 1) {
     return (
-      <div className="space-y-6">
+      <div className="w-full max-w-md space-y-6">
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-bold">Csatlakozz a Creatorz-hoz</h1>
           <p className="text-muted-foreground">
@@ -128,7 +128,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-md">
       <CardHeader>
         <button
           type="button"

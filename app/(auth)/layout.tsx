@@ -10,7 +10,7 @@ export default function AuthLayout({
       <Link href="/" className="text-2xl font-bold tracking-tight">
         Creatorz
       </Link>
-      <div className="w-full max-w-md">{children}</div>
+      {children}
     </div>
   );
 }

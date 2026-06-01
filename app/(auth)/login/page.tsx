@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-md">
       <CardHeader>
         <CardTitle>Bejelentkezés</CardTitle>
         <CardDescription>Üdv újra! Lépj be a fiókodba.</CardDescription>

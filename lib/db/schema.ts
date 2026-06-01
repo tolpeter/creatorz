@@ -297,6 +297,16 @@ export const notifications = pgTable("notifications", {
   readIdx: index("notifications_read_idx").on(table.read),
 }));
 
+// ============= SAVED CREATORS (BRAND ⭐ CREATOR) =============
+export const savedCreators = pgTable("saved_creators", {
+  brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
+  creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  notes: text("notes"),
+}, (table) => ({
+  pk: primaryKey({ columns: [table.brandId, table.creatorId] }),
+}));
+
 // ============= RELATIONS =============
 export const usersRelations = relations(users, ({ one, many }) => ({
   creatorProfile: one(creatorProfiles),

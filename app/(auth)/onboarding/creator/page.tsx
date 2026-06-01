@@ -1,28 +1,45 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { redirect } from "next/navigation";
+import { getCurrentCreator, getCurrentUser } from "@/lib/auth";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CreatorOnboardingWizard,
+  type OnboardingInitial,
+} from "@/components/creator/creator-onboarding-wizard";
 
-export default function CreatorOnboardingPage() {
+export const metadata = { title: "Creator onboarding" };
+
+export default async function CreatorOnboardingPage() {
+  const current = await getCurrentUser();
+  if (!current) redirect("/login");
+  if (current.dbUser?.role === "brand") redirect("/brand");
+
+  const creator = await getCurrentCreator();
+  if (!creator) redirect("/login");
+
+  const p = creator.profile;
+  const initial: OnboardingInitial = {
+    username: p.username,
+    displayName: p.displayName,
+    bio: p.bio ?? "",
+    city: p.city ?? "",
+    county: p.county ?? "",
+    age: p.age != null ? String(p.age) : "",
+    gender: p.gender ?? "",
+    categories: p.categories ?? [],
+    languages: p.languages ?? ["hu"],
+    instagramUrl: p.instagramUrl ?? "",
+    instagramFollowers: p.instagramFollowers != null ? String(p.instagramFollowers) : "",
+    tiktokUrl: p.tiktokUrl ?? "",
+    tiktokFollowers: p.tiktokFollowers != null ? String(p.tiktokFollowers) : "",
+    facebookUrl: p.facebookUrl ?? "",
+    facebookFollowers: p.facebookFollowers != null ? String(p.facebookFollowers) : "",
+    youtubeUrl: p.youtubeUrl ?? "",
+    youtubeSubscribers: p.youtubeSubscribers != null ? String(p.youtubeSubscribers) : "",
+    rateCard: (p.rateCard ?? []) as OnboardingInitial["rateCard"],
+  };
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Creator onboarding</CardTitle>
-        <CardDescription>
-          A 4 lépéses profil-varázsló a 3. fázisban érkezik. Addig is
-          beléphetsz a dashboardodra.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild className="w-full">
-          <Link href="/creator">Tovább a dashboardra</Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <div className="w-full max-w-2xl">
+      <CreatorOnboardingWizard initial={initial} />
+    </div>
   );
 }

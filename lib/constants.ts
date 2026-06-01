@@ -48,3 +48,29 @@ export const LANGUAGES = [
   { value: "ro", label: "Román" },
   { value: "sk", label: "Szlovák" },
 ] as const;
+
+export const GENDER_OPTIONS = [
+  { value: "ferfi", label: "Férfi" },
+  { value: "no", label: "Nő" },
+  { value: "egyeb", label: "Egyéb" },
+  { value: "nem_mondom", label: "Nem mondom meg" },
+] as const;
+
+export const INDUSTRIES = [
+  "Szépségápolás",
+  "Divat",
+  "Gasztronómia",
+  "Egészség & wellness",
+  "Technológia",
+  "Utazás & turizmus",
+  "Otthon & lakberendezés",
+  "Sport & fitness",
+  "Pénzügy",
+  "Oktatás",
+  "Szórakoztatás",
+  "Egyéb",
+] as const;
+
+export const MAX_PORTFOLIO_ITEMS = 15;
+export const MAX_CREATOR_CATEGORIES = 3;
+export const BIO_MAX_LENGTH = 500;

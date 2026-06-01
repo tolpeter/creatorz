@@ -1,28 +1,26 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { redirect } from "next/navigation";
+import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
+import { BrandOnboardingForm } from "@/components/brand/brand-onboarding-form";
 
-export default function BrandOnboardingPage() {
+export const metadata = { title: "Márka onboarding" };
+
+export default async function BrandOnboardingPage() {
+  const current = await getCurrentUser();
+  if (!current) redirect("/login");
+  if (current.dbUser?.role === "creator") redirect("/creator");
+
+  const brand = await getCurrentBrand();
+  if (!brand) redirect("/login");
+
+  const p = brand.profile;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Márka onboarding</CardTitle>
-        <CardDescription>
-          Az egyszerű márka-regisztrációs űrlap a 4. fázisban érkezik. Addig is
-          beléphetsz a dashboardodra.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Button asChild className="w-full">
-          <Link href="/brand">Tovább a dashboardra</Link>
-        </Button>
-      </CardContent>
-    </Card>
+    <BrandOnboardingForm
+      initial={{
+        companyName: p.companyName ?? "",
+        websiteUrl: p.websiteUrl ?? "",
+        contactName: p.contactName ?? "",
+        industry: p.industry ?? "",
+      }}
+    />
   );
 }

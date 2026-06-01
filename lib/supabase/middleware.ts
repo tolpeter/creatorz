@@ -34,7 +34,12 @@ export async function updateSession(request: NextRequest) {
   const protectedPaths = ["/creator", "/brand", "/admin", "/onboarding", "/dashboard"];
   const authPaths = ["/login", "/register"];
 
-  if (!user && protectedPaths.some((p) => url.pathname.startsWith(p))) {
+  // Szegmens-határ figyelembevétele: "/creators" (publikus) NEM "/creator" (védett)
+  const isProtected = protectedPaths.some(
+    (p) => url.pathname === p || url.pathname.startsWith(`${p}/`)
+  );
+
+  if (!user && isProtected) {
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }

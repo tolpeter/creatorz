@@ -1,0 +1,49 @@
+"use server";
+
+import { z } from "zod";
+import { db } from "@/lib/db";
+import { savedCreators } from "@/lib/db/schema";
+import { and, eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { getCurrentBrand } from "@/lib/auth";
+
+export async function toggleSavedCreator(creatorId: string) {
+  const brand = await getCurrentBrand();
+  if (!brand) return { error: "Csak bejelentkezett márka menthet creatort" };
+
+  const id = z.string().uuid().safeParse(creatorId);
+  if (!id.success) return { error: "Érvénytelen creator" };
+
+  const existing = await db
+    .select({ creatorId: savedCreators.creatorId })
+    .from(savedCreators)
+    .where(
+      and(
+        eq(savedCreators.brandId, brand.profile.id),
+        eq(savedCreators.creatorId, id.data)
+      )
+    )
+    .limit(1);
+
+  let saved: boolean;
+  if (existing.length > 0) {
+    await db
+      .delete(savedCreators)
+      .where(
+        and(
+          eq(savedCreators.brandId, brand.profile.id),
+          eq(savedCreators.creatorId, id.data)
+        )
+      );
+    saved = false;
+  } else {
+    await db
+      .insert(savedCreators)
+      .values({ brandId: brand.profile.id, creatorId: id.data })
+      .onConflictDoNothing();
+    saved = true;
+  }
+
+  revalidatePath("/brand/saved");
+  return { success: true, saved };
+}
