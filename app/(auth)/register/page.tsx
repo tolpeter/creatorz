@@ -79,8 +79,8 @@ export default function RegisterPage() {
 
   if (step === 1) {
     return (
-      <div className="relative w-full max-w-5xl">
-        {/* Lebegő blob háttér */}
+      <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl">
+        {/* Lebegő blob háttér (a wrapper overflow-hidden levágja a kilógást) */}
         <div
           aria-hidden
           className="pointer-events-none absolute -left-32 -top-24 h-80 w-80 animate-blob rounded-full bg-accent/15 blur-3xl"
@@ -213,10 +213,11 @@ function RoleCard({
       style={{ aspectRatio: "788 / 565" }}
     >
       <Image
-        src={image}
+        src={`${image}?v=3`}
         alt={alt}
         fill
         priority
+        unoptimized
         sizes="(max-width: 768px) 100vw, 500px"
         className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
       />
