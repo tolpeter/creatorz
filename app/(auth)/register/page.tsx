@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import Image from "next/image";
-import { Sparkles, Building2, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -107,18 +107,12 @@ export default function RegisterPage() {
           <div className="grid gap-6 md:grid-cols-2">
             <RoleCard
               onClick={() => chooseRole("creator")}
-              icon={<Sparkles className="h-6 w-6 text-accent" />}
-              iconBg="bg-accent/15"
-              title="Tartalomgyártó vagyok"
-              desc="Tartalmat gyártok és márkákkal szeretnék dolgozni"
+              alt="Tartalomgyártó vagyok"
               image="/images/register-creator.webp"
             />
             <RoleCard
               onClick={() => chooseRole("brand")}
-              icon={<Building2 className="h-6 w-6 text-accent" />}
-              iconBg="bg-accent/15"
-              title="Márka vagyok"
-              desc="Tartalomgyártókat keresek a tartalmaim elkészítéséhez"
+              alt="Márka vagyok"
               image="/images/register-brand.webp"
             />
           </div>
@@ -203,57 +197,29 @@ export default function RegisterPage() {
 
 function RoleCard({
   onClick,
-  icon,
-  iconBg,
-  title,
-  desc,
+  alt,
   image,
 }: {
   onClick: () => void;
-  icon: React.ReactNode;
-  iconBg: string;
-  title: string;
-  desc: string;
+  alt: string;
   image: string;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="group relative flex aspect-square w-full flex-col overflow-hidden rounded-3xl border bg-card text-left shadow-sm transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl hover:ring-2 hover:ring-accent focus-visible:-translate-y-2 focus-visible:shadow-2xl focus-visible:ring-2 focus-visible:ring-accent focus-visible:outline-none sm:aspect-[4/5] md:aspect-[4/5]"
+      aria-label={alt}
+      className="group relative block w-full overflow-hidden rounded-3xl shadow-sm outline-none transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl focus-visible:-translate-y-2 focus-visible:shadow-2xl focus-visible:ring-2 focus-visible:ring-accent"
+      style={{ aspectRatio: "788 / 565" }}
     >
-      {/* SZÖVEG TOP */}
-      <div className="relative z-10 flex flex-col gap-3 p-6 sm:p-7">
-        <span
-          className={`flex h-12 w-12 items-center justify-center rounded-xl ${iconBg}`}
-        >
-          {icon}
-        </span>
-        <div>
-          <h2 className="text-xl font-bold leading-tight sm:text-2xl">{title}</h2>
-          <p className="mt-1.5 max-w-[14rem] text-sm text-muted-foreground">
-            {desc}
-          </p>
-        </div>
-      </div>
-
-      {/* KÉP BOTTOM */}
-      <div className="relative flex-1 overflow-hidden">
-        <Image
-          src={image}
-          alt=""
-          fill
-          sizes="(max-width: 768px) 100vw, 500px"
-          className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-        />
-        {/* Subtle gradient overlay alulra */}
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-card/70 to-transparent" />
-      </div>
-
-      {/* ARROW GOMB BOTTOM-LEFT */}
-      <span className="absolute bottom-5 left-5 z-10 flex h-12 w-12 items-center justify-center rounded-full bg-card text-accent shadow-lg transition-all duration-300 group-hover:bg-accent group-hover:text-accent-foreground group-hover:shadow-[0_0_24px_rgba(163,230,53,0.5)] group-hover:scale-110 sm:bottom-6 sm:left-6">
-        <ArrowRight className="h-5 w-5" />
-      </span>
+      <Image
+        src={image}
+        alt={alt}
+        fill
+        priority
+        sizes="(max-width: 768px) 100vw, 500px"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+      />
     </button>
   );
 }
