@@ -24,6 +24,18 @@ export default async function PublicLayout({
             >
               Tartalomgyártók
             </Link>
+            <Link
+              href="/ads"
+              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+            >
+              Hirdetések
+            </Link>
+            <Link
+              href="/kapcsolat"
+              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
+            >
+              Kapcsolat
+            </Link>
           </div>
           <div className="flex items-center gap-2">
             {current?.dbUser ? (

@@ -97,6 +97,8 @@ export async function submitReview(token: string, input: z.input<typeof reviewSc
       <p>Szia ${collab.creatorName}!</p>
       <p>A(z) <strong>${collab.brandName}</strong> értékelt a közös munka után.</p>
       <p><a href="${APP_URL}/creator/reviews">Értékelés megtekintése és válasz</a></p>
+      <hr />
+      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
     `,
   });
 

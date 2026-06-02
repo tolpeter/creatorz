@@ -113,6 +113,8 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       <h2>Új pályázat érkezett</h2>
       <p><strong>${creator.profile.displayName}</strong> pályázott a(z) „${ad.title}" hirdetésedre.</p>
       <p><a href="${APP_URL}/brand/ads">Pályázatok megtekintése</a></p>
+      <hr />
+      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
     `,
   });
 
@@ -204,6 +206,8 @@ export async function acceptApplication(applicationId: string) {
       <p>A(z) <strong>${brand.profile.companyName}</strong> elfogadta a pályázatodat a következő hirdetésre:</p>
       <p style="font-weight:bold">„${row.adTitle}"</p>
       <p><a href="${APP_URL}/creator/applications">Pályázatom megtekintése</a></p>
+      <hr />
+      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
     `,
   });
 
@@ -239,6 +243,8 @@ export async function rejectApplication(applicationId: string, reason?: string) 
       <p>A(z) „${row.adTitle}" hirdetésre adott pályázatodat sajnos nem fogadták el.</p>
       ${reason ? `<p>Indok: ${reason}</p>` : ""}
       <p>Ne csüggedj, nézz szét a többi hirdetés között!</p>
+      <hr />
+      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
     `,
   });
 

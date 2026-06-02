@@ -280,6 +280,47 @@ export default async function LandingPage() {
         </div>
       </section>
 
+      {/* KAPCSOLAT */}
+      <section className="py-20">
+        <div className="mx-auto max-w-3xl px-6">
+          <div className="relative overflow-hidden rounded-3xl border bg-card p-8 text-center shadow-sm sm:p-12">
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/15 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-accent/10 blur-3xl"
+            />
+            <div className="relative">
+              <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                Itt vagyunk neked
+              </span>
+              <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
+                Kérdésed van?
+              </h2>
+              <p className="mt-3 max-w-xl text-muted-foreground sm:mx-auto">
+                Írj nekünk emailt, 24 órán belül válaszolunk. Bármilyen kérdés,
+                visszajelzés, hibabejelentés — itt vagyunk.
+              </p>
+              <a
+                href="mailto:info@creatorz.hu"
+                className="mt-6 inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-base font-semibold text-accent-foreground transition-all hover:scale-105 hover:bg-accent/90 hover:shadow-[0_0_24px_rgba(163,230,53,0.4)]"
+              >
+                info@creatorz.hu
+              </a>
+              <p className="mt-4 text-xs text-muted-foreground">
+                Vagy nézd meg a{" "}
+                <Link href="/kapcsolat" className="text-accent underline">
+                  kapcsolat oldalt
+                </Link>
+                .
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <SiteFooter />
     </div>
   );

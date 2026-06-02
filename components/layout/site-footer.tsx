@@ -43,6 +43,12 @@ export function SiteFooter() {
         <div className="md:col-span-1">
           <Logo variant="light" className="text-xl" />
           <p className="mt-2 text-sm">Magyar UGC tartalomgyártó platform.</p>
+          <a
+            href="mailto:info@creatorz.hu"
+            className="mt-3 inline-block text-sm font-medium text-accent hover:underline"
+          >
+            info@creatorz.hu
+          </a>
         </div>
         {cols.map((c) => (
           <div key={c.title}>
