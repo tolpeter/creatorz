@@ -1,5 +1,13 @@
 import Link from "next/link";
-import { Star, MapPin, Eye, PlayCircle } from "lucide-react";
+import {
+  Star,
+  MapPin,
+  PlayCircle,
+  Bookmark,
+  Camera,
+  ArrowRight,
+} from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
@@ -22,98 +30,122 @@ export type BrowseCard = {
 
 export function BrowseCreatorCard({ c }: { c: BrowseCard }) {
   const totalFollowers = (c.instagramFollowers ?? 0) + (c.tiktokFollowers ?? 0);
-  const loc = [c.city, c.county].filter((x) => x && x !== c.city).join(", ");
 
   return (
-    <Link
-      href={`/creators/${c.username}`}
+    <div
       className={cn(
-        "group relative block overflow-hidden rounded-2xl border bg-card transition-all hover:shadow-lg",
-        c.isFeatured && "ring-2 ring-accent"
+        "group relative flex flex-col overflow-hidden rounded-2xl border bg-card transition-all hover:shadow-lg",
+        c.isFeatured && "ring-2 ring-accent/70"
       )}
     >
-      {/* Hero kép */}
-      <div className="relative aspect-[3/4] w-full overflow-hidden bg-muted">
+      {/* HERO KÉP */}
+      <Link href={`/creators/${c.username}`} className="relative block aspect-[4/5] overflow-hidden bg-muted">
         {c.avatarUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={c.avatarUrl}
             alt={c.displayName}
-            className="h-full w-full object-cover transition-transform group-hover:scale-105"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20 text-5xl font-bold text-muted-foreground">
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-muted-foreground/20 text-6xl font-bold text-muted-foreground/40">
             {c.displayName.charAt(0).toUpperCase()}
           </div>
         )}
 
-        {/* Felül lebegő badge-ek */}
-        <div className="absolute left-2.5 top-2.5 flex flex-col gap-1.5">
+        {/* Felső badge-ek */}
+        <div className="absolute left-3 top-3 flex flex-col items-start gap-1.5">
           {c.hasVideo && (
-            <Badge className="rounded-full bg-primary px-2.5 py-1 text-xs text-primary-foreground shadow">
-              <PlayCircle className="mr-1 h-3 w-3" /> Pitch videó
-            </Badge>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/75 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">
+              <PlayCircle className="h-3.5 w-3.5" />
+              Pitch videó
+            </span>
           )}
           {c.isFeatured && (
-            <Badge className="rounded-full bg-accent px-2.5 py-1 text-xs text-accent-foreground shadow">
+            <span className="inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-xs font-semibold text-accent-foreground">
               ★ Kiemelt
-            </Badge>
-          )}
-        </div>
-
-        {/* Alsó gomb */}
-        <div className="absolute inset-x-2.5 bottom-2.5 flex items-center gap-2">
-          <span className="flex-1 rounded-full bg-primary px-3 py-2 text-center text-xs font-semibold text-primary-foreground shadow-lg">
-            Profil megtekintése
-          </span>
-          <span
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-background/95 text-foreground shadow-lg"
-            aria-hidden
-          >
-            <Eye className="h-4 w-4" />
-          </span>
-        </div>
-      </div>
-
-      {/* Adatok */}
-      <div className="space-y-2 p-3">
-        <div className="flex items-start justify-between gap-2">
-          <h3 className="truncate text-base font-semibold">{c.displayName}</h3>
-          {c.city && (
-            <span className="flex shrink-0 items-center gap-0.5 text-xs text-muted-foreground">
-              <MapPin className="h-3 w-3" /> {c.city}
             </span>
           )}
         </div>
 
+        {/* Sarokban play-kör */}
+        <span className="absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full bg-white/90 text-foreground shadow-lg backdrop-blur transition-transform group-hover:scale-110">
+          <PlayCircle className="h-5 w-5" />
+        </span>
+      </Link>
+
+      {/* INFÓ */}
+      <div className="flex flex-1 flex-col gap-3 p-4">
+        {/* Avatar + név + bookmark */}
+        <div className="flex items-center gap-3">
+          <Avatar className="h-10 w-10 border">
+            <AvatarImage src={c.avatarUrl ?? undefined} alt={c.displayName} />
+            <AvatarFallback>{c.displayName.charAt(0).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0 flex-1">
+            <Link
+              href={`/creators/${c.username}`}
+              className="block truncate text-base font-semibold hover:underline"
+            >
+              {c.displayName}
+            </Link>
+            {c.city && (
+              <p className="flex items-center gap-1 truncate text-xs text-muted-foreground">
+                <MapPin className="h-3 w-3" /> {c.city}
+              </p>
+            )}
+          </div>
+          <button
+            type="button"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border bg-background text-muted-foreground transition-colors hover:border-accent hover:text-accent"
+            aria-label="Mentés"
+          >
+            <Bookmark className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* Kategória chipek */}
         {c.categories.length > 0 && (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex flex-wrap items-center gap-1.5">
             {c.categories.slice(0, 2).map((cat) => (
-              <Badge key={cat} variant="secondary" className="text-[10px] font-medium">
+              <Badge key={cat} variant="secondary" className="rounded-md text-[11px] font-medium">
                 {CREATOR_CATEGORIES.find((x) => x.value === cat)?.label ?? cat}
               </Badge>
             ))}
             {c.categories.length > 2 && (
-              <Badge variant="secondary" className="text-[10px] font-medium">
+              <Badge variant="secondary" className="rounded-md text-[11px] font-medium">
                 +{c.categories.length - 2}
               </Badge>
             )}
           </div>
         )}
 
-        <div className="flex items-center justify-between border-t pt-2 text-sm">
-          <div className="flex items-center gap-1">
-            <Star className="h-3.5 w-3.5 fill-accent text-accent" />
+        {/* Stats sor */}
+        <div className="flex items-center justify-between gap-2 text-sm">
+          <span className="flex items-center gap-1.5">
+            <Star className="h-4 w-4 fill-accent text-accent" />
             <span className="font-semibold">{c.averageRating ?? "—"}</span>
-          </div>
-          <div className="text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">
-              {formatNumber(totalFollowers || c.reviewCount)}
-            </span>{" "}
-            {totalFollowers > 0 ? "követő" : "értékelés"}
-          </div>
+          </span>
+          {totalFollowers > 0 ? (
+            <span className="flex items-center gap-1.5">
+              <span className="font-semibold">{formatNumber(totalFollowers)}</span>
+              <span className="text-xs text-muted-foreground">követő</span>
+              <Camera className="h-3.5 w-3.5 text-muted-foreground" />
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">{c.reviewCount} értékelés</span>
+          )}
         </div>
+
+        {/* CTA gomb */}
+        <Link
+          href={`/creators/${c.username}`}
+          className="mt-auto flex items-center justify-center gap-1.5 rounded-full bg-accent/15 px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-all hover:bg-accent hover:shadow-md"
+        >
+          <span className="text-foreground">Profil megtekintése</span>
+          <ArrowRight className="h-4 w-4 text-foreground" />
+        </Link>
       </div>
-    </Link>
+    </div>
   );
 }

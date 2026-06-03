@@ -1,9 +1,13 @@
+import Link from "next/link";
+import { Search, ArrowRight, Sparkles } from "lucide-react";
 import { and, or, eq, gte, lte, ilike, desc, sql, inArray, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users, portfolioItems } from "@/lib/db/schema";
 import { BrowseCreatorCard, type BrowseCard } from "@/components/creator/browse-creator-card";
 import { BrowseFilters } from "@/components/creator/browse-filters";
 import { SortSelect } from "@/components/creator/sort-select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 export const metadata = {
   title: "Tartalomgyártók böngészése",
@@ -152,25 +156,59 @@ export default async function CreatorsBrowsePage({
     hasVideo: hasVideoSet.has(r.id),
   }));
 
+  // Aktív szűrők számolása (badge a "Szűrők" mellé)
+  const activeFilterCount = [
+    search,
+    categories.length ? "c" : "",
+    languages.length ? "l" : "",
+    county,
+    city,
+    gender,
+    minAge,
+    maxAge,
+    minIg,
+    minTt,
+    one(sp.verifiedOnly) === "1" ? "v" : "",
+    minRating,
+  ].filter(Boolean).length;
+
   return (
-    <div className="grid gap-6 md:grid-cols-[260px_1fr]">
-      <aside className="md:sticky md:top-20 md:self-start">
-        <h2 className="mb-3 text-lg font-semibold">Szűrők</h2>
-        <BrowseFilters />
+    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      {/* SIDEBAR — Szűrők */}
+      <aside className="lg:sticky lg:top-20 lg:self-start">
+        <div className="rounded-2xl border bg-card p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="flex items-center gap-2 text-base font-semibold">
+              Szűrők
+              {activeFilterCount > 0 && (
+                <Badge className="bg-accent text-accent-foreground hover:bg-accent">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </h2>
+          </div>
+          <BrowseFilters />
+        </div>
       </aside>
 
-      <div>
-        <div className="mb-4 flex items-center justify-between gap-3">
+      {/* CONTENT */}
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-2xl font-bold">Tartalomgyártók</h1>
+            <h1 className="text-3xl font-bold">Tartalomgyártók</h1>
             <p className="text-sm text-muted-foreground">{creators.length} találat</p>
           </div>
           <SortSelect />
         </div>
 
+        {/* Cards grid */}
         {creators.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-            Nincs a szűrőknek megfelelő tartalomgyártó.
+          <div className="rounded-2xl border border-dashed p-12 text-center">
+            <Search className="mx-auto mb-3 h-10 w-10 text-muted-foreground/40" />
+            <p className="text-muted-foreground">
+              Nincs a szűrőknek megfelelő tartalomgyártó.
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -179,6 +217,32 @@ export default async function CreatorsBrowsePage({
             ))}
           </div>
         )}
+
+        {/* Alsó CTA: Nem találtad meg, akit keresel? */}
+        <div className="relative overflow-hidden rounded-2xl border bg-card p-6 sm:p-7">
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-accent/15 blur-3xl"
+          />
+          <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
+                <Sparkles className="h-7 w-7 text-accent" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold">Nem találtad meg, akit keresel?</h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Írd le, milyen tartalomgyártót keresel, és segítünk megtalálni a tökéletes partnert.
+                </p>
+              </div>
+            </div>
+            <Button asChild className="shrink-0">
+              <Link href="/kapcsolat">
+                Keresési igény leadása <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );
