@@ -2,10 +2,9 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
-import { Filter, X } from "lucide-react";
+import { Filter, X, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -15,7 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
-import { CREATOR_CATEGORIES, HUNGARIAN_COUNTIES, LANGUAGES, GENDER_OPTIONS } from "@/lib/constants";
+import {
+  CREATOR_CATEGORIES,
+  HUNGARIAN_COUNTIES,
+  LANGUAGES,
+  GENDER_OPTIONS,
+} from "@/lib/constants";
 
 export function BrowseFilters() {
   const router = useRouter();
@@ -40,7 +44,6 @@ export function BrowseFilters() {
 
   function apply() {
     const params = new URLSearchParams();
-    // megőrizzük a rendezést
     const sort = sp.get("sort");
     if (sort) params.set("sort", sort);
 
@@ -77,32 +80,45 @@ export function BrowseFilters() {
   }
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-1.5">
-        <Label>Keresés</Label>
-        <Input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && apply()}
-          placeholder="Név, város…"
+    <div className="space-y-1.5 text-sm">
+      {/* Keresés */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Keresés</label>
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && apply()}
+            placeholder="Név, város, kulcsszó…"
+            className="h-7 pl-7 text-xs"
+          />
+        </div>
+      </div>
+
+      {/* Kategóriák */}
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-muted-foreground">Kategóriák</label>
+        <ChipMultiSelect
+          compact
+          options={CREATOR_CATEGORIES}
+          value={categories}
+          onChange={setCategories}
         />
       </div>
 
-      <div className="space-y-2">
-        <Label>Kategóriák</Label>
-        <ChipMultiSelect options={CREATOR_CATEGORIES} value={categories} onChange={setCategories} />
+      {/* Nyelvek */}
+      <div className="space-y-1">
+        <label className="text-xs font-semibold text-muted-foreground">Nyelvek</label>
+        <ChipMultiSelect compact options={LANGUAGES} value={languages} onChange={setLanguages} />
       </div>
 
-      <div className="space-y-2">
-        <Label>Nyelvek</Label>
-        <ChipMultiSelect options={LANGUAGES} value={languages} onChange={setLanguages} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>Megye</Label>
+      {/* Megye */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Megye</label>
         <Select value={county || "all"} onValueChange={(v) => setCounty(v === "all" ? "" : v)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Összes" />
+          <SelectTrigger className="h-7 text-xs">
+            <SelectValue placeholder="Összes megye" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Összes megye</SelectItem>
@@ -115,15 +131,22 @@ export function BrowseFilters() {
         </Select>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Város</Label>
-        <Input value={city} onChange={(e) => setCity(e.target.value)} placeholder="pl. Budapest" />
+      {/* Város */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Város</label>
+        <Input
+          value={city}
+          onChange={(e) => setCity(e.target.value)}
+          placeholder="pl. Budapest"
+          className="h-7 text-xs"
+        />
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Nem</Label>
+      {/* Nem */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Nem</label>
         <Select value={gender || "all"} onValueChange={(v) => setGender(v === "all" ? "" : v)}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 text-xs">
             <SelectValue placeholder="Mindegy" />
           </SelectTrigger>
           <SelectContent>
@@ -137,31 +160,60 @@ export function BrowseFilters() {
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="space-y-1.5">
-          <Label>Kor min.</Label>
-          <Input type="number" value={minAge} onChange={(e) => setMinAge(e.target.value)} />
+      {/* Kor (év) – két oszlop */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Kor (év)</label>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            type="number"
+            value={minAge}
+            onChange={(e) => setMinAge(e.target.value)}
+            placeholder="Kor min."
+            className="h-7 text-xs"
+          />
+          <Input
+            type="number"
+            value={maxAge}
+            onChange={(e) => setMaxAge(e.target.value)}
+            placeholder="Kor max."
+            className="h-7 text-xs"
+          />
         </div>
-        <div className="space-y-1.5">
-          <Label>Kor max.</Label>
-          <Input type="number" value={maxAge} onChange={(e) => setMaxAge(e.target.value)} />
+      </div>
+
+      {/* Min IG / TikTok – két oszlop */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-0.5">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Min. Instagram követő
+          </label>
+          <Input
+            type="number"
+            value={minIg}
+            onChange={(e) => setMinIg(e.target.value)}
+            placeholder="pl. 10 000"
+            className="h-7 text-xs"
+          />
+        </div>
+        <div className="space-y-0.5">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Min. TikTok követő
+          </label>
+          <Input
+            type="number"
+            value={minTt}
+            onChange={(e) => setMinTt(e.target.value)}
+            placeholder="pl. 20 000"
+            className="h-7 text-xs"
+          />
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Min. Instagram követő</Label>
-        <Input type="number" value={minIg} onChange={(e) => setMinIg(e.target.value)} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>Min. TikTok követő</Label>
-        <Input type="number" value={minTt} onChange={(e) => setMinTt(e.target.value)} />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label>Min. értékelés</Label>
+      {/* Min értékelés */}
+      <div className="space-y-0.5">
+        <label className="text-xs font-semibold text-muted-foreground">Min. értékelés</label>
         <Select value={minRating || "any"} onValueChange={(v) => setMinRating(v === "any" ? "" : v)}>
-          <SelectTrigger>
+          <SelectTrigger className="h-7 text-xs">
             <SelectValue placeholder="Bármilyen" />
           </SelectTrigger>
           <SelectContent>
@@ -175,17 +227,19 @@ export function BrowseFilters() {
         </Select>
       </div>
 
-      <div className="flex items-center justify-between">
-        <Label htmlFor="verifiedOnly">Csak verifikált</Label>
-        <Switch id="verifiedOnly" checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
+      {/* Verifikált toggle */}
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs font-medium">Csak verifikált profilok</span>
+        <Switch checked={verifiedOnly} onCheckedChange={setVerifiedOnly} />
       </div>
 
-      <div className="flex gap-2">
-        <Button onClick={apply} className="flex-1">
-          <Filter className="h-4 w-4" /> Szűrés
+      {/* Gombok */}
+      <div className="flex gap-2 pt-1">
+        <Button onClick={apply} className="h-8 flex-1 text-sm font-semibold">
+          <Filter className="h-3.5 w-3.5" /> Szűrés
         </Button>
-        <Button onClick={reset} variant="outline">
-          <X className="h-4 w-4" /> Törlés
+        <Button onClick={reset} variant="outline" className="h-8 text-sm">
+          <X className="h-3.5 w-3.5" /> Törlés
         </Button>
       </div>
     </div>

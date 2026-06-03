@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, ArrowRight, Sparkles } from "lucide-react";
+import { Search, ArrowRight, Sparkles, SlidersHorizontal } from "lucide-react";
 import { and, or, eq, gte, lte, ilike, desc, sql, inArray, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users, portfolioItems } from "@/lib/db/schema";
@@ -175,17 +175,18 @@ export default async function CreatorsBrowsePage({
   return (
     <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
       {/* SIDEBAR — Szűrők */}
-      <aside className="lg:sticky lg:top-20 lg:self-start">
-        <div className="rounded-2xl border bg-card p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="flex items-center gap-2 text-base font-semibold">
-              Szűrők
+      <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:self-start lg:overflow-y-auto">
+        <div className="rounded-2xl border bg-card p-3">
+          <div className="mb-2 flex items-center justify-between">
+            <h2 className="text-base font-bold">Szűrők</h2>
+            <div className="flex items-center gap-1.5 text-muted-foreground">
+              <SlidersHorizontal className="h-4 w-4" />
               {activeFilterCount > 0 && (
                 <Badge className="bg-accent text-accent-foreground hover:bg-accent">
                   {activeFilterCount}
                 </Badge>
               )}
-            </h2>
+            </div>
           </div>
           <BrowseFilters />
         </div>
