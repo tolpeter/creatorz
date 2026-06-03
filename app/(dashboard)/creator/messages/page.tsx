@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { eq, or, asc, sql } from "drizzle-orm";
+import { and, eq, or, asc, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages, users, brandProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -15,6 +15,12 @@ export default async function CreatorMessagesPage() {
   const current = await getCurrentUser();
   if (!current?.dbUser) redirect("/login");
   const myId = current.dbUser.id;
+
+  // Olvasottnak jelöljük az összes nekem szóló üzenetet (badge legközelebb eltűnik)
+  await db
+    .update(messages)
+    .set({ read: true })
+    .where(and(eq(messages.toUserId, myId), eq(messages.read, false)));
 
   // Az összes üzenet (mindkét irányba), amiben benne vagyok
   const all = await db

@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { eq, or, asc, sql } from "drizzle-orm";
+import { and, eq, or, asc, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages, users, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
@@ -15,6 +15,11 @@ export default async function BrandMessagesPage() {
   const brand = await getCurrentBrand();
   if (!brand) redirect("/login");
   const myId = brand.appUserId;
+
+  await db
+    .update(messages)
+    .set({ read: true })
+    .where(and(eq(messages.toUserId, myId), eq(messages.read, false)));
 
   const all = await db
     .select({
