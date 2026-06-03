@@ -173,11 +173,19 @@ export default async function CreatorsBrowsePage({
   ].filter(Boolean).length;
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-      {/* SIDEBAR — Szűrők */}
-      <aside className="lg:sticky lg:top-20 lg:max-h-[calc(100vh-5rem)] lg:self-start lg:overflow-y-auto">
-        <div className="rounded-2xl border bg-card p-3">
-          <div className="mb-2 flex items-center justify-between">
+    // Full-bleed: kitör a public layout max-w-6xl tárolójából, teljes viewport szélességet kap
+    <div
+      className="relative -my-6"
+      style={{
+        marginLeft: "calc(50% - 50vw)",
+        marginRight: "calc(50% - 50vw)",
+        width: "100vw",
+      }}
+    >
+      <div className="grid gap-0 lg:grid-cols-[300px_1fr]">
+        {/* SIDEBAR — bal szélre rögzítve */}
+        <aside className="border-b bg-card p-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r">
+          <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-bold">Szűrők</h2>
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <SlidersHorizontal className="h-4 w-4" />
@@ -189,11 +197,10 @@ export default async function CreatorsBrowsePage({
             </div>
           </div>
           <BrowseFilters />
-        </div>
-      </aside>
+        </aside>
 
-      {/* CONTENT */}
-      <div className="space-y-6">
+      {/* CONTENT — paddinggel, középre */}
+      <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
@@ -244,6 +251,7 @@ export default async function CreatorsBrowsePage({
             </Button>
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

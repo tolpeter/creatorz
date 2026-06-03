@@ -20,6 +20,7 @@ import {
   LANGUAGES,
   GENDER_OPTIONS,
 } from "@/lib/constants";
+import { CATEGORY_ICONS } from "@/lib/category-icons";
 
 export function BrowseFilters() {
   const router = useRouter();
@@ -104,6 +105,7 @@ export function BrowseFilters() {
           options={CREATOR_CATEGORIES}
           value={categories}
           onChange={setCategories}
+          iconMap={CATEGORY_ICONS}
         />
       </div>
 
