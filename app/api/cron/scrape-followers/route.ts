@@ -3,9 +3,10 @@ import { creatorProfiles } from "@/lib/db/schema";
 import { eq, or, isNotNull } from "drizzle-orm";
 import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
 import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
+import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 
-export const maxDuration = 60;
+export const maxDuration = 300; // Napi cron: hosszabb futás engedélyezve
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
       or(
         isNotNull(creatorProfiles.instagramUrl),
         isNotNull(creatorProfiles.tiktokUrl),
+        isNotNull(creatorProfiles.facebookUrl),
         isNotNull(creatorProfiles.youtubeUrl)
       )
     );
@@ -57,6 +59,18 @@ export async function GET(req: Request) {
         /* ignore */
       }
     }
+    if (c.facebookUrl) {
+      try {
+        const n = await scrapeFacebookFollowers(c.facebookUrl);
+        if (n !== null) {
+          updates.facebookFollowers = n;
+          updates.facebookVerified = true;
+          updates.facebookLastChecked = now;
+        }
+      } catch {
+        /* ignore */
+      }
+    }
     if (c.youtubeUrl) {
       try {
         const n = await fetchYouTubeSubscribers(c.youtubeUrl);
@@ -76,6 +90,7 @@ export async function GET(req: Request) {
       updated++;
     }
 
+    // Kis szünet a platformok rate-limitje miatt
     await new Promise((r) => setTimeout(r, 1500));
   }
 

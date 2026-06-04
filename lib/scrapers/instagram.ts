@@ -1,7 +1,7 @@
+import { extractFollowerCountAI } from "@/lib/ai/extract-followers";
+
 /**
- * Best-effort Instagram follower scrape. Az Instagram aktívan blokkolja a
- * scrapelést, ezért gyakran null-t ad vissza — ilyenkor a manuális érték marad.
- * Megbízható megoldás: Meta Graph API (V2, OAuth + token).
+ * Instagram follower scrape: 1. regex (gyors), 2. AI fallback (megbízhatóbb).
  */
 export async function scrapeInstagramFollowers(profileUrl: string): Promise<number | null> {
   try {
@@ -20,7 +20,13 @@ export async function scrapeInstagramFollowers(profileUrl: string): Promise<numb
     const match =
       html.match(/"edge_followed_by":\{"count":(\d+)\}/) ||
       html.match(/"follower_count":(\d+)/);
-    return match ? parseInt(match[1]!, 10) : null;
+    if (match) {
+      const n = parseInt(match[1]!, 10);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+
+    // Regex hibázott → AI extrakció
+    return await extractFollowerCountAI("Instagram", html);
   } catch {
     return null;
   }

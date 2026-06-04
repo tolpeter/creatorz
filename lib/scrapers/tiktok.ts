@@ -1,6 +1,7 @@
+import { extractFollowerCountAI } from "@/lib/ai/extract-followers";
+
 /**
- * Best-effort TikTok follower scrape a nyilvános profil-oldalról.
- * Törékeny (a TikTok gyakran változtatja a markupot / blokkol), hibánál null.
+ * TikTok follower scrape: 1. regex, 2. AI fallback.
  */
 export async function scrapeTikTokFollowers(profileUrl: string): Promise<number | null> {
   try {
@@ -13,11 +14,16 @@ export async function scrapeTikTokFollowers(profileUrl: string): Promise<number 
     if (!res.ok) return null;
     const html = await res.text();
 
-    // Több lehetséges minta
     const match =
       html.match(/"followerCount":(\d+)/) ||
       html.match(/"stats":\{[^}]*"followerCount":(\d+)/);
-    return match ? parseInt(match[1]!, 10) : null;
+    if (match) {
+      const n = parseInt(match[1]!, 10);
+      if (Number.isFinite(n) && n > 0) return n;
+    }
+
+    // AI fallback
+    return await extractFollowerCountAI("TikTok", html);
   } catch {
     return null;
   }

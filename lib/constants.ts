@@ -47,6 +47,21 @@ export const LANGUAGES = [
   { value: "de", label: "Német" },
   { value: "ro", label: "Román" },
   { value: "sk", label: "Szlovák" },
+  { value: "es", label: "Spanyol" },
+  { value: "fr", label: "Francia" },
+  { value: "it", label: "Olasz" },
+  { value: "pt", label: "Portugál" },
+  { value: "nl", label: "Holland" },
+  { value: "pl", label: "Lengyel" },
+  { value: "cs", label: "Cseh" },
+  { value: "hr", label: "Horvát" },
+  { value: "sr", label: "Szerb" },
+  { value: "bg", label: "Bolgár" },
+  { value: "ru", label: "Orosz" },
+  { value: "uk", label: "Ukrán" },
+  { value: "tr", label: "Török" },
+  { value: "zh", label: "Kínai" },
+  { value: "ja", label: "Japán" },
 ] as const;
 
 export const GENDER_OPTIONS = [

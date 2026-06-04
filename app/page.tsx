@@ -268,6 +268,7 @@ export default async function LandingPage() {
           perks={["Ingyenes profil és portfólió", "Pályázz márkák hirdetéseire", "Építsd a hírneved értékelésekkel", "Opcionális kiemelés a directoryban"]}
           cta="Tartalomgyártóként csatlakozom"
           highlight
+          delay="1.7s"
         />
       </section>
 
@@ -341,18 +342,28 @@ function SideCard({
   cta,
   highlight,
   image,
+  delay,
 }: {
   title: string;
   perks: string[];
   cta: string;
   highlight?: boolean;
   image?: string;
+  delay?: string;
 }) {
   return (
-    <div className={`overflow-hidden rounded-2xl border ${highlight ? "border-accent ring-1 ring-accent" : ""}`}>
+    <div
+      className={`animate-float overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-xl ${highlight ? "border-accent ring-1 ring-accent" : ""}`}
+      style={{ animationDelay: delay }}
+    >
       {image && (
-        <div className="relative h-40 w-full">
-          <Image src={image} alt="" fill className="object-cover" />
+        <div className="relative h-44 w-full overflow-hidden">
+          <Image
+            src={image}
+            alt=""
+            fill
+            className="object-cover transition-transform duration-700 hover:scale-105"
+          />
         </div>
       )}
       <div className="p-8">
