@@ -1,47 +1,48 @@
 import "server-only";
-import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
 
 /**
- * Claude API alapú követőszám-kinyerés egy social profil HTML-jéből.
+ * OpenAI alapú követőszám-kinyerés egy social profil HTML-jéből.
  * A regex-scrape fallback-jaként hívandó: amikor az regex nem találja meg.
  *
  * Stratégia:
- *  - A teljes HTML-t levágjuk a head + a body első ~10kB-jára (a JSON-LD,
- *    Open Graph metaadatok, és a kezdő SSR JSON itt szokott lenni).
- *  - Claude Haiku (gyors + olcsó) elolvassa, megtalálja a follower-számot.
- *  - Validáljuk az eredményt (egész szám 0..1 milliárd).
+ *  - A teljes HTML-t levágjuk az első ~12kB-ra (head + script JSON-LD + SSR JSON).
+ *  - GPT-4o-mini (gyors + olcsó) elolvassa, megtalálja a follower-számot.
+ *  - Validáljuk: egész szám 0..1 milliárd.
  *
- * Költség becslés: ~5000 token input × $0.80/M = $0.004 / hívás (Haiku 4).
- * 100 tartalomgyártó × naponta = ~$0.40 / hónap.
+ * Költség: ~5000 token input × $0.15/M = $0.0008 / hívás (gpt-4o-mini).
+ * 100 tartalomgyártó × naponta = ~$0.08 / hónap (~30 Ft).
  */
 export async function extractFollowerCountAI(
   platform: "Instagram" | "TikTok" | "Facebook" | "YouTube",
   html: string
 ): Promise<number | null> {
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
-  // Tipikus szempontok: head + script tagek + meta = az első 12kB-ben legtöbbször ott van
   const trimmed = html.length > 12_000 ? html.slice(0, 12_000) : html;
 
   try {
-    const client = new Anthropic({ apiKey });
-    const msg = await client.messages.create({
-      model: "claude-haiku-4-5",
+    const client = new OpenAI({ apiKey });
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
       max_tokens: 32,
+      temperature: 0,
       messages: [
         {
+          role: "system",
+          content:
+            "You extract a single integer (follower count) from social media profile HTML. Reply with ONLY the number, no other text.",
+        },
+        {
           role: "user",
-          content: `You are extracting a single number from a social media profile page.
-
-Platform: ${platform}
-Task: Find the total follower / subscriber / friend count for the profile shown on this page.
+          content: `Platform: ${platform}
 
 Rules:
-- Return ONLY the integer number, nothing else.
+- Find the total follower / subscriber / friend count for the profile.
 - Expand abbreviations: "12.4K" → 12400, "2.5M" → 2500000, "1.2B" → 1200000000.
-- If the page is not a profile page, or no follower count is visible, return: 0
-- Do NOT include the word "followers", just the number.
+- If no profile or no follower count visible, reply: 0
+- Reply with ONLY the integer.
 
 HTML (truncated):
 ${trimmed}`,
@@ -49,8 +50,7 @@ ${trimmed}`,
       ],
     });
 
-    const block = msg.content[0];
-    const text = block && block.type === "text" ? block.text : "";
+    const text = completion.choices[0]?.message?.content ?? "";
     const n = parseInt(text.replace(/[^\d]/g, ""), 10);
     if (!Number.isFinite(n) || n <= 0 || n > 1_000_000_000) return null;
     return n;
