@@ -1,7 +1,18 @@
 import Replicate from "replicate";
 
-export const replicate = new Replicate({
-  auth: process.env.REPLICATE_API_TOKEN,
+let cached: Replicate | null = null;
+function getReplicate(): Replicate {
+  if (!process.env.REPLICATE_API_TOKEN) {
+    throw new Error("REPLICATE_API_TOKEN hiányzik — kép-generálás nem elérhető");
+  }
+  if (!cached) cached = new Replicate({ auth: process.env.REPLICATE_API_TOKEN });
+  return cached;
+}
+
+export const replicate = new Proxy({} as Replicate, {
+  get(_target, prop) {
+    return Reflect.get(getReplicate() as unknown as object, prop);
+  },
 });
 
 type AspectRatio = "1:1" | "16:9" | "9:16" | "4:3" | "3:4";
