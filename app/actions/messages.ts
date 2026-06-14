@@ -13,6 +13,7 @@ import { and, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { renderNewMessageEmail } from "@/lib/email/templates";
 import { formatHuf } from "@/lib/utils/format";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -68,24 +69,19 @@ export async function sendMessage(input: z.input<typeof initSchema>) {
     link: "/creator/messages",
   });
 
-  const budgetLine = d.budgetHint
-    ? `<p><strong>Becsült büdzsé:</strong> ${formatHuf(d.budgetHint)}</p>`
-    : "";
-  await sendEmailSafe({
-    to: recipient.email,
-    subject: `Új üzenet a Creatorz-on – ${brand.profile.companyName}`,
-    html: `
-      <h2>Új üzenet érkezett</h2>
-      <p>Szia ${recipient.displayName}!</p>
-      <p><strong>${brand.profile.companyName}</strong> üzenetet küldött neked:</p>
-      ${d.subject ? `<p><strong>Tárgy:</strong> ${d.subject}</p>` : ""}
-      <blockquote>${d.body.replace(/\n/g, "<br/>")}</blockquote>
-      ${budgetLine}
-      <p><a href="${APP_URL}/creator/messages">Megnyitás a Creatorz-on</a></p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – info@creatorz.hu</p>
-    `,
-  });
+  {
+    const previewParts = [d.subject, d.body.slice(0, 200)].filter(Boolean);
+    const previewLine = d.budgetHint
+      ? `${previewParts.join(" — ")} (becsült büdzsé: ${formatHuf(d.budgetHint)})`
+      : previewParts.join(" — ");
+    const email = renderNewMessageEmail({
+      recipientName: recipient.displayName,
+      senderName: brand.profile.companyName,
+      preview: previewLine,
+      inboxUrl: `${APP_URL}/creator/messages`,
+    });
+    await sendEmailSafe({ to: recipient.email, ...email });
+  }
 
   revalidatePath("/brand/messages");
   return { success: true };
@@ -97,7 +93,9 @@ export async function sendMessage(input: z.input<typeof initSchema>) {
 
 const replySchema = z.object({
   toUserId: z.string().uuid(),
-  body: z.string().min(1, "Az üzenet nem lehet üres").max(5000),
+  body: z.string().max(5000).optional().default(""),
+  attachmentUrl: z.string().url().max(1000).optional().nullable(),
+  attachmentName: z.string().max(255).optional().nullable(),
 });
 
 export async function replyToUser(input: z.input<typeof replySchema>) {
@@ -156,36 +154,42 @@ export async function replyToUser(input: z.input<typeof replySchema>) {
   const meName =
     meRows[0]?.creatorName ?? meRows[0]?.brandName ?? current.authUser.email ?? "Felhasználó";
 
+  const bodyText = (d.body ?? "").trim();
+  if (!bodyText && !d.attachmentUrl) {
+    return { error: "Üres üzenet — írj szöveget vagy csatolj fájlt." };
+  }
+
   await db.insert(messages).values({
     fromUserId: current.dbUser.id,
     toUserId: d.toUserId,
-    body: d.body,
+    body: bodyText,
+    attachmentUrl: d.attachmentUrl ?? null,
+    attachmentName: d.attachmentName ?? null,
   });
 
   const isToCreator = recipient.role === "creator";
   const link = isToCreator ? "/creator/messages" : "/brand/messages";
+  const preview = bodyText
+    ? bodyText.slice(0, 120)
+    : `📎 ${d.attachmentName ?? "Csatolmányt küldött"}`;
 
   await db.insert(notifications).values({
     userId: d.toUserId,
     type: "message",
     title: `Új üzenet: ${meName}`,
-    body: d.body.slice(0, 120),
+    body: preview,
     link,
   });
 
-  await sendEmailSafe({
-    to: recipient.email,
-    subject: `Új üzenet a Creatorz-on – ${meName}`,
-    html: `
-      <h2>Új üzenet érkezett</h2>
-      <p>Szia ${recipient.creatorName ?? recipient.brandName ?? ""}!</p>
-      <p><strong>${meName}</strong> üzenetet küldött neked:</p>
-      <blockquote>${d.body.replace(/\n/g, "<br/>")}</blockquote>
-      <p><a href="${APP_URL}${link}">Megnyitás a Creatorz-on</a></p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – info@creatorz.hu</p>
-    `,
-  });
+  {
+    const email = renderNewMessageEmail({
+      recipientName: recipient.creatorName ?? recipient.brandName ?? "Felhasználó",
+      senderName: meName,
+      preview: bodyText ? bodyText.slice(0, 220) : (d.attachmentName ? `📎 ${d.attachmentName}` : undefined),
+      inboxUrl: `${APP_URL}${link}`,
+    });
+    await sendEmailSafe({ to: recipient.email, ...email });
+  }
 
   revalidatePath("/creator/messages");
   revalidatePath("/brand/messages");

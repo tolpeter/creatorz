@@ -7,6 +7,10 @@ import { and, eq, ne } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentCreator } from "@/lib/auth";
 import { generateUsername } from "@/lib/utils/username";
+import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
+import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
+import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
+import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 
 async function requireCreator() {
   const creator = await getCurrentCreator();
@@ -21,7 +25,13 @@ const basicsSchema = z.object({
   bio: z.string().max(500).optional().or(z.literal("")),
   city: z.string().max(100).optional().or(z.literal("")),
   county: z.string().max(50).optional().or(z.literal("")),
-  age: z.coerce.number().int().min(13).max(100).optional().nullable(),
+  // A z.coerce.number() a null/üres-stringet 0-ra konvertálja, ami fail-eli a
+  // min(13)-at. Ezért preprocess-szel előbb undefined-re tesszük az "üres" eseteket,
+  // és az .optional()-t a preprocess belsejébe tesszük, hogy a coerce ne fusson.
+  age: z.preprocess(
+    (v) => (v == null || v === "" ? undefined : v),
+    z.coerce.number().int().min(13).max(100).optional(),
+  ),
   gender: z.string().max(20).optional().or(z.literal("")),
   categories: z.array(z.string()).max(3),
   languages: z.array(z.string()).min(1),
@@ -147,6 +157,18 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
   if (!parsed.success) return { error: "Érvénytelen adatok" };
   const d = parsed.data;
 
+  const missingCount = [
+    { label: "Instagram", url: d.instagramUrl, count: d.instagramFollowers },
+    { label: "TikTok", url: d.tiktokUrl, count: d.tiktokFollowers },
+    { label: "Facebook", url: d.facebookUrl, count: d.facebookFollowers },
+    { label: "YouTube", url: d.youtubeUrl, count: d.youtubeSubscribers },
+  ].find((item) => item.url && !(item.count && item.count > 0));
+  if (missingCount) {
+    return {
+      error: `Add meg a(z) ${missingCount.label} követő/feliratkozó számát is.`,
+    };
+  }
+
   await db
     .update(creatorProfiles)
     .set({
@@ -166,34 +188,23 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
   return { success: true };
 }
 
-// ---------- Rate card ----------
-const rateCardSchema = z.object({
-  rateCard: z
-    .array(
-      z.object({
-        service: z.string().min(1).max(120),
-        priceHuf: z.coerce.number().int().min(0),
-        description: z.string().max(300).optional().or(z.literal("")),
-      })
-    )
-    .max(20),
+// ---------- Bemutatkozó videó (1 db, kiemelt) ----------
+const introVideoSchema = z.object({
+  introVideoUrl: z.string().max(600).optional().nullable(),
 });
 
-export async function updateCreatorRateCard(input: z.input<typeof rateCardSchema>) {
+export async function updateCreatorIntroVideo(
+  input: z.input<typeof introVideoSchema>
+) {
   const creator = await requireCreator();
   if (!creator) return { error: "Nincs bejelentkezve" };
-
-  const parsed = rateCardSchema.safeParse(input);
-  if (!parsed.success) return { error: "Érvénytelen rate card adatok" };
+  const parsed = introVideoSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen videó URL" };
 
   await db
     .update(creatorProfiles)
     .set({
-      rateCard: parsed.data.rateCard.map((r) => ({
-        service: r.service,
-        priceHuf: r.priceHuf,
-        description: r.description || undefined,
-      })),
+      introVideoUrl: parsed.data.introVideoUrl || null,
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));
@@ -202,7 +213,183 @@ export async function updateCreatorRateCard(input: z.input<typeof rateCardSchema
   return { success: true };
 }
 
+// ---------- Self-hitelesítés ----------
+/**
+ * A creator maga hitelesíti a profilját. Feltételek (hogy valódi, kész profil
+ * kapjon badge-et): profilkép, bemutatkozás, legalább 1 kategória és legalább
+ * 1 összekapcsolt közösségi fiók. Siker esetén a `verified` flag igazra vált.
+ */
+export async function verifyCreatorProfile() {
+  const creator = await requireCreator();
+  if (!creator) return { error: "Nincs bejelentkezve" };
+
+  // Friss adatok
+  const rows = await db
+    .select()
+    .from(creatorProfiles)
+    .where(eq(creatorProfiles.id, creator.profile.id))
+    .limit(1);
+  const p = rows[0];
+  if (!p) return { error: "Profil nem található" };
+
+  const missing: string[] = [];
+  if (!p.avatarUrl) missing.push("profilkép");
+  if (!p.bio || p.bio.trim().length < 10) missing.push("bemutatkozás (min. 10 karakter)");
+  if (!p.categories || p.categories.length < 1) missing.push("legalább 1 kategória");
+  const hasSocial = Boolean(
+    p.instagramUrl || p.tiktokUrl || p.facebookUrl || p.youtubeUrl,
+  );
+  if (!hasSocial) missing.push("legalább 1 közösségi fiók");
+
+  if (missing.length > 0) {
+    return {
+      error: `A hitelesítéshez még hiányzik: ${missing.join(", ")}.`,
+      missing,
+    };
+  }
+
+  await db
+    .update(creatorProfiles)
+    .set({ verified: true, verifiedAt: new Date(), updatedAt: new Date() })
+    .where(eq(creatorProfiles.id, creator.profile.id));
+
+  revalidatePath("/creator/profile");
+  revalidatePath("/creator");
+  return { success: true };
+}
+
+// ---------- AI összekapcsolás (csak URL → követőszámok) ----------
+const connectSchema = z.object({
+  instagramUrl: z.string().max(300).optional().or(z.literal("")),
+  tiktokUrl: z.string().max(300).optional().or(z.literal("")),
+  facebookUrl: z.string().max(300).optional().or(z.literal("")),
+  youtubeUrl: z.string().max(300).optional().or(z.literal("")),
+});
+
+export type ConnectSocialsResult = {
+  success?: boolean;
+  error?: string;
+  instagramFollowers?: number | null;
+  tiktokFollowers?: number | null;
+  facebookFollowers?: number | null;
+  youtubeSubscribers?: number | null;
+  failed?: string[];
+};
+
+/**
+ * "Összekapcsol" gomb: a creator csak az URL-eket adja meg, az AI/scrape
+ * pipeline behúzza a követő/feliratkozó számokat, elmenti és visszaadja.
+ * Innentől a napi/4 napos cron tartja frissen.
+ */
+export async function connectCreatorSocials(
+  input: z.input<typeof connectSchema>
+): Promise<ConnectSocialsResult> {
+  const creator = await requireCreator();
+  if (!creator) return { error: "Nincs bejelentkezve" };
+
+  const parsed = connectSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen URL-ek" };
+  const d = parsed.data;
+
+  if (!d.instagramUrl && !d.tiktokUrl && !d.facebookUrl && !d.youtubeUrl) {
+    return { error: "Adj meg legalább egy social profil linket" };
+  }
+
+  const now = new Date();
+  const set: Record<string, unknown> = { updatedAt: now };
+
+  const out: ConnectSocialsResult = {
+    instagramFollowers: null,
+    tiktokFollowers: null,
+    facebookFollowers: null,
+    youtubeSubscribers: null,
+    failed: [],
+  };
+
+  // Platformonként hibatűrő: egy hiba nem állítja le a többit.
+  if (d.instagramUrl) {
+    try {
+      const n = await scrapeInstagramFollowers(d.instagramUrl);
+      if (n != null && n > 0) {
+        set.instagramUrl = d.instagramUrl;
+        set.instagramFollowers = n;
+        set.instagramVerified = true;
+        set.instagramLastChecked = now;
+        out.instagramFollowers = n;
+      } else out.failed!.push("Instagram");
+    } catch {
+      out.failed!.push("Instagram");
+    }
+  }
+  if (d.tiktokUrl) {
+    try {
+      const n = await scrapeTikTokFollowers(d.tiktokUrl);
+      if (n != null && n > 0) {
+        set.tiktokUrl = d.tiktokUrl;
+        set.tiktokFollowers = n;
+        set.tiktokVerified = true;
+        set.tiktokLastChecked = now;
+        out.tiktokFollowers = n;
+      } else out.failed!.push("TikTok");
+    } catch {
+      out.failed!.push("TikTok");
+    }
+  }
+  if (d.facebookUrl) {
+    try {
+      const n = await scrapeFacebookFollowers(d.facebookUrl);
+      if (n != null && n > 0) {
+        set.facebookUrl = d.facebookUrl;
+        set.facebookFollowers = n;
+        set.facebookVerified = true;
+        set.facebookLastChecked = now;
+        out.facebookFollowers = n;
+      } else out.failed!.push("Facebook");
+    } catch {
+      out.failed!.push("Facebook");
+    }
+  }
+  if (d.youtubeUrl) {
+    try {
+      const n = await fetchYouTubeSubscribers(d.youtubeUrl);
+      if (n != null && n > 0) {
+        set.youtubeUrl = d.youtubeUrl;
+        set.youtubeSubscribers = n;
+        set.youtubeVerified = true;
+        set.youtubeLastChecked = now;
+        out.youtubeSubscribers = n;
+      } else out.failed!.push("YouTube");
+    } catch {
+      out.failed!.push("YouTube");
+    }
+  }
+
+  const hasSuccessfulFetch =
+    typeof set.instagramFollowers === "number" ||
+    typeof set.tiktokFollowers === "number" ||
+    typeof set.facebookFollowers === "number" ||
+    typeof set.youtubeSubscribers === "number";
+
+  if (!hasSuccessfulFetch) {
+    return {
+      error:
+        "Nem sikerült lekérni a követő/feliratkozó számot. Adj meg másik linket, vagy írd be kézzel a profilszerkesztőben.",
+      ...out,
+    };
+  }
+
+  await db
+    .update(creatorProfiles)
+    .set(set)
+    .where(eq(creatorProfiles.id, creator.profile.id));
+
+  revalidatePath("/creator/profile");
+  return { success: true, ...out };
+}
+
 // ---------- Onboarding (összevont) ----------
+// Az árazás kikerült — az ár mindig megegyezés kérdése a felek között.
+// A követőszámokat nem kézzel adják meg: az „Összekapcsol” / cron tölti.
 const onboardingSchema = basicsSchema.extend({
   instagramUrl: z.string().max(300).optional().or(z.literal("")),
   instagramFollowers: z.coerce.number().int().min(0).optional().nullable(),
@@ -212,7 +399,6 @@ const onboardingSchema = basicsSchema.extend({
   facebookFollowers: z.coerce.number().int().min(0).optional().nullable(),
   youtubeUrl: z.string().max(300).optional().or(z.literal("")),
   youtubeSubscribers: z.coerce.number().int().min(0).optional().nullable(),
-  rateCard: rateCardSchema.shape.rateCard.optional(),
 });
 
 export async function completeCreatorOnboarding(input: z.input<typeof onboardingSchema>) {
@@ -240,6 +426,18 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
     return { error: "Ez a felhasználónév már foglalt" };
   }
 
+  const missingCount = [
+    { label: "Instagram", url: d.instagramUrl, count: d.instagramFollowers },
+    { label: "TikTok", url: d.tiktokUrl, count: d.tiktokFollowers },
+    { label: "Facebook", url: d.facebookUrl, count: d.facebookFollowers },
+    { label: "YouTube", url: d.youtubeUrl, count: d.youtubeSubscribers },
+  ].find((item) => item.url && !(item.count && item.count > 0));
+  if (missingCount) {
+    return {
+      error: `Add meg a(z) ${missingCount.label} követő/feliratkozó számát is, vagy töröld a linket.`,
+    };
+  }
+
   await db
     .update(creatorProfiles)
     .set({
@@ -253,18 +451,13 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       categories: d.categories,
       languages: d.languages,
       instagramUrl: d.instagramUrl || null,
-      instagramFollowers: d.instagramFollowers ?? null,
+      instagramFollowers: d.instagramUrl ? d.instagramFollowers ?? null : null,
       tiktokUrl: d.tiktokUrl || null,
-      tiktokFollowers: d.tiktokFollowers ?? null,
+      tiktokFollowers: d.tiktokUrl ? d.tiktokFollowers ?? null : null,
       facebookUrl: d.facebookUrl || null,
-      facebookFollowers: d.facebookFollowers ?? null,
+      facebookFollowers: d.facebookUrl ? d.facebookFollowers ?? null : null,
       youtubeUrl: d.youtubeUrl || null,
-      youtubeSubscribers: d.youtubeSubscribers ?? null,
-      rateCard: (d.rateCard ?? []).map((r) => ({
-        service: r.service,
-        priceHuf: r.priceHuf,
-        description: r.description || undefined,
-      })),
+      youtubeSubscribers: d.youtubeUrl ? d.youtubeSubscribers ?? null : null,
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));

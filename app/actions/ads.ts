@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { ads } from "@/lib/db/schema";
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { ads, creatorProfiles, notifications, users } from "@/lib/db/schema";
+import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
@@ -13,24 +13,43 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
 const MAX_ACTIVE_ADS = 5;
 
+// Opcionális pozitív egész vagy üres → null
+const optionalBudget = z
+  .union([z.coerce.number().int().min(1000), z.literal(""), z.null(), z.undefined()])
+  .transform((v) => (v === "" || v === null || v === undefined ? null : v));
+
 const adSchema = z
   .object({
     title: z.string().min(5).max(80),
     description: z.string().min(50).max(2000),
     categories: z.array(z.string()).min(1).max(3),
+    targetKinds: z
+      .array(z.enum(["ugc", "editor", "photographer", "videographer"]))
+      .min(1)
+      .default(["ugc"]),
     contentType: z.enum(["video", "photo", "both"]),
+    collaborationType: z.enum(["project", "longterm", "barter"]).default("project"),
     itemCount: z.coerce.number().int().min(1).max(20),
-    budgetMinHuf: z.coerce.number().int().min(1000),
-    budgetMaxHuf: z.coerce.number().int().min(1000),
+    budgetMinHuf: optionalBudget,
+    budgetMaxHuf: optionalBudget,
+    budgetPublic: z.boolean().default(false),
+    anonymous: z.boolean().default(false),
+    coverUrl: z.string().max(600).optional().nullable(),
     deadline: z.coerce.date(),
     location: z.string().max(200).optional().or(z.literal("")),
     usageRights: z.enum(["organic", "paid_ads", "perpetual"]),
     referenceLinks: z.array(z.string()).max(5).default([]),
   })
-  .refine((d) => d.budgetMaxHuf >= d.budgetMinHuf, {
-    message: "A maximum költségvetés nem lehet kisebb a minimumnál",
-    path: ["budgetMaxHuf"],
-  })
+  .refine(
+    (d) =>
+      d.budgetMinHuf == null ||
+      d.budgetMaxHuf == null ||
+      d.budgetMaxHuf >= d.budgetMinHuf,
+    {
+      message: "A maximum költségvetés nem lehet kisebb a minimumnál",
+      path: ["budgetMaxHuf"],
+    },
+  )
   .refine((d) => d.deadline.getTime() > Date.now(), {
     message: "A határidő a jövőben legyen",
     path: ["deadline"],
@@ -72,10 +91,15 @@ export async function createAd(input: z.input<typeof adSchema>) {
       title: d.title,
       description: d.description,
       categories: d.categories,
+      targetKinds: d.targetKinds,
       contentType: d.contentType,
+      collaborationType: d.collaborationType,
       itemCount: d.itemCount,
+      coverUrl: d.coverUrl || null,
       budgetMinHuf: d.budgetMinHuf,
       budgetMaxHuf: d.budgetMaxHuf,
+      budgetPublic: d.budgetPublic,
+      anonymous: d.anonymous,
       deadline: d.deadline,
       location: d.location || null,
       usageRights: d.usageRights,
@@ -126,11 +150,63 @@ async function requireAdmin() {
 
 export async function approveAd(adId: string) {
   if (!(await requireAdmin())) return { error: "Csak admin" };
+
+  const [ad] = await db
+    .select({ title: ads.title, categories: ads.categories })
+    .from(ads)
+    .where(eq(ads.id, adId))
+    .limit(1);
+
   await db
     .update(ads)
     .set({ status: "active", approvedAt: new Date(), rejectionReason: null })
     .where(eq(ads.id, adId));
+
+  // Keresési riasztás: a hirdetés kategóriáival egyező tartalomgyártók értesítése.
+  await notifyMatchingCreators(adId, ad?.title ?? "", ad?.categories ?? []);
+
   revalidatePath("/admin");
+  revalidatePath("/ads");
+  return { success: true };
+}
+
+/** Új aktív hirdetésnél értesíti a kategóriával egyező, nem felfüggesztett creatorokat. */
+async function notifyMatchingCreators(adId: string, title: string, categories: string[]) {
+  if (!categories.length) return;
+  try {
+    const matches = await db
+      .select({ userId: creatorProfiles.userId })
+      .from(creatorProfiles)
+      .innerJoin(users, eq(users.id, creatorProfiles.userId))
+      .where(
+        and(
+          eq(users.suspended, false),
+          or(
+            ...categories.map(
+              (c) => sql`${creatorProfiles.categories} @> ${JSON.stringify([c])}::jsonb`,
+            ),
+          )!,
+        ),
+      );
+    if (!matches.length) return;
+    await db.insert(notifications).values(
+      matches.map((m) => ({
+        userId: m.userId,
+        type: "ad_match",
+        title: "Új hirdetés a kategóriádban",
+        body: title,
+        link: `/ads/${adId}`,
+      })),
+    );
+  } catch {
+    // best-effort: a riasztás hibája ne akadályozza a jóváhagyást
+  }
+}
+
+export async function setAdFeatured(adId: string, value: boolean) {
+  if (!(await requireAdmin())) return { error: "Csak admin" };
+  await db.update(ads).set({ isFeatured: value }).where(eq(ads.id, adId));
+  revalidatePath("/admin/ads");
   revalidatePath("/ads");
   return { success: true };
 }

@@ -6,7 +6,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReplyForm } from "@/components/shared/reply-form";
-import { formatHuDate, formatHuf } from "@/lib/utils/format";
+import { MessageAttachment } from "@/components/shared/message-attachment";
+import { formatHuf } from "@/lib/utils/format";
+import { relativeTime } from "@/lib/utils/relative-time";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Üzenetek" };
@@ -31,6 +33,8 @@ export default async function CreatorMessagesPage() {
       subject: messages.subject,
       body: messages.body,
       budgetHint: messages.budgetHint,
+      attachmentUrl: messages.attachmentUrl,
+      attachmentName: messages.attachmentName,
       createdAt: messages.createdAt,
     })
     .from(messages)
@@ -123,7 +127,14 @@ export default async function CreatorMessagesPage() {
                                 {m.subject}
                               </p>
                             )}
-                            <p className="whitespace-pre-wrap">{m.body}</p>
+                            {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
+                            {m.attachmentUrl && (
+                              <MessageAttachment
+                                url={m.attachmentUrl}
+                                name={m.attachmentName}
+                                mine={mine}
+                              />
+                            )}
                             {m.budgetHint != null && (
                               <p className="mt-1 text-xs opacity-80">
                                 Becsült büdzsé: {formatHuf(m.budgetHint)}
@@ -131,7 +142,7 @@ export default async function CreatorMessagesPage() {
                             )}
                           </div>
                           <span className="text-xs text-muted-foreground">
-                            {formatHuDate(m.createdAt)}
+                            {relativeTime(m.createdAt)}
                           </span>
                         </div>
                       );

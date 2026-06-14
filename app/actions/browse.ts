@@ -1,11 +1,28 @@
 "use server";
 
-import { and, or, eq, gte, lte, ilike, desc, sql, inArray, type SQL } from "drizzle-orm";
+import {
+  and,
+  or,
+  eq,
+  gte,
+  lte,
+  gt,
+  isNull,
+  ilike,
+  desc,
+  sql,
+  inArray,
+  type SQL,
+} from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users, portfolioItems } from "@/lib/db/schema";
 import type { BrowseCard } from "@/components/creator/browse-creator-card";
+import { getSavedCreatorIds } from "@/app/actions/saved";
+import { activityLabel } from "@/lib/creator-stats";
 
 export type BrowseFiltersInput = {
+  // Típus-szűrő: "all" | "ugc" | "editor" | "photographer" | "videographer"
+  tipus?: string;
   search?: string;
   categories?: string[];
   languages?: string[];
@@ -23,11 +40,20 @@ export type BrowseFiltersInput = {
 
 const PAGE_SIZE = 12;
 
-export async function loadMoreCreators(
-  offset: number,
-  filters: BrowseFiltersInput
-): Promise<{ items: BrowseCard[]; hasMore: boolean }> {
+/** A szűrőkből felépíti a közös WHERE feltételeket (loadMore + count is használja). */
+function buildConditions(filters: BrowseFiltersInput): SQL[] {
   const conditions: SQL[] = [eq(users.suspended, false)];
+
+  // Típus-szűrő: UGC vagy kreatív szakember (szerepkör szerint)
+  const tipus = filters.tipus ?? "all";
+  if (tipus === "ugc") {
+    conditions.push(eq(creatorProfiles.profileKind, "ugc"));
+  } else if (["editor", "photographer", "videographer"].includes(tipus)) {
+    conditions.push(eq(creatorProfiles.profileKind, "professional"));
+    conditions.push(
+      sql`${creatorProfiles.professionalRoles} @> ${JSON.stringify([tipus])}::jsonb`
+    );
+  }
 
   if (filters.search?.trim()) {
     const like = `%${filters.search.trim()}%`;
@@ -35,18 +61,17 @@ export async function loadMoreCreators(
       or(
         ilike(creatorProfiles.displayName, like),
         ilike(creatorProfiles.city, like),
-        ilike(creatorProfiles.username, like)
+        ilike(creatorProfiles.username, like),
+        ilike(creatorProfiles.bio, like)
       )!
     );
   }
 
   if (filters.categories?.length) {
+    // ÉS feltétel: a creatornak MINDEGYIK kiválasztott kategóriának meg kell
+    // felelnie (a jsonb @> a teljes tömb tartalmazását ellenőrzi).
     conditions.push(
-      or(
-        ...filters.categories.map(
-          (c) => sql`${creatorProfiles.categories} @> ${JSON.stringify([c])}::jsonb`
-        )
-      )!
+      sql`${creatorProfiles.categories} @> ${JSON.stringify(filters.categories)}::jsonb`
     );
   }
 
@@ -85,6 +110,103 @@ export async function loadMoreCreators(
   if (filters.minRating && !isNaN(Number(filters.minRating)))
     conditions.push(gte(creatorProfiles.averageRating, String(filters.minRating)));
 
+  return conditions;
+}
+
+/** A szűrőknek megfelelő tartalomgyártók teljes száma (a fejléc-számlálóhoz). */
+export async function countCreators(filters: BrowseFiltersInput): Promise<number> {
+  const conditions = buildConditions(filters);
+  const rows = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(and(...conditions));
+  return rows[0]?.n ?? 0;
+}
+
+export async function loadFeaturedCreators(limit = 12): Promise<BrowseCard[]> {
+  const now = new Date();
+  const rows = await db
+    .select({
+      id: creatorProfiles.id,
+      username: creatorProfiles.username,
+      displayName: creatorProfiles.displayName,
+      avatarUrl: creatorProfiles.avatarUrl,
+      city: creatorProfiles.city,
+      county: creatorProfiles.county,
+      categories: creatorProfiles.categories,
+      instagramFollowers: creatorProfiles.instagramFollowers,
+      tiktokFollowers: creatorProfiles.tiktokFollowers,
+      isFeatured: creatorProfiles.isFeatured,
+      isAdminFeatured: creatorProfiles.isAdminFeatured,
+      verified: creatorProfiles.verified,
+      averageRating: creatorProfiles.averageRating,
+      reviewCount: creatorProfiles.reviewCount,
+      lastLoginAt: users.lastLoginAt,
+      profileKind: creatorProfiles.profileKind,
+      professionalRoles: creatorProfiles.professionalRoles,
+      specialties: creatorProfiles.specialties,
+      createdAt: creatorProfiles.createdAt,
+    })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(
+      and(
+        eq(users.suspended, false),
+        or(
+          eq(creatorProfiles.isAdminFeatured, true),
+          and(
+            eq(creatorProfiles.isFeatured, true),
+            or(isNull(creatorProfiles.featuredUntil), gt(creatorProfiles.featuredUntil, now)),
+          ),
+        )!,
+      ),
+    )
+    .orderBy(
+      desc(creatorProfiles.isAdminFeatured),
+      sql`${creatorProfiles.averageRating} desc nulls last`,
+      desc(creatorProfiles.createdAt),
+    )
+    .limit(limit);
+
+  const ids = rows.map((r) => r.id);
+  const videoOwners = ids.length
+    ? await db
+        .selectDistinct({ creatorId: portfolioItems.creatorId })
+        .from(portfolioItems)
+        .where(and(inArray(portfolioItems.creatorId, ids), eq(portfolioItems.type, "video")))
+    : [];
+  const videoSet = new Set(videoOwners.map((v) => v.creatorId));
+
+  return rows.map((r) => ({
+    id: r.id,
+    saved: false,
+    username: r.username,
+    displayName: r.displayName,
+    avatarUrl: r.avatarUrl,
+    city: r.city,
+    county: r.county,
+    categories: r.categories ?? [],
+    instagramFollowers: r.instagramFollowers,
+    tiktokFollowers: r.tiktokFollowers,
+    isFeatured: true,
+    verified: r.verified,
+    averageRating: r.averageRating,
+    reviewCount: r.reviewCount,
+    hasVideo: videoSet.has(r.id),
+    activity: activityLabel(r.lastLoginAt),
+    profileKind: r.profileKind,
+    professionalRoles: r.professionalRoles ?? [],
+    specialties: r.specialties ?? [],
+  }));
+}
+
+export async function loadMoreCreators(
+  offset: number,
+  filters: BrowseFiltersInput
+): Promise<{ items: BrowseCard[]; hasMore: boolean }> {
+  const conditions = buildConditions(filters);
+
   const orderBy =
     filters.sort === "newest"
       ? [desc(creatorProfiles.createdAt)]
@@ -109,8 +231,13 @@ export async function loadMoreCreators(
       tiktokFollowers: creatorProfiles.tiktokFollowers,
       isFeatured: creatorProfiles.isFeatured,
       isAdminFeatured: creatorProfiles.isAdminFeatured,
+      verified: creatorProfiles.verified,
       averageRating: creatorProfiles.averageRating,
       reviewCount: creatorProfiles.reviewCount,
+      lastLoginAt: users.lastLoginAt,
+      profileKind: creatorProfiles.profileKind,
+      professionalRoles: creatorProfiles.professionalRoles,
+      specialties: creatorProfiles.specialties,
     })
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
@@ -129,8 +256,11 @@ export async function loadMoreCreators(
         .where(and(inArray(portfolioItems.creatorId, ids), eq(portfolioItems.type, "video")))
     : [];
   const videoSet = new Set(videoOwners.map((v) => v.creatorId));
+  const savedSet = new Set(ids.length ? await getSavedCreatorIds(ids) : []);
 
   const items: BrowseCard[] = slice.map((r) => ({
+    id: r.id,
+    saved: savedSet.has(r.id),
     username: r.username,
     displayName: r.displayName,
     avatarUrl: r.avatarUrl,
@@ -140,9 +270,14 @@ export async function loadMoreCreators(
     instagramFollowers: r.instagramFollowers,
     tiktokFollowers: r.tiktokFollowers,
     isFeatured: r.isFeatured || r.isAdminFeatured,
+    verified: r.verified,
     averageRating: r.averageRating,
     reviewCount: r.reviewCount,
     hasVideo: videoSet.has(r.id),
+    activity: activityLabel(r.lastLoginAt),
+    profileKind: r.profileKind,
+    professionalRoles: r.professionalRoles ?? [],
+    specialties: r.specialties ?? [],
   }));
 
   return { items, hasMore };

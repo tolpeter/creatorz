@@ -1,9 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Link2,
+  BadgeCheck,
+  Save,
+  Sparkles,
+  Users,
+  TrendingUp,
+  ShieldCheck,
+} from "lucide-react";
+import { SocialTile } from "@/components/creator/platform-icon";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,10 +27,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
 import { ImageUploader } from "@/components/creator/image-uploader";
-import { RateCardEditor, type RateCardItem } from "@/components/creator/rate-card-editor";
+import { IntroVideoUploader } from "@/components/creator/intro-video-uploader";
 import {
   CREATOR_CATEGORIES,
   HUNGARIAN_COUNTIES,
@@ -30,12 +46,14 @@ import {
   MAX_CREATOR_CATEGORIES,
 } from "@/lib/constants";
 import { generateUsername } from "@/lib/utils/slug";
+import { formatNumber } from "@/lib/utils/format";
 import {
   updateCreatorBasics,
   updateCreatorAppearance,
-  updateCreatorEquipment,
+  updateCreatorIntroVideo,
   updateCreatorSocial,
-  updateCreatorRateCard,
+  connectCreatorSocials,
+  verifyCreatorProfile,
 } from "@/app/actions/creator-profile";
 
 export type ProfileEditorInitial = {
@@ -49,8 +67,7 @@ export type ProfileEditorInitial = {
   categories: string[];
   languages: string[];
   avatarUrl: string | null;
-  bannerUrl: string | null;
-  equipment: { phone: string; camera: string; microphone: string; editing: string };
+  introVideoUrl: string | null;
   instagramUrl: string;
   instagramFollowers: string;
   tiktokUrl: string;
@@ -59,15 +76,62 @@ export type ProfileEditorInitial = {
   facebookFollowers: string;
   youtubeUrl: string;
   youtubeSubscribers: string;
-  rateCard: RateCardItem[];
 };
 
 type ActionResult = { success?: boolean; error?: string };
 
-export function ProfileEditor({ initial }: { initial: ProfileEditorInitial }) {
+export function ProfileEditor({
+  initial,
+  verified = false,
+}: {
+  initial: ProfileEditorInitial;
+  verified?: boolean;
+}) {
   const router = useRouter();
   const [v, setV] = useState<ProfileEditorInitial>(initial);
+  const [isVerified, setIsVerified] = useState(verified);
+  const [verifying, setVerifying] = useState(false);
+
+  // Hitelesítés feltételei (élő, a mezők alapján)
+  const verifyChecks = [
+    { ok: Boolean(v.avatarUrl), label: "Profilkép feltöltve" },
+    { ok: v.bio.trim().length >= 10, label: "Bemutatkozás (min. 10 karakter)" },
+    { ok: v.categories.length >= 1, label: "Legalább 1 kategória" },
+    {
+      ok: Boolean(v.instagramUrl || v.tiktokUrl || v.facebookUrl || v.youtubeUrl),
+      label: "Legalább 1 közösségi fiók",
+    },
+  ];
+  const canVerify = verifyChecks.every((c) => c.ok);
+
+  async function runVerify() {
+    setVerifying(true);
+    const res = await verifyCreatorProfile();
+    setVerifying(false);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    setIsVerified(true);
+    toast.success("Profilod hitelesítve! 🎉");
+    router.refresh();
+  }
+
+  // Profil kitöltöttség (élő, a mezők alapján)
+  const score = useMemo(() => {
+    const checks = [
+      Boolean(v.displayName && v.username),
+      v.categories.length > 0,
+      v.languages.length > 0,
+      Boolean(v.avatarUrl),
+      Boolean(v.bio),
+      Boolean(v.city || v.county),
+      Boolean(v.tiktokUrl || v.instagramUrl || v.youtubeUrl || v.facebookUrl),
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [v]);
   const [saving, setSaving] = useState<string | null>(null);
+  const [connecting, setConnecting] = useState<"tiktok" | "youtube" | null>(null);
 
   function set<K extends keyof ProfileEditorInitial>(k: K, val: ProfileEditorInitial[K]) {
     setV((prev) => ({ ...prev, [k]: val }));
@@ -85,15 +149,173 @@ export function ProfileEditor({ initial }: { initial: ProfileEditorInitial }) {
     router.refresh();
   }
 
+  // Per-platform automatikus összekapcsolás (csak TikTok / YouTube).
+  async function connectOne(platform: "tiktok" | "youtube") {
+    const url = platform === "tiktok" ? v.tiktokUrl : v.youtubeUrl;
+    if (!url.trim()) {
+      toast.error("Előbb illeszd be a profil URL-jét");
+      return;
+    }
+    setConnecting(platform);
+    const res = await connectCreatorSocials(
+      platform === "tiktok" ? { tiktokUrl: url } : { youtubeUrl: url }
+    );
+    setConnecting(null);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    const fetched =
+      platform === "tiktok" ? res.tiktokFollowers : res.youtubeSubscribers;
+    if (fetched != null) {
+      setV((prev) => ({
+        ...prev,
+        ...(platform === "tiktok"
+          ? { tiktokFollowers: String(fetched) }
+          : { youtubeSubscribers: String(fetched) }),
+      }));
+      toast.success("Összekapcsolva — a számot behúztuk!");
+    } else {
+      toast.warning(
+        "Most nem sikerült lekérni. A 4 napos automatikus frissítés újrapróbálja."
+      );
+    }
+    router.refresh();
+  }
+
+  // Bemutatkozó videó azonnali mentése (feltöltés/eltávolítás után).
+  async function saveIntroVideo(url: string | null) {
+    set("introVideoUrl", url);
+    const res = await updateCreatorIntroVideo({ introVideoUrl: url });
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    router.refresh();
+  }
+
+  // Ha van social URL, hozzá tartozó követő/feliratkozó szám is kell.
+  function saveSocial() {
+    const missingCount = [
+      { label: "Instagram", url: v.instagramUrl, count: v.instagramFollowers },
+      { label: "TikTok", url: v.tiktokUrl, count: v.tiktokFollowers },
+      { label: "Facebook", url: v.facebookUrl, count: v.facebookFollowers },
+      { label: "YouTube", url: v.youtubeUrl, count: v.youtubeSubscribers },
+    ].find((item) => item.url.trim() && !(Number(item.count) > 0));
+
+    if (missingCount) {
+      toast.error(`Add meg a(z) ${missingCount.label} követő/feliratkozó számát is.`);
+      return;
+    }
+
+    run("social", () =>
+      updateCreatorSocial({
+        instagramUrl: v.instagramUrl,
+        instagramFollowers: v.instagramFollowers ? Number(v.instagramFollowers) : null,
+        tiktokUrl: v.tiktokUrl,
+        tiktokFollowers: v.tiktokFollowers ? Number(v.tiktokFollowers) : null,
+        facebookUrl: v.facebookUrl,
+        facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
+        youtubeUrl: v.youtubeUrl,
+        youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
+      })
+    );
+  }
+
   return (
-    <Tabs defaultValue="basics" className="w-full">
-      <TabsList className="flex w-full flex-wrap">
-        <TabsTrigger value="basics">Alapadatok</TabsTrigger>
-        <TabsTrigger value="appearance">Megjelenés</TabsTrigger>
-        <TabsTrigger value="equipment">Eszközök</TabsTrigger>
-        <TabsTrigger value="social">Social fiókok</TabsTrigger>
-        <TabsTrigger value="ratecard">Rate card</TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      {/* FEJLÉC-KÁRTYA: avatar + kitöltöttség + előnyök */}
+      <ProfileHeaderCard
+        avatarUrl={v.avatarUrl}
+        displayName={v.displayName}
+        username={v.username}
+        score={score}
+        verified={isVerified}
+      />
+
+      {/* HITELESÍTÉS */}
+      {isVerified ? (
+        <div className="flex items-center gap-3 rounded-2xl border border-accent/40 bg-accent/[0.08] p-4">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent text-black">
+            <BadgeCheck className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-sm font-bold text-[#3f6212]">
+              Hitelesített profil
+            </p>
+            <p className="text-xs text-muted-foreground">
+              A profilod mellett megjelenik a hitelesített jelvény — ez növeli a
+              márkák bizalmát.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="flex items-center gap-2 text-base font-bold">
+                <ShieldCheck className="h-5 w-5 text-accent" />
+                Hitelesítsd a profilod
+              </p>
+              <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+                Töltsd ki az alábbiakat, majd kattints a hitelesítésre. Utána a
+                neved mellett megjelenik a hitelesített jelvény.
+              </p>
+            </div>
+            <Button
+              type="button"
+              onClick={runVerify}
+              disabled={!canVerify || verifying}
+              className="bg-accent font-semibold text-black hover:bg-accent/90"
+            >
+              {verifying ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <BadgeCheck className="h-4 w-4" />
+              )}
+              Hitelesítés
+            </Button>
+          </div>
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {verifyChecks.map((c) => (
+              <li
+                key={c.label}
+                className={`flex items-center gap-2 text-sm ${
+                  c.ok ? "text-foreground" : "text-muted-foreground"
+                }`}
+              >
+                {c.ok ? (
+                  <BadgeCheck className="h-4 w-4 text-accent" />
+                ) : (
+                  <span className="h-4 w-4 shrink-0 rounded-full border border-black/20" />
+                )}
+                {c.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <Tabs defaultValue="basics" className="w-full">
+        <div className="rounded-2xl border border-black/10 bg-white p-2 shadow-sm">
+          <TabsList className="grid h-auto w-full grid-cols-1 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-3">
+            {(
+              [
+                ["basics", "Alapadatok"],
+                ["appearance", "Megjelenés"],
+                ["social", "Social fiókok"],
+              ] as const
+            ).map(([val, label]) => (
+              <TabsTrigger
+                key={val}
+                value={val}
+                className="h-11 rounded-xl px-3 text-sm font-bold text-muted-foreground after:hidden data-active:bg-accent data-active:text-black data-active:shadow-sm"
+              >
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
       {/* ALAPADATOK */}
       <TabsContent value="basics">
@@ -229,12 +451,10 @@ export function ProfileEditor({ initial }: { initial: ProfileEditorInitial }) {
               value={v.avatarUrl}
               onChange={(url) => set("avatarUrl", url)}
             />
-            <ImageUploader
-              bucket="banners"
-              variant="banner"
-              label="Borítókép"
-              value={v.bannerUrl}
-              onChange={(url) => set("bannerUrl", url)}
+            <div className="h-px bg-border" />
+            <IntroVideoUploader
+              value={v.introVideoUrl}
+              onChange={(url) => saveIntroVideo(url)}
             />
             <SaveButton
               loading={saving === "appearance"}
@@ -242,7 +462,6 @@ export function ProfileEditor({ initial }: { initial: ProfileEditorInitial }) {
                 run("appearance", () =>
                   updateCreatorAppearance({
                     avatarUrl: v.avatarUrl,
-                    bannerUrl: v.bannerUrl,
                   })
                 )
               }
@@ -251,116 +470,326 @@ export function ProfileEditor({ initial }: { initial: ProfileEditorInitial }) {
         </Card>
       </TabsContent>
 
-      {/* ESZKÖZÖK */}
-      <TabsContent value="equipment">
-        <Card>
-          <CardHeader>
-            <CardTitle>Eszközök</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {(
-              [
-                ["phone", "Telefon"],
-                ["camera", "Kamera"],
-                ["microphone", "Mikrofon"],
-                ["editing", "Vágószoftver"],
-              ] as const
-            ).map(([key, label]) => (
-              <div key={key} className="space-y-1.5">
-                <Label>{label}</Label>
-                <Input
-                  value={v.equipment[key]}
-                  onChange={(e) =>
-                    set("equipment", { ...v.equipment, [key]: e.target.value })
-                  }
-                  placeholder={`pl. ${label} típusa`}
-                />
-              </div>
-            ))}
-            <SaveButton
-              loading={saving === "equipment"}
-              onClick={() =>
-                run("equipment", () => updateCreatorEquipment(v.equipment))
-              }
-            />
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* SOCIAL */}
+      {/* SOCIAL — TikTok/YouTube automata; Instagram/Facebook kézi (kötelező) */}
       <TabsContent value="social">
         <Card>
           <CardHeader>
             <CardTitle>Social fiókok</CardTitle>
+            <CardDescription>
+              Add meg közösségi média fiókjaidat, hogy könnyebben elérhető
+              legyél.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {(
-              [
-                ["instagramUrl", "instagramFollowers", "Instagram", "követő"],
-                ["tiktokUrl", "tiktokFollowers", "TikTok", "követő"],
-                ["facebookUrl", "facebookFollowers", "Facebook", "követő"],
-                ["youtubeUrl", "youtubeSubscribers", "YouTube", "feliratkozó"],
-              ] as const
-            ).map(([urlKey, followKey, label, unit]) => (
-              <div key={label} className="grid gap-3 sm:grid-cols-[1fr_160px]">
-                <div className="space-y-1.5">
-                  <Label>{label} URL</Label>
-                  <Input
-                    value={v[urlKey]}
-                    onChange={(e) => set(urlKey, e.target.value)}
-                    placeholder="https://…"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label>{unit}szám</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={v[followKey]}
-                    onChange={(e) => set(followKey, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
-            <SaveButton
-              loading={saving === "social"}
-              onClick={() =>
-                run("social", () =>
-                  updateCreatorSocial({
-                    instagramUrl: v.instagramUrl,
-                    instagramFollowers: v.instagramFollowers ? Number(v.instagramFollowers) : null,
-                    tiktokUrl: v.tiktokUrl,
-                    tiktokFollowers: v.tiktokFollowers ? Number(v.tiktokFollowers) : null,
-                    facebookUrl: v.facebookUrl,
-                    facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
-                    youtubeUrl: v.youtubeUrl,
-                    youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
-                  })
-                )
-              }
+            {/* TikTok — automata */}
+            <SocialAutoRow
+              platform="tiktok"
+              label="TikTok"
+              unit="követő"
+              url={v.tiktokUrl}
+              count={v.tiktokFollowers}
+              onUrl={(val) => set("tiktokUrl", val)}
+              onCount={(val) => set("tiktokFollowers", val)}
+              onConnect={() => connectOne("tiktok")}
+              connecting={connecting === "tiktok"}
             />
-          </CardContent>
-        </Card>
-      </TabsContent>
 
-      {/* RATE CARD */}
-      <TabsContent value="ratecard">
-        <Card>
-          <CardHeader>
-            <CardTitle>Rate card</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <RateCardEditor value={v.rateCard} onChange={(n) => set("rateCard", n)} />
-            <SaveButton
-              loading={saving === "ratecard"}
-              onClick={() =>
-                run("ratecard", () => updateCreatorRateCard({ rateCard: v.rateCard }))
-              }
+            {/* YouTube — automata */}
+            <SocialAutoRow
+              platform="youtube"
+              label="YouTube"
+              unit="feliratkozó"
+              url={v.youtubeUrl}
+              count={v.youtubeSubscribers}
+              onUrl={(val) => set("youtubeUrl", val)}
+              onCount={(val) => set("youtubeSubscribers", val)}
+              onConnect={() => connectOne("youtube")}
+              connecting={connecting === "youtube"}
             />
+
+            {/* Elválasztó + kézi-megadás magyarázat IG/FB ikon-chipekkel */}
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex shrink-0 items-center gap-1.5">
+                <SocialTile platform="instagram" className="h-6 w-6" />
+                <SocialTile platform="facebook" className="h-6 w-6" />
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Az Instagram és a Facebook követőszámát kézzel kell megadni — ha
+                megadod a linket, a követőszám kötelező.
+              </p>
+            </div>
+
+            {/* Instagram — kézi */}
+            <SocialManualRow
+              platform="instagram"
+              label="Instagram"
+              unit="követő"
+              url={v.instagramUrl}
+              count={v.instagramFollowers}
+              onUrl={(val) => set("instagramUrl", val)}
+              onCount={(val) => set("instagramFollowers", val)}
+            />
+
+            {/* Facebook — kézi */}
+            <SocialManualRow
+              platform="facebook"
+              label="Facebook"
+              unit="követő"
+              url={v.facebookUrl}
+              count={v.facebookFollowers}
+              onUrl={(val) => set("facebookUrl", val)}
+              onCount={(val) => set("facebookFollowers", val)}
+            />
+
+            <div className="flex justify-end pt-2">
+              <Button
+                type="button"
+                onClick={saveSocial}
+                disabled={saving === "social"}
+                className="bg-accent font-semibold text-black hover:bg-accent/90"
+              >
+                {saving === "social" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Save className="h-4 w-4" />
+                )}
+                Mentés
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </TabsContent>
-    </Tabs>
+      </Tabs>
+    </div>
+  );
+}
+
+/** Fejléc-kártya: avatar, név, kitöltöttség, hitelesítés + 3 előny-kártya. */
+function ProfileHeaderCard({
+  avatarUrl,
+  displayName,
+  username,
+  score,
+  verified,
+}: {
+  avatarUrl: string | null;
+  displayName: string;
+  username: string;
+  score: number;
+  verified: boolean;
+}) {
+  const benefits = [
+    {
+      icon: Sparkles,
+      title: "Nagyobb láthatóság",
+      desc: "A teljes profil több lehetőséget hoz.",
+    },
+    {
+      icon: Users,
+      title: "Hitelesség",
+      desc: "Az ellenőrzött adatok növelik a bizalmat.",
+    },
+    {
+      icon: TrendingUp,
+      title: "Több ajánlat",
+      desc: "A márkák könnyebben megtalálnak.",
+    },
+  ];
+  return (
+    <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+        {/* Bal: avatar + név + kitöltöttség */}
+        <div className="flex items-center gap-4">
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={avatarUrl}
+              alt={displayName}
+              className="h-16 w-16 shrink-0 rounded-full object-cover ring-2 ring-black/5"
+            />
+          ) : (
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#f0f4e5] text-xl font-bold">
+              {(displayName || username || "?").charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="truncate text-lg font-bold">
+                {displayName || username}
+              </span>
+              <span className="inline-flex items-center rounded-full bg-accent/15 px-2 py-0.5 text-xs font-semibold text-[#3f6212]">
+                {score}% kész
+              </span>
+            </div>
+            {verified ? (
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm font-medium text-[#3f6212]">
+                <BadgeCheck className="h-4 w-4 text-accent" />
+                Ellenőrzött alkotó
+              </p>
+            ) : (
+              <p className="mt-0.5 flex items-center gap-1.5 text-sm text-muted-foreground">
+                <ShieldCheck className="h-4 w-4" />
+                Kapcsold össze a fiókjaid a hitelesítéshez
+              </p>
+            )}
+            <p className="mt-1 max-w-md text-sm text-muted-foreground">
+              Az adatok kitöltése segít, hogy több releváns együttműködést
+              találj.
+            </p>
+          </div>
+        </div>
+
+        {/* Jobb: 3 előny-kártya */}
+        <div className="grid gap-2 sm:grid-cols-3 lg:gap-3">
+          {benefits.map((b) => {
+            const Icon = b.icon;
+            return (
+              <div
+                key={b.title}
+                className="rounded-xl border border-black/10 bg-[#f6f7f2] p-3 lg:w-[180px]"
+              >
+                <Icon className="h-5 w-5 text-accent" />
+                <p className="mt-1.5 text-sm font-semibold">{b.title}</p>
+                <p className="mt-0.5 text-xs leading-4 text-muted-foreground">
+                  {b.desc}
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Automata sor: nagy logó-csempe + URL + behúzott szám + „Összekapcsol". */
+function SocialAutoRow({
+  platform,
+  label,
+  unit,
+  url,
+  count,
+  onUrl,
+  onCount,
+  onConnect,
+  connecting,
+}: {
+  platform: "tiktok" | "youtube";
+  label: string;
+  unit: string;
+  url: string;
+  count: string;
+  onUrl: (v: string) => void;
+  onCount: (v: string) => void;
+  onConnect: () => void;
+  connecting: boolean;
+}) {
+  const needsCount = url.trim().length > 0 && !(Number(count) > 0);
+  return (
+    <div className="rounded-xl border border-black/10 bg-white/60 p-3">
+      <div className="grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_160px_auto] lg:items-end">
+        <SocialTile platform={platform} className="h-14 w-14" />
+        <div className="min-w-0">
+          <Label className="text-sm">{label} profil URL</Label>
+          <Input
+            value={url}
+            onChange={(e) => onUrl(e.target.value)}
+            placeholder="https://…"
+            className="mt-1.5"
+          />
+        </div>
+        <div className="min-w-0">
+          <Label className="text-sm">{unit}szám *</Label>
+          <Input
+            type="number"
+            min={0}
+            value={count}
+            onChange={(e) => onCount(e.target.value)}
+            placeholder="pl. 24500"
+            aria-invalid={needsCount}
+            className={`mt-1.5 ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onConnect}
+          disabled={connecting}
+          className="shrink-0"
+        >
+          {connecting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Link2 className="h-4 w-4" />
+          )}
+          Összekapcsol
+        </Button>
+      </div>
+      {count && Number(count) > 0 ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
+          <BadgeCheck className="h-3.5 w-3.5 text-accent" />
+          {formatNumber(Number(count))} {unit}
+        </p>
+      ) : null}
+      {needsCount ? (
+        <p className="mt-2 text-xs text-destructive">
+          A szám megadása kötelező, ha megadtad a {label} linket.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+/** Kézi sor: nagy logó-csempe + URL + kötelező követőszám mező (IG/FB). */
+function SocialManualRow({
+  platform,
+  label,
+  unit,
+  url,
+  count,
+  onUrl,
+  onCount,
+}: {
+  platform: "instagram" | "facebook";
+  label: string;
+  unit: string;
+  url: string;
+  count: string;
+  onUrl: (v: string) => void;
+  onCount: (v: string) => void;
+}) {
+  const needsCount = url.trim().length > 0 && !(Number(count) > 0);
+  // Magyar névelő: magánhangzóval kezdődő szó előtt "Az", egyébként "A".
+  const article = /^[aáeéiíoóöőuúüű]/i.test(label) ? "Az" : "A";
+  return (
+    <div className="rounded-xl border border-black/10 bg-white/60 p-3">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <SocialTile platform={platform} className="h-14 w-14" />
+        <div className="min-w-0 flex-1">
+          <Label className="text-sm">{label} profil URL</Label>
+          <Input
+            value={url}
+            onChange={(e) => onUrl(e.target.value)}
+            placeholder="https://…"
+            className="mt-1.5"
+          />
+        </div>
+        <Input
+          type="number"
+          min={0}
+          value={count}
+          onChange={(e) => onCount(e.target.value)}
+          placeholder={`${unit}szám *`}
+          aria-invalid={needsCount}
+          className={`sm:w-[150px] ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}
+        />
+      </div>
+      {needsCount && (
+        <p className="mt-2 text-xs text-destructive">
+          {article} {label} követőszám megadása kötelező, ha megadtad a linket.
+        </p>
+      )}
+    </div>
   );
 }
 

@@ -1,0 +1,1 @@
+ALTER TABLE "ads" ADD COLUMN "target_kinds" jsonb DEFAULT '["ugc"]'::jsonb NOT NULL;

@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -23,7 +22,6 @@ export function ApplyModal({ adId, adTitle }: { adId: string; adTitle: string })
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [price, setPrice] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function submit() {
@@ -35,7 +33,6 @@ export function ApplyModal({ adId, adTitle }: { adId: string; adTitle: string })
     const res = await createApplication({
       adId,
       message,
-      proposedPriceHuf: price ? Number(price) : 0,
     });
     setLoading(false);
     if (res.error) {
@@ -73,16 +70,10 @@ export function ApplyModal({ adId, adTitle }: { adId: string; adTitle: string })
             />
             <p className="text-right text-xs text-muted-foreground">{message.length}/2000</p>
           </div>
-          <div className="space-y-1.5">
-            <Label>Ár-ajánlatod (Ft)</Label>
-            <Input
-              type="number"
-              min={1000}
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-              placeholder="pl. 30000"
-            />
-          </div>
+          <p className="rounded-md bg-muted px-3 py-2 text-xs text-muted-foreground">
+            💡 Az árat nem itt kell megadnod — a részleteket és a díjazást a
+            márkával közvetlenül, az elfogadott pályázat után egyeztetitek.
+          </p>
         </div>
         <DialogFooter>
           <Button onClick={submit} disabled={loading}>

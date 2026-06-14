@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/select";
 import { INDUSTRIES } from "@/lib/constants";
 import { completeBrandOnboarding } from "@/app/actions/brand-profile";
+import { triggerVerificationEmail } from "@/app/actions/auth";
 
 export function BrandOnboardingForm({
   initial,
@@ -49,7 +50,9 @@ export function BrandOnboardingForm({
       return;
     }
     toast.success("Profil elmentve!");
-    router.push("/brand");
+    // Még egy utolsó lépés: email-megerősítés
+    await triggerVerificationEmail();
+    router.push("/verify-email");
     router.refresh();
   }
 

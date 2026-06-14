@@ -18,13 +18,17 @@ import { revalidatePath } from "next/cache";
 import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { checkRateLimit, DAY } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
+import {
+  renderNewApplicationEmail,
+  renderApplicationAcceptedEmail,
+  renderApplicationRejectedEmail,
+} from "@/lib/email/templates";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 const applySchema = z.object({
   adId: z.string().uuid(),
   message: z.string().min(50, "Az üzenet legalább 50 karakter").max(2000),
-  proposedPriceHuf: z.coerce.number().int().min(1000),
 });
 
 export async function createApplication(input: z.input<typeof applySchema>) {
@@ -76,7 +80,6 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       adId: d.adId,
       creatorId: creator.profile.id,
       message: d.message,
-      proposedPriceHuf: d.proposedPriceHuf,
     })
     .onConflictDoNothing({ target: [adApplications.adId, adApplications.creatorId] })
     .returning({ id: adApplications.id });
@@ -106,17 +109,13 @@ export async function createApplication(input: z.input<typeof applySchema>) {
     });
   }
 
-  await sendEmailSafe({
-    to: ad.brandUserEmail,
-    subject: `Új pályázat – ${ad.title}`,
-    html: `
-      <h2>Új pályázat érkezett</h2>
-      <p><strong>${creator.profile.displayName}</strong> pályázott a(z) „${ad.title}" hirdetésedre.</p>
-      <p><a href="${APP_URL}/brand/ads">Pályázatok megtekintése</a></p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
-    `,
-  });
+  {
+    const email = renderNewApplicationEmail({
+      creatorName: creator.profile.displayName,
+      adTitle: ad.title,
+    });
+    await sendEmailSafe({ to: ad.brandUserEmail, ...email });
+  }
 
   revalidatePath("/creator/applications");
   return { success: true };
@@ -197,19 +196,14 @@ export async function acceptApplication(applicationId: string) {
     link: "/creator/applications",
   });
 
-  await sendEmailSafe({
-    to: row.creatorEmail,
-    subject: "🎉 Elfogadták a pályázatodat – Creatorz",
-    html: `
-      <h2>🎉 Elfogadták a pályázatodat!</h2>
-      <p>Szia ${row.creatorName}!</p>
-      <p>A(z) <strong>${brand.profile.companyName}</strong> elfogadta a pályázatodat a következő hirdetésre:</p>
-      <p style="font-weight:bold">„${row.adTitle}"</p>
-      <p><a href="${APP_URL}/creator/applications">Pályázatom megtekintése</a></p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
-    `,
-  });
+  {
+    const email = renderApplicationAcceptedEmail({
+      creatorName: row.creatorName,
+      brandName: brand.profile.companyName,
+      adTitle: row.adTitle,
+    });
+    await sendEmailSafe({ to: row.creatorEmail, ...email });
+  }
 
   revalidatePath("/brand/ads");
   return { success: true };
@@ -235,18 +229,14 @@ export async function rejectApplication(applicationId: string, reason?: string) 
     link: "/creator/applications",
   });
 
-  await sendEmailSafe({
-    to: row.creatorEmail,
-    subject: "Pályázatod elbírálva – Creatorz",
-    html: `
-      <p>Szia ${row.creatorName}!</p>
-      <p>A(z) „${row.adTitle}" hirdetésre adott pályázatodat sajnos nem fogadták el.</p>
-      ${reason ? `<p>Indok: ${reason}</p>` : ""}
-      <p>Ne csüggedj, nézz szét a többi hirdetés között!</p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
-    `,
-  });
+  {
+    const email = renderApplicationRejectedEmail({
+      creatorName: row.creatorName,
+      adTitle: row.adTitle,
+      reason: reason || undefined,
+    });
+    await sendEmailSafe({ to: row.creatorEmail, ...email });
+  }
 
   revalidatePath("/brand/ads");
   return { success: true };

@@ -6,7 +6,7 @@ import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 
-export const maxDuration = 300; // Napi cron: hosszabb futás engedélyezve
+export const maxDuration = 300; // 4 naponta futó cron: végigellenőrzi az összes linket, frissíti a követő/feliratkozó számokat
 
 export async function GET(req: Request) {
   const authHeader = req.headers.get("authorization");

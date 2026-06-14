@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/shared/cookie-banner";
+import { Analytics } from "@/components/analytics/analytics";
 import "@/lib/env";
 
 const inter = Inter({
@@ -62,6 +63,31 @@ export default function RootLayout({
   return (
     <html lang="hu" className={`${inter.variable} ${geistMono.variable}`}>
       <body className="min-h-screen font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify([
+              {
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Creatorz",
+                url: process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu",
+                logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu"}/og-image.png`,
+                description:
+                  "Magyar UGC tartalomgyártó platform — márkák és tartalomgyártók közvetlen összekötése.",
+                email: "info@creatorz.hu",
+              },
+              {
+                "@context": "https://schema.org",
+                "@type": "WebSite",
+                name: "Creatorz",
+                url: process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu",
+                inLanguage: "hu-HU",
+              },
+            ]),
+          }}
+        />
+        <Analytics />
         <TooltipProvider>{children}</TooltipProvider>
         <CookieBanner />
         <Toaster richColors position="top-right" />

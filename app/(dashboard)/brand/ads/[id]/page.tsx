@@ -13,7 +13,7 @@ import {
   ApplicationStatusBadge,
 } from "@/components/shared/ad-status-badge";
 import { ApplicationActions } from "@/components/brand/application-actions";
-import { formatHuf, formatHuDate } from "@/lib/utils/format";
+import { formatHuf, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
 
 export default async function BrandAdDetailPage({
@@ -72,7 +72,7 @@ export default async function BrandAdDetailPage({
             ))}
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            <p>💰 {formatHuf(ad.budgetMinHuf)} – {formatHuf(ad.budgetMaxHuf)}</p>
+            <p>💰 {formatBudgetRange(ad.budgetMinHuf, ad.budgetMaxHuf)}</p>
             <p>📅 Határidő: {formatHuDate(ad.deadline)}</p>
             <p>🎬 {ad.itemCount} db tartalom</p>
             {ad.location && <p>📍 {ad.location}</p>}
@@ -118,9 +118,11 @@ export default async function BrandAdDetailPage({
                     <ApplicationStatusBadge status={a.status} />
                   </div>
                   <p className="whitespace-pre-wrap text-sm">{a.message}</p>
-                  <p className="text-sm font-semibold">
-                    Ár-ajánlat: {formatHuf(a.proposedPriceHuf)}
-                  </p>
+                  {a.proposedPriceHuf != null && (
+                    <p className="text-sm font-semibold">
+                      Ár-ajánlat: {formatHuf(a.proposedPriceHuf)}
+                    </p>
+                  )}
                   {a.status === "pending" && <ApplicationActions applicationId={a.id} />}
                 </CardContent>
               </Card>

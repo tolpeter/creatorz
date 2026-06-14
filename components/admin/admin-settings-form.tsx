@@ -37,6 +37,7 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
     { key: "auto_approve_creators", label: "Tartalomgyártók automatikus jóváhagyása", desc: "" },
     { key: "auto_approve_brands", label: "Márkák automatikus jóváhagyása", desc: "" },
     { key: "auto_approve_ads", label: "Hirdetések automatikus jóváhagyása", desc: "" },
+    { key: "analytics_enabled", label: "Látogatottság-mérés (Analytics)", desc: "Google Analytics / Tag Manager betöltése. Csak akkor működik, ha a NEXT_PUBLIC_GA_ID vagy NEXT_PUBLIC_GTM_ID is be van állítva." },
   ];
 
   const numbers: Array<{ key: keyof SettingsMap; label: string }> = [

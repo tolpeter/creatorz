@@ -33,9 +33,11 @@ export default async function CreatorPortfolioPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Portfolio</h1>
+        <h1 className="text-2xl font-bold">Portfólió</h1>
         <p className="text-muted-foreground">
-          Videók és fotók — húzással átrendezhető.
+          Linkeld be a TikTok/YouTube videóidat (előképpel jelennek meg), vagy
+          tölts fel fotókat — húzással átrendezhető. A kiemelt bemutatkozó
+          videót a Profil → Megjelenés fülön töltheted fel.
         </p>
       </div>
       <PortfolioManager initial={items} />

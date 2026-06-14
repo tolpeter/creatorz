@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(npm --version)",
-      "Bash(git --version)"
+      "Bash(git --version)",
+      "Bash(cd /c/codex/Creatorz.hu)",
+      "Bash(sed -n '175,185p' components/creator/creator-onboarding-wizard.tsx)",
+      "Bash(sed -n '148,158p' components/creator/professional-onboarding-wizard.tsx)",
+      "Bash(sed -n '46,56p' components/brand/brand-onboarding-form.tsx)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(grep -nB1 -A3 \"onboardingSchema\\\\s*=\" app/actions/creator-profile.ts)",
+      "Bash(node --env-file=.env.local --import tsx -e ' *)"
     ]
   }
 }

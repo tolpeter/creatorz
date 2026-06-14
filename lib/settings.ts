@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   auto_approve_creators: false,
   auto_approve_brands: true,
   auto_approve_ads: false,
+  analytics_enabled: true,
 } as const;
 
 export type SettingsKey = keyof typeof DEFAULT_SETTINGS;
@@ -23,6 +24,7 @@ export type SettingsMap = {
   auto_approve_creators: boolean;
   auto_approve_brands: boolean;
   auto_approve_ads: boolean;
+  analytics_enabled: boolean;
 };
 
 /** Összes beállítás: DB-érték vagy default. */

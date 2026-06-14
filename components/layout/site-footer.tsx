@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
+import { CookieSettingsButton } from "@/components/shared/cookie-settings-button";
 
 export function SiteFooter() {
   const cols = [
@@ -7,8 +8,10 @@ export function SiteFooter() {
       title: "Termék",
       links: [
         { href: "/creators", label: "Tartalomgyártók" },
+        { href: "/#markak", label: "Márkák" },
         { href: "/ads", label: "Hirdetések" },
         { href: "/#hogyan", label: "Hogyan működik" },
+        { href: "/blog", label: "Blog" },
       ],
     },
     {
@@ -27,20 +30,28 @@ export function SiteFooter() {
       ],
     },
     {
+      title: "Súgó",
+      links: [
+        { href: "/gyik", label: "GYIK és súgó" },
+        { href: "/status", label: "Platform státusz" },
+        { href: "/kapcsolat", label: "Kapcsolat" },
+      ],
+    },
+    {
       title: "Jogi",
       links: [
-        { href: "/adatvedelem", label: "Adatvédelem" },
+        { href: "/szabalyzat", label: "Szabályzatok" },
         { href: "/aszf", label: "ÁSZF" },
+        { href: "/adatvedelem", label: "Adatvédelem" },
         { href: "/cookies", label: "Cookie" },
-        { href: "/kapcsolat", label: "Kapcsolat" },
       ],
     },
   ];
 
   return (
     <footer className="border-t bg-[#0A0A0A] text-white/70">
-      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 sm:grid-cols-2 md:grid-cols-5">
-        <div className="md:col-span-1">
+      <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
+        <div className="sm:col-span-2 lg:col-span-1">
           <Logo variant="light" className="text-xl" />
           <p className="mt-2 text-sm">Magyar UGC tartalomgyártó platform.</p>
           <a
@@ -65,8 +76,10 @@ export function SiteFooter() {
           </div>
         ))}
       </div>
-      <div className="border-t border-white/10 px-6 py-4 text-center text-xs">
-        © {new Date().getFullYear()} Creatorz · Minden jog fenntartva
+      <div className="flex flex-col items-center justify-center gap-1 border-t border-white/10 px-6 py-4 text-center text-xs sm:flex-row sm:gap-2">
+        <span>© {new Date().getFullYear()} Creatorz · Minden jog fenntartva</span>
+        <span className="hidden sm:inline">·</span>
+        <CookieSettingsButton className="hover:text-accent" />
       </div>
     </footer>
   );

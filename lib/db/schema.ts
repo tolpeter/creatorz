@@ -1,8 +1,9 @@
 import {
   pgTable, uuid, text, varchar, integer, boolean, timestamp,
-  numeric, jsonb, pgEnum, index, uniqueIndex, primaryKey,
+  numeric, jsonb, pgEnum, index, uniqueIndex, primaryKey, date,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
+import type { BlogBlock, BlogFaq } from "@/lib/blog/types";
 
 // ============= ENUMS =============
 export const userRoleEnum = pgEnum("user_role", ["creator", "brand", "admin"]);
@@ -12,6 +13,71 @@ export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "
 export const featureTypeEnum = pgEnum("feature_type", ["7day", "30day"]);
 export const contentTypeEnum = pgEnum("content_type", ["video", "photo", "both"]);
 export const portfolioTypeEnum = pgEnum("portfolio_type", ["video", "photo"]);
+export const reportStatusEnum = pgEnum("report_status", ["open", "resolved", "dismissed"]);
+
+// Általános tartalom-bejelentés (profil / hirdetés)
+export const reports = pgTable("reports", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  reporterUserId: uuid("reporter_user_id").references(() => users.id, { onDelete: "set null" }),
+  reportedUserId: uuid("reported_user_id").references(() => users.id, { onDelete: "set null" }),
+  targetType: varchar("target_type", { length: 20 }).notNull(), // creator | ad
+  targetId: uuid("target_id").notNull(),
+  targetLabel: text("target_label"),
+  targetUrl: text("target_url"),
+  reason: varchar("reason", { length: 40 }).notNull(),
+  note: text("note"),
+  status: reportStatusEnum("status").notNull().default("open"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+}, (table) => ({
+  statusIdx: index("reports_status_idx").on(table.status),
+}));
+
+// Együttműködés típusa: projekt (egyszeri), hosszútávú, barter
+export const collaborationTypeEnum = pgEnum("collaboration_type", ["project", "longterm", "barter"]);
+// Profil típusa: UGC tartalomgyártó vagy kreatív szakember (videóvágó/fotós/operatőr)
+export const profileKindEnum = pgEnum("profile_kind", ["ugc", "professional"]);
+
+export const blogStatusEnum = pgEnum("blog_status", ["draft", "published"]);
+
+// ============= BLOG POSTS (AI által generált SEO tartalom) =============
+export const blogPosts = pgTable("blog_posts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  slug: varchar("slug", { length: 220 }).notNull().unique(),
+  title: text("title").notNull(),
+  metaTitle: text("meta_title"),
+  metaDescription: text("meta_description"),
+  excerpt: text("excerpt"),
+  coverUrl: text("cover_url"),
+  coverAlt: text("cover_alt"),
+  content: jsonb("content").$type<BlogBlock[]>().notNull().default([]),
+  faq: jsonb("faq").$type<BlogFaq[]>().default([]),
+  keywords: jsonb("keywords").$type<string[]>().default([]),
+  tags: jsonb("tags").$type<string[]>().default([]),
+  topic: text("topic"),
+  readMinutes: integer("read_minutes").notNull().default(4),
+  views: integer("views").notNull().default(0),
+  status: blogStatusEnum("status").notNull().default("published"),
+  aiGenerated: boolean("ai_generated").notNull().default(true),
+  publishedAt: timestamp("published_at").defaultNow(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+}, (t) => ({
+  slugIdx: uniqueIndex("blog_posts_slug_idx").on(t.slug),
+  statusIdx: index("blog_posts_status_idx").on(t.status, t.publishedAt),
+}));
+
+// ============= PROFILE VIEWS (márka megnézte a creatort) =============
+export const profileViews = pgTable("profile_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
+  viewedDate: date("viewed_date").notNull(),  // napi dedup (YYYY-MM-DD)
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  uniqDay: uniqueIndex("profile_views_unique_day_idx").on(t.creatorId, t.brandId, t.viewedDate),
+  creatorIdx: index("profile_views_creator_idx").on(t.creatorId),
+}));
 
 // ============= USERS =============
 export const users = pgTable("users", {
@@ -21,12 +87,19 @@ export const users = pgTable("users", {
   role: userRoleEnum("role").notNull(),
   approved: boolean("approved").notNull().default(false),
   suspended: boolean("suspended").notNull().default(false),
+  // Email-verifikáció (saját rendszer — a Supabase auth-tól független):
+  // ezen keresztül kényszerítjük ki, hogy a regisztráció + onboarding végén
+  // a user megerősítse az emailcímét, mielőtt a dashboardot használhatná.
+  emailVerified: boolean("email_verified").notNull().default(false),
+  emailVerificationToken: text("email_verification_token"),
+  emailVerificationExpiresAt: timestamp("email_verification_expires_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
 }, (table) => ({
   emailIdx: uniqueIndex("users_email_idx").on(table.email),
   authIdIdx: uniqueIndex("users_auth_id_idx").on(table.authId),
+  emailVerificationTokenIdx: uniqueIndex("users_email_verification_token_idx").on(table.emailVerificationToken),
 }));
 
 // ============= CREATOR PROFILES =============
@@ -44,6 +117,16 @@ export const creatorProfiles = pgTable("creator_profiles", {
   gender: varchar("gender", { length: 20 }),
   categories: jsonb("categories").$type<string[]>().notNull().default([]),
   languages: jsonb("languages").$type<string[]>().notNull().default(["hu"]),
+
+  // Profil típusa: UGC tartalomgyártó vagy kreatív szakember
+  profileKind: profileKindEnum("profile_kind").notNull().default("ugc"),
+  // Csak professional profilnál: szerepkörök — "editor" | "photographer" | "videographer"
+  professionalRoles: jsonb("professional_roles").$type<string[]>().notNull().default([]),
+  // Csak professional profilnál: szakterület/stílus chip-ek (pl. "Esküvő", "Reklámfilm")
+  specialties: jsonb("specialties").$type<string[]>().notNull().default([]),
+  // Opcionális külső link (weboldal / Behance / portfólió-oldal)
+  websiteUrl: text("website_url"),
+
   equipment: jsonb("equipment").$type<{
     phone?: string;
     camera?: string;
@@ -68,6 +151,13 @@ export const creatorProfiles = pgTable("creator_profiles", {
   youtubeSubscribers: integer("youtube_subscribers"),
   youtubeVerified: boolean("youtube_verified").notNull().default(false),
   youtubeLastChecked: timestamp("youtube_last_checked"),
+
+  // Kiemelt bemutatkozó videó (1 db, saját feltöltés, max 50 MB)
+  introVideoUrl: text("intro_video_url"),
+
+  // Self-hitelesítés: a creator maga hitelesíti a profilját (badge a profilon)
+  verified: boolean("verified").notNull().default(false),
+  verifiedAt: timestamp("verified_at"),
 
   // Rate card (JSON array)
   rateCard: jsonb("rate_card").$type<Array<{
@@ -107,10 +197,29 @@ export const brandProfiles = pgTable("brand_profiles", {
   address: text("address"),
   industry: varchar("industry", { length: 100 }),
   description: text("description"),
+  averageRating: numeric("average_rating", { precision: 3, scale: 2 }),
+  reviewCount: integer("review_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({
   companyNameIdx: index("brand_profiles_company_idx").on(table.companyName),
+}));
+
+// ============= BRAND REVIEWS (tartalomgyártó → márka) =============
+export const brandReviews = pgTable("brand_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  collaborationId: uuid("collaboration_id").notNull().references(() => collaborations.id, { onDelete: "cascade" }).unique(),
+  brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
+  creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  overallRating: integer("overall_rating").notNull(),
+  communicationRating: integer("communication_rating").notNull(),
+  fairnessRating: integer("fairness_rating").notNull(),     // korrektség / fizetés
+  clarityRating: integer("clarity_rating").notNull(),       // a brief egyértelműsége
+  text: text("text").notNull(),
+  hidden: boolean("hidden").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  brandIdx: index("brand_reviews_brand_idx").on(table.brandId),
 }));
 
 // ============= PORTFOLIO ITEMS =============
@@ -120,6 +229,10 @@ export const portfolioItems = pgTable("portfolio_items", {
   type: portfolioTypeEnum("type").notNull(),
   url: text("url").notNull(),
   thumbnailUrl: text("thumbnail_url"),
+  // Külső link portfólió (kreatív szakemberek): ha kitöltött, nem feltöltött fájl.
+  externalUrl: text("external_url"),
+  // Beágyazás típusa: "drive" | "youtube" | "vimeo" | "link" | null (feltöltött fájl)
+  embedType: varchar("embed_type", { length: 20 }),
   title: varchar("title", { length: 200 }),
   description: text("description"),
   categories: jsonb("categories").$type<string[]>().notNull().default([]),
@@ -136,10 +249,19 @@ export const ads = pgTable("ads", {
   title: varchar("title", { length: 80 }).notNull(),
   description: text("description").notNull(),
   categories: jsonb("categories").$type<string[]>().notNull().default([]),
+  // Kit keres a márka: "ugc" | "editor" | "photographer" | "videographer" (több is)
+  targetKinds: jsonb("target_kinds").$type<string[]>().notNull().default(["ugc"]),
   contentType: contentTypeEnum("content_type").notNull(),
   itemCount: integer("item_count").notNull().default(1),
-  budgetMinHuf: integer("budget_min_huf").notNull(),
-  budgetMaxHuf: integer("budget_max_huf").notNull(),
+  // Borítókép (opcionális, a márka tölti fel)
+  coverUrl: text("cover_url"),
+  // Költségvetés opcionális — alapból NEM publikus (megbeszélés kérdése),
+  // csak ha a márka kifejezetten közzéteszi (budgetPublic).
+  budgetMinHuf: integer("budget_min_huf"),
+  budgetMaxHuf: integer("budget_max_huf"),
+  budgetPublic: boolean("budget_public").notNull().default(false),
+  // Együttműködés típusa (creator-szűrhető)
+  collaborationType: collaborationTypeEnum("collaboration_type").notNull().default("project"),
   deadline: timestamp("deadline").notNull(),
   location: varchar("location", { length: 200 }),
   usageRights: varchar("usage_rights", { length: 50 }).notNull(),
@@ -148,6 +270,10 @@ export const ads = pgTable("ads", {
   rejectionReason: text("rejection_reason"),
   isFeatured: boolean("is_featured").notNull().default(false),
   applicationCount: integer("application_count").notNull().default(0),
+  // Anonim hirdetés: ha be van pipálva, a publikus felületen NEM látszik
+  // a márka neve, logója, weboldala. Csak az adminok és a creator (aki pályázik)
+  // látja a részleteket. A regisztrációhoz szükséges márka-adatok megmaradnak.
+  anonymous: boolean("anonymous").notNull().default(false),
   viewCount: integer("view_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   approvedAt: timestamp("approved_at"),
@@ -157,6 +283,7 @@ export const ads = pgTable("ads", {
   statusIdx: index("ads_status_idx").on(table.status),
   categoriesIdx: index("ads_categories_idx").on(table.categories),
   deadlineIdx: index("ads_deadline_idx").on(table.deadline),
+  collabTypeIdx: index("ads_collab_type_idx").on(table.collaborationType),
 }));
 
 // ============= AD APPLICATIONS (CREATOR PÁLYÁZATOK) =============
@@ -165,7 +292,8 @@ export const adApplications = pgTable("ad_applications", {
   adId: uuid("ad_id").notNull().references(() => ads.id, { onDelete: "cascade" }),
   creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
   message: text("message").notNull(),
-  proposedPriceHuf: integer("proposed_price_huf").notNull(),
+  // Ár-ajánlat opcionális — az ár mindig megegyezés kérdése a felek között
+  proposedPriceHuf: integer("proposed_price_huf"),
   status: applicationStatusEnum("status").notNull().default("pending"),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
@@ -185,6 +313,8 @@ export const collaborations = pgTable("collaborations", {
   brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
   creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
   acceptedAt: timestamp("accepted_at").notNull().defaultNow(),
+  deliveredAt: timestamp("delivered_at"),   // creator leadta a munkát
+  completedAt: timestamp("completed_at"),   // brand lezárta az együttműködést
   reviewEmailSentAt: timestamp("review_email_sent_at"),
   reviewToken: text("review_token").unique(),  // for token-based review submission
   status: varchar("status", { length: 30 }).notNull().default("active"),
@@ -235,6 +365,8 @@ export const messages = pgTable("messages", {
   subject: varchar("subject", { length: 200 }),
   body: text("body").notNull(),
   budgetHint: integer("budget_hint"),
+  attachmentUrl: text("attachment_url"),
+  attachmentName: text("attachment_name"),
   read: boolean("read").notNull().default(false),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
@@ -295,6 +427,20 @@ export const notifications = pgTable("notifications", {
 }, (table) => ({
   userIdx: index("notifications_user_idx").on(table.userId),
   readIdx: index("notifications_read_idx").on(table.read),
+}));
+
+// ============= CONTACT MESSAGES (kapcsolat űrlap → admin inbox) =============
+export const contactMessages = pgTable("contact_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 120 }),
+  email: varchar("email", { length: 200 }).notNull(),
+  subject: varchar("subject", { length: 160 }).notNull(),
+  message: text("message").notNull(),
+  read: boolean("read").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  readIdx: index("contact_messages_read_idx").on(table.read),
+  createdIdx: index("contact_messages_created_idx").on(table.createdAt),
 }));
 
 // ============= SAVED CREATORS (BRAND ⭐ CREATOR) =============

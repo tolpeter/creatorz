@@ -63,7 +63,11 @@ export default async function CreatorApplicationsPage() {
               <p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{r.message}</p>
               <div className="mt-3 flex items-center justify-between">
                 <span className="text-sm">
-                  Ár-ajánlat: <strong>{formatHuf(r.proposedPriceHuf)}</strong> ·{" "}
+                  {r.proposedPriceHuf != null && (
+                    <>
+                      Ár-ajánlat: <strong>{formatHuf(r.proposedPriceHuf)}</strong> ·{" "}
+                    </>
+                  )}
                   {formatHuDate(r.createdAt)}
                 </span>
                 {r.status === "pending" && <WithdrawApplicationButton applicationId={r.id} />}

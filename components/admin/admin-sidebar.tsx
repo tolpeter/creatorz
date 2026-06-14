@@ -12,41 +12,69 @@ import {
   Star,
   Flag,
   TrendingUp,
+  MessageSquare,
+  Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true },
-  { href: "/admin/settings", label: "Beállítások", icon: Settings },
-  { href: "/admin/users", label: "Felhasználók", icon: Users },
-  { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck },
-  { href: "/admin/brands", label: "Márkák", icon: Building2 },
-  { href: "/admin/ads", label: "Hirdetések", icon: Megaphone },
-  { href: "/admin/reviews", label: "Értékelések", icon: Star },
-  { href: "/admin/reports", label: "Bejelentések", icon: Flag },
-  { href: "/admin/finance", label: "Pénzügy", icon: TrendingUp },
+  { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true, key: "overview" },
+  { href: "/admin/messages", label: "Üzenetek", icon: MessageSquare, key: "messages" },
+  { href: "/admin/settings", label: "Beállítások", icon: Settings, key: "settings" },
+  { href: "/admin/users", label: "Felhasználók", icon: Users, key: "users" },
+  { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },
+  { href: "/admin/brands", label: "Márkák", icon: Building2, key: "brands" },
+  { href: "/admin/ads", label: "Hirdetések", icon: Megaphone, key: "ads" },
+  { href: "/admin/blog", label: "Blog", icon: Newspaper, key: "blog" },
+  { href: "/admin/reviews", label: "Értékelések", icon: Star, key: "reviews" },
+  { href: "/admin/reports", label: "Bejelentések", icon: Flag, key: "reports" },
+  { href: "/admin/finance", label: "Pénzügy", icon: TrendingUp, key: "finance" },
 ];
 
-export function AdminSidebar() {
+export function AdminSidebar({
+  unreadContact = 0,
+  badges = {},
+}: {
+  unreadContact?: number;
+  badges?: Record<string, number>;
+}) {
   const pathname = usePathname();
+  const badgeMap: Record<string, number> = { messages: unreadContact, ...badges };
   return (
-    <nav className="flex gap-1 overflow-x-auto md:w-56 md:flex-col md:overflow-visible">
+    <nav className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2 shadow-sm md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
+      <div className="hidden px-3 pb-3 pt-2 md:block">
+        <p className="text-xs font-semibold uppercase text-accent">
+          Admin Control
+        </p>
+        <p className="mt-1 text-sm text-white/60">
+          Moderáció, pénzügy és platform állapot.
+        </p>
+      </div>
       {navItems.map((item) => {
-        const active = item.exact ? pathname === item.href : pathname.startsWith(item.href);
+        const active = item.exact
+          ? pathname === item.href
+          : pathname.startsWith(item.href);
         const Icon = item.icon;
+        const badgeCount = badgeMap[item.key] ?? 0;
+        const showBadge = badgeCount > 0;
         return (
           <Link
             key={item.href}
             href={item.href}
             className={cn(
-              "flex shrink-0 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+              "relative flex shrink-0 items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
               active
-                ? "bg-accent text-accent-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground md:text-white/70 md:hover:bg-white/10 md:hover:text-white",
             )}
           >
             <Icon className="h-4 w-4" />
-            {item.label}
+            <span className="flex-1">{item.label}</span>
+            {showBadge && (
+              <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
+                {badgeCount}
+              </span>
+            )}
           </Link>
         );
       })}

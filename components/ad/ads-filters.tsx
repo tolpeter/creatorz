@@ -14,7 +14,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
-import { CREATOR_CATEGORIES, CONTENT_TYPES, USAGE_RIGHTS } from "@/lib/constants";
+import {
+  CREATOR_CATEGORIES,
+  CONTENT_TYPES,
+  USAGE_RIGHTS,
+  COLLABORATION_TYPES,
+} from "@/lib/constants";
 
 export function AdsFilters() {
   const router = useRouter();
@@ -24,6 +29,9 @@ export function AdsFilters() {
     sp.get("categories")?.split(",").filter(Boolean) ?? []
   );
   const [contentType, setContentType] = useState(sp.get("contentType") ?? "");
+  const [collaborationType, setCollaborationType] = useState(
+    sp.get("collaborationType") ?? ""
+  );
   const [usageRights, setUsageRights] = useState(sp.get("usageRights") ?? "");
   const [deadline, setDeadline] = useState(sp.get("deadline") ?? "");
   const [location, setLocation] = useState(sp.get("location") ?? "");
@@ -35,6 +43,7 @@ export function AdsFilters() {
     if (sort) params.set("sort", sort);
     if (categories.length) params.set("categories", categories.join(","));
     if (contentType) params.set("contentType", contentType);
+    if (collaborationType) params.set("collaborationType", collaborationType);
     if (usageRights) params.set("usageRights", usageRights);
     if (deadline) params.set("deadline", deadline);
     if (location.trim()) params.set("location", location.trim());
@@ -45,6 +54,7 @@ export function AdsFilters() {
   function reset() {
     setCategories([]);
     setContentType("");
+    setCollaborationType("");
     setUsageRights("");
     setDeadline("");
     setLocation("");
@@ -65,6 +75,18 @@ export function AdsFilters() {
           <SelectContent>
             <SelectItem value="all">Mindegy</SelectItem>
             {CONTENT_TYPES.map((c) => (
+              <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="space-y-1.5">
+        <Label>Együttműködés típusa</Label>
+        <Select value={collaborationType || "all"} onValueChange={(v) => setCollaborationType(v === "all" ? "" : v)}>
+          <SelectTrigger><SelectValue placeholder="Mindegy" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Mindegy</SelectItem>
+            {COLLABORATION_TYPES.map((c) => (
               <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
             ))}
           </SelectContent>

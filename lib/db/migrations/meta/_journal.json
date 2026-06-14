@@ -15,6 +15,48 @@
       "when": 1780262450643,
       "tag": "0001_faulty_scourge",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781043904059,
+      "tag": "0002_launch_baseline",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781119735542,
+      "tag": "0003_professionals",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1781120082714,
+      "tag": "0004_professional_website",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1781120913450,
+      "tag": "0005_ad_target_kinds",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1781241259866,
+      "tag": "0006_email_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1781265819406,
+      "tag": "0007_anonymous_ads",
+      "breakpoints": true
     }
   ]
 }

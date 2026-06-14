@@ -1,63 +1,26 @@
-import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { Logo } from "@/components/layout/logo";
+import { SiteHeader } from "@/components/layout/site-header";
+import { SiteFooter } from "@/components/layout/site-footer";
 
 export default async function PublicLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const current = await getCurrentUser();
+  let current: Awaited<ReturnType<typeof getCurrentUser>> = null;
+  try {
+    current = await getCurrentUser();
+  } catch {
+    current = null;
+  }
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-          <div className="flex items-center gap-6">
-            <Link href="/">
-              <Logo className="text-lg" />
-            </Link>
-            <Link
-              href="/creators"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground"
-            >
-              Tartalomgyártók
-            </Link>
-            <Link
-              href="/ads"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
-            >
-              Hirdetések
-            </Link>
-            <Link
-              href="/kapcsolat"
-              className="hidden text-sm font-medium text-muted-foreground hover:text-foreground sm:inline"
-            >
-              Kapcsolat
-            </Link>
-          </div>
-          <div className="flex items-center gap-2">
-            {current?.dbUser ? (
-              <Button asChild size="sm">
-                <Link href="/dashboard">Irányítópult</Link>
-              </Button>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm">
-                  <Link href="/login">Bejelentkezés</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="/register">Regisztráció</Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader isLoggedIn={Boolean(current?.dbUser)} />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
         {children}
       </main>
+      <SiteFooter />
     </div>
   );
 }

@@ -64,6 +64,20 @@ export async function setAdminFeatured(creatorId: string, value: boolean) {
   return { success: true };
 }
 
+export async function setCreatorVerified(creatorId: string, value: boolean) {
+  if (!(await requireAdmin())) return { error: "Csak admin" };
+  await db
+    .update(creatorProfiles)
+    .set({
+      verified: value,
+      verifiedAt: value ? new Date() : null,
+      updatedAt: new Date(),
+    })
+    .where(eq(creatorProfiles.id, creatorId));
+  revalidatePath("/admin/creators");
+  return { success: true };
+}
+
 export async function setReviewHidden(reviewId: string, hidden: boolean) {
   if (!(await requireAdmin())) return { error: "Csak admin" };
   const rows = await db

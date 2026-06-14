@@ -25,13 +25,23 @@ function Avatar({
   )
 }
 
+/**
+ * Default avatar: ha a felhasználó nem töltött fel profilképet (vagy null/üres
+ * az URL), automatikusan a brand-szerű neon-lime sziluett kerül a helyére
+ * (Fallback helyett). Így mindenhol egységes a kinézet.
+ */
+const DEFAULT_AVATAR_URL = "/images/default-avatar.webp"
+
 function AvatarImage({
   className,
+  src,
   ...props
 }: React.ComponentProps<typeof AvatarPrimitive.Image>) {
+  const safeSrc = src || DEFAULT_AVATAR_URL
   return (
     <AvatarPrimitive.Image
       data-slot="avatar-image"
+      src={safeSrc}
       className={cn(
         "aspect-square size-full rounded-full object-cover",
         className

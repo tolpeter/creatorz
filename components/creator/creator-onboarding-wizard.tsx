@@ -3,7 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ArrowRight, Loader2, Check } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+  Check,
+  Sparkles,
+  BadgeCheck,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,7 +31,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
-import { RateCardEditor, type RateCardItem } from "@/components/creator/rate-card-editor";
 import {
   CREATOR_CATEGORIES,
   HUNGARIAN_COUNTIES,
@@ -34,7 +40,12 @@ import {
   MAX_CREATOR_CATEGORIES,
 } from "@/lib/constants";
 import { generateUsername } from "@/lib/utils/slug";
-import { completeCreatorOnboarding } from "@/app/actions/creator-profile";
+import { formatNumber } from "@/lib/utils/format";
+import {
+  completeCreatorOnboarding,
+  connectCreatorSocials,
+} from "@/app/actions/creator-profile";
+import { triggerVerificationEmail } from "@/app/actions/auth";
 
 export type OnboardingInitial = {
   username: string;
@@ -54,15 +65,15 @@ export type OnboardingInitial = {
   facebookFollowers: string;
   youtubeUrl: string;
   youtubeSubscribers: string;
-  rateCard: RateCardItem[];
 };
 
-const STEPS = ["Alapadatok", "Kategória & nyelvek", "Social", "Rate card"];
+const STEPS = ["Alapadatok", "Kategória & nyelvek", "Social fiókok"];
 
 export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [connecting, setConnecting] = useState(false);
   const [usernameEdited, setUsernameEdited] = useState(false);
   const [v, setV] = useState<OnboardingInitial>(initial);
 
@@ -86,11 +97,6 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
     if (step === 1) {
       if (v.languages.length < 1) return "Válassz legalább egy nyelvet";
     }
-    if (step === 3) {
-      if (v.rateCard.length < 1) return "Adj hozzá legalább egy szolgáltatást a rate card-hoz";
-      if (v.rateCard.some((r) => !r.service.trim() || !(r.priceHuf > 0)))
-        return "Minden szolgáltatáshoz adj nevet és 0-nál nagyobb árat";
-    }
     return null;
   }
 
@@ -101,6 +107,44 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       return;
     }
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
+  }
+
+  async function connectSocials() {
+    if (!v.instagramUrl && !v.tiktokUrl && !v.facebookUrl && !v.youtubeUrl) {
+      toast.error("Adj meg legalább egy social profil linket");
+      return;
+    }
+    setConnecting(true);
+    const res = await connectCreatorSocials({
+      instagramUrl: v.instagramUrl,
+      tiktokUrl: v.tiktokUrl,
+      facebookUrl: v.facebookUrl,
+      youtubeUrl: v.youtubeUrl,
+    });
+    setConnecting(false);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    setV((prev) => ({
+      ...prev,
+      instagramFollowers:
+        res.instagramFollowers != null ? String(res.instagramFollowers) : prev.instagramFollowers,
+      tiktokFollowers:
+        res.tiktokFollowers != null ? String(res.tiktokFollowers) : prev.tiktokFollowers,
+      facebookFollowers:
+        res.facebookFollowers != null ? String(res.facebookFollowers) : prev.facebookFollowers,
+      youtubeSubscribers:
+        res.youtubeSubscribers != null ? String(res.youtubeSubscribers) : prev.youtubeSubscribers,
+    }));
+    const failed = res.failed ?? [];
+    if (failed.length > 0) {
+      toast.warning(
+        `Összekapcsolva. Ezeket nem sikerült most lekérni: ${failed.join(", ")}. Később automatikusan újrapróbáljuk.`
+      );
+    } else {
+      toast.success("Összekapcsolva — a számokat behúztuk!");
+    }
   }
 
   async function submit() {
@@ -128,7 +172,6 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
       youtubeUrl: v.youtubeUrl,
       youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
-      rateCard: v.rateCard,
     });
     setLoading(false);
     if (res.error) {
@@ -136,7 +179,9 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       return;
     }
     toast.success("Profil elmentve!");
-    router.push("/creator");
+    // Még egy utolsó lépés: email-megerősítés
+    await triggerVerificationEmail();
+    router.push("/verify-email");
     router.refresh();
   }
 
@@ -290,10 +335,19 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
 
         {step === 2 && (
           <>
-            <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              A követőszámokat heti automatikus ellenőrzéssel frissítjük. A V2-ben
-              hivatalos OAuth verifikáció érkezik.
-            </p>
+            <div className="rounded-lg border border-accent/30 bg-accent/[0.06] p-4 text-sm">
+              <p className="flex items-center gap-2 font-semibold">
+                <Sparkles className="h-4 w-4 text-accent" />
+                Csak a linket add meg — a számokat az AI behúzza
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                Illeszd be a profiljaid linkjét, és kattints az
+                <strong> „Összekapcsol” </strong> gombra. A követő- és
+                feliratkozószámokat automatikusan lekérjük, és onnantól 4
+                naponta frissítjük. Ez a lépés kihagyható, később is megteheted
+                a profilodnál.
+              </p>
+            </div>
             {(
               [
                 ["instagramUrl", "instagramFollowers", "Instagram", "követő"],
@@ -301,37 +355,50 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
                 ["facebookUrl", "facebookFollowers", "Facebook", "követő"],
                 ["youtubeUrl", "youtubeSubscribers", "YouTube", "feliratkozó"],
               ] as const
-            ).map(([urlKey, followKey, label, unit]) => (
-              <div key={label} className="grid gap-3 sm:grid-cols-[1fr_160px]">
-                <div className="space-y-1.5">
-                  <Label>{label} URL</Label>
-                  <Input
-                    value={v[urlKey]}
-                    onChange={(e) => set(urlKey, e.target.value)}
-                    placeholder={`https://…`}
-                  />
+            ).map(([urlKey, followKey, label, unit]) => {
+              const count = v[followKey];
+              return (
+                <div key={label} className="space-y-1.5">
+                  <Label>{label} profil URL</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Input
+                      value={v[urlKey]}
+                      onChange={(e) => set(urlKey, e.target.value)}
+                      placeholder="https://…"
+                      className="sm:flex-1"
+                    />
+                    <div className="flex min-w-[150px] items-center gap-1.5 rounded-md bg-muted px-3 py-2 text-sm">
+                      {count ? (
+                        <>
+                          <BadgeCheck className="h-4 w-4 text-accent" />
+                          <span className="font-semibold">
+                            {formatNumber(Number(count))}
+                          </span>
+                          <span className="text-muted-foreground">{unit}</span>
+                        </>
+                      ) : (
+                        <span className="text-muted-foreground">Még nincs adat</span>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>{unit}szám</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={v[followKey]}
-                    onChange={(e) => set(followKey, e.target.value)}
-                  />
-                </div>
-              </div>
-            ))}
-          </>
-        )}
-
-        {step === 3 && (
-          <>
-            <RateCardEditor value={v.rateCard} onChange={(next) => set("rateCard", next)} />
-            <p className="rounded-lg bg-muted p-3 text-sm text-muted-foreground">
-              Portfólió elemeket (videó/fotó) a profil elkészülte után a{" "}
-              <strong>Portfolio</strong> oldalon tölthetsz fel.
-            </p>
+              );
+            })}
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={connectSocials}
+                disabled={connecting}
+              >
+                {connecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
+                {connecting ? "Összekapcsolás…" : "Összekapcsol"}
+              </Button>
+            </div>
           </>
         )}
 

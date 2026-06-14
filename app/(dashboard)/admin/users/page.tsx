@@ -1,21 +1,61 @@
-import { desc } from "drizzle-orm";
+import { and, desc, eq, ilike, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { UserRowActions } from "@/components/admin/user-row-actions";
+import { ExportButton } from "@/components/admin/export-button";
 import { Badge } from "@/components/ui/badge";
+import { AdminSearch } from "@/components/admin/admin-search";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Felhasználók" };
 
-export default async function AdminUsersPage() {
-  const rows = await db.select().from(users).orderBy(desc(users.createdAt)).limit(200);
+export default async function AdminUsersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; role?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+  const role = sp.role ?? "";
+
+  const conditions: SQL[] = [];
+  if (q) conditions.push(ilike(users.email, `%${q}%`));
+  if (role === "creator" || role === "brand" || role === "admin")
+    conditions.push(eq(users.role, role));
+  if (role === "suspended") conditions.push(eq(users.suspended, true));
+
+  const rows = await db
+    .select()
+    .from(users)
+    .where(conditions.length ? and(...conditions) : undefined)
+    .orderBy(desc(users.createdAt))
+    .limit(200);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Felhasználók</h1>
-        <p className="text-muted-foreground">{rows.length} felhasználó</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Felhasználók</h1>
+          <p className="text-muted-foreground">{rows.length} találat</p>
+        </div>
+        <ExportButton type="users" />
       </div>
+
+      <AdminSearch
+        q={q}
+        placeholder="Keresés email alapján…"
+        basePath="/admin/users"
+        filterParam="role"
+        activeFilter={role}
+        filters={[
+          { label: "Mind", value: "" },
+          { label: "Tartalomgyártó", value: "creator" },
+          { label: "Márka", value: "brand" },
+          { label: "Admin", value: "admin" },
+          { label: "Felfüggesztett", value: "suspended" },
+        ]}
+      />
+
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50 text-left">

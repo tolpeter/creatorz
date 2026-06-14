@@ -1,19 +1,35 @@
 import Link from "next/link";
 import Image from "next/image";
 import { or, eq, sql } from "drizzle-orm";
-import { Search, UserPlus, Handshake, Check } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Handshake,
+  Search,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { db } from "@/lib/db";
 import { creatorProfiles, brandProfiles, ads, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { CreatorCard, type CreatorCardData } from "@/components/creator/creator-card";
+import {
+  CreatorCard,
+  type CreatorCardData,
+} from "@/components/creator/creator-card";
 import { SiteFooter } from "@/components/layout/site-footer";
-import { Logo } from "@/components/layout/logo";
 import { NicheBrowser } from "@/components/shared/niche-browser";
+import { SiteHeader } from "@/components/layout/site-header";
+import { MarketplaceSection } from "@/components/shared/marketplace-section";
+import { WhyCreatorzSection } from "@/components/shared/why-creatorz-section";
 
 export default async function LandingPage() {
-  const current = await getCurrentUser();
+  let current: Awaited<ReturnType<typeof getCurrentUser>> = null;
+  try {
+    current = await getCurrentUser();
+  } catch {
+    current = null;
+  }
 
   const featuredRows = await db
     .select({
@@ -33,133 +49,63 @@ export default async function LandingPage() {
     })
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
-    .where(or(eq(creatorProfiles.isFeatured, true), eq(creatorProfiles.isAdminFeatured, true)))
+    .where(
+      or(
+        eq(creatorProfiles.isFeatured, true),
+        eq(creatorProfiles.isAdminFeatured, true),
+      ),
+    )
     .orderBy(sql`${creatorProfiles.averageRating} desc nulls last`)
     .limit(6);
 
   const featured: CreatorCardData[] = featuredRows.map((r) => ({
     ...r,
     categories: r.categories ?? [],
-    isFeatured: r.isFeatured || r.isAdminFeatured,
+    isFeatured: Boolean(r.isFeatured || r.isAdminFeatured),
   }));
 
   const [cN, bN, aN] = await Promise.all([
     db.select({ n: sql<number>`count(*)::int` }).from(creatorProfiles),
     db.select({ n: sql<number>`count(*)::int` }).from(brandProfiles),
-    db.select({ n: sql<number>`count(*)::int` }).from(ads).where(eq(ads.status, "active")),
+    db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(ads)
+      .where(eq(ads.status, "active")),
   ]);
 
   const steps = [
-    { icon: UserPlus, title: "Regisztrálj", desc: "Ingyenes, 2 perc. Tartalomgyártóként vagy márkaként." },
-    { icon: Search, title: "Találd meg a párost", desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz hirdetésre." },
-    { icon: Handshake, title: "Kezdj el dolgozni", desc: "Közvetlen kapcsolatfelvétel, együttműködés, értékelés." },
+    {
+      icon: UserPlus,
+      title: "Regisztrálj",
+      desc: "Ingyenes, 2 perc. Tartalomgyártóként vagy márkaként.",
+    },
+    {
+      icon: Search,
+      title: "Találd meg a párost",
+      desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz hirdetésre.",
+    },
+    {
+      icon: Handshake,
+      title: "Kezdj el dolgozni",
+      desc: "Közvetlen kapcsolatfelvétel, együttműködés, értékelés.",
+    },
   ];
 
   return (
     <div className="flex min-h-screen flex-col">
-      {/* STICKY FLOATING PILL NAV */}
-      <header className="fixed inset-x-0 top-4 z-50 flex justify-center px-4">
-        <div className="flex w-full max-w-5xl items-center justify-between gap-4 rounded-full border border-white/10 bg-[#0A0A0A]/85 px-4 py-2.5 shadow-xl backdrop-blur-lg sm:px-6">
-          <Logo variant="light" className="text-lg" />
-          <nav className="hidden items-center gap-6 text-sm text-white/80 md:flex">
-            <Link href="/creators" className="hover:text-accent">Tartalomgyártók</Link>
-            <Link href="/ads" className="hover:text-accent">Hirdetések</Link>
-            <Link href="/#hogyan" className="hover:text-accent">Hogyan működik</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            {current?.dbUser ? (
-              <Button asChild size="sm" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/dashboard">Irányítópult</Link>
-              </Button>
-            ) : (
-              <>
-                <Button asChild variant="ghost" size="sm" className="hidden text-white hover:bg-white/10 hover:text-white sm:inline-flex">
-                  <Link href="/login">Bejelentkezés</Link>
-                </Button>
-                <Button asChild size="sm" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-                  <Link href="/register">Regisztráció</Link>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </header>
+      <SiteHeader isLoggedIn={Boolean(current?.dbUser)} />
+      <HomeHero />
 
-      {/* HERO */}
-      <section
-        className="relative flex min-h-screen flex-col overflow-hidden px-6 pt-24 pb-12 text-white sm:pt-28"
-        style={{
-          background:
-            "radial-gradient(60% 50% at 50% 0%, rgba(163,230,53,0.18), transparent), radial-gradient(40% 40% at 80% 80%, rgba(163,230,53,0.10), transparent), linear-gradient(180deg, #0A0A0A, #0f0f0f)",
-        }}
-      >
-        <Image
-          src="/images/generated/hero-bg.webp"
-          alt=""
-          fill
-          priority
-          className="object-cover opacity-25"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/90" />
-
-        <div className="relative z-10 mx-auto grid w-full max-w-6xl flex-1 items-center gap-12 lg:grid-cols-[1.2fr_1fr]">
-          {/* SZÖVEG */}
-          <div className="text-center lg:text-left">
-            <Badge className="mb-6 border-accent/40 bg-accent/20 text-accent">
-              ✨ Magyar UGC tartalomgyártók új otthona
-            </Badge>
-            <h1 className="mb-6 text-balance text-4xl font-bold tracking-tight md:text-6xl">
-              Magyar tartalomgyártók és márkák{" "}
-              <span className="text-accent">találkozóhelye</span>
-            </h1>
-            <p className="mx-auto mb-10 max-w-2xl text-balance text-base text-white/75 md:text-lg lg:mx-0">
-              Találd meg azokat a TikTok-, Instagram-, YouTube- és Amazon-tartalomkészítőket,
-              akik hiteles UGC-videókkal segíthetik márkád vagy ügynökséged kommunikációját.
-              Regisztrálj ingyen, böngéssz portfóliókat, vagy add fel a hirdetésed.
-            </p>
-            <div className="flex flex-col items-center gap-4 sm:flex-row lg:items-start">
-              <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-                <Link href="/register">Tartalomgyártó vagyok →</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-white/40 bg-transparent text-white hover:bg-white/10 hover:text-white">
-                <Link href="/register">Márkát képviselek →</Link>
-              </Button>
-            </div>
-            <div className="mt-14 grid grid-cols-3 gap-6 lg:max-w-md">
-              <Stat value={`${cN[0]?.n ?? 0}`} label="Tartalomgyártó" />
-              <Stat value={`${bN[0]?.n ?? 0}`} label="Márka" />
-              <Stat value="100%" label="Magyar" />
-            </div>
-          </div>
-
-          {/* TELEFON KÉP */}
-          <div className="relative hidden lg:block">
-            <div className="relative mx-auto aspect-[9/16] w-[300px] overflow-hidden rounded-[2.2rem] border-[3px] border-white/15 bg-black shadow-2xl">
-              <Image
-                src="/images/generated/hero-phone.webp?v=2"
-                alt="Tartalomgyártó UGC videót forgat"
-                fill
-                priority
-                unoptimized
-                className="object-cover"
-              />
-              {/* phone notch */}
-              <div className="absolute left-1/2 top-2 z-10 h-5 w-20 -translate-x-1/2 rounded-full bg-black" />
-            </div>
-            {/* lebegő glow ring */}
-            <div className="pointer-events-none absolute -inset-10 -z-10 rounded-full bg-accent/15 blur-3xl" />
-          </div>
-        </div>
-      </section>
-
-      {/* KIEMELT TARTALOMGYÁRTÓK */}
       {featured.length > 0 && (
         <section className="py-20">
           <div className="mx-auto max-w-6xl px-6">
-            <div className="mb-8 flex items-center justify-between">
+            <div className="mb-8 flex items-center justify-between gap-4">
               <h2 className="text-3xl font-bold">Kiemelt tartalomgyártók</h2>
-              <Link href="/creators" className="text-sm font-semibold text-accent hover:underline">
-                Mind megtekintése →
+              <Link
+                href="/creators"
+                className="text-sm font-semibold text-accent hover:underline"
+              >
+                Mind megtekintése <ArrowRight className="inline h-4 w-4" />
               </Link>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -171,47 +117,24 @@ export default async function LandingPage() {
         </section>
       )}
 
-      {/* HOGYAN MŰKÖDIK — animált */}
       <section
         id="hogyan"
-        className="relative overflow-hidden py-24"
-        style={{
-          background:
-            "radial-gradient(80% 60% at 50% 0%, rgba(163,230,53,0.12), transparent), linear-gradient(180deg, transparent, rgba(10,10,10,0.04))",
-        }}
+        className="relative overflow-hidden border-y bg-muted/20 py-24"
       >
-        {/* lebegő háttér-pontok */}
-        <div aria-hidden className="pointer-events-none absolute inset-0">
-          <span className="absolute left-[8%] top-[20%] h-2 w-2 animate-float rounded-full bg-accent/70" />
-          <span
-            className="absolute right-[12%] top-[40%] h-1.5 w-1.5 animate-float rounded-full bg-accent/50"
-            style={{ animationDelay: "1.2s" }}
-          />
-          <span
-            className="absolute left-[20%] bottom-[18%] h-2.5 w-2.5 animate-float rounded-full bg-accent/40"
-            style={{ animationDelay: "0.6s" }}
-          />
-          <span
-            className="absolute right-[25%] bottom-[28%] h-1 w-1 animate-float rounded-full bg-accent/60"
-            style={{ animationDelay: "1.8s" }}
-          />
-        </div>
-
         <div className="relative mx-auto w-full max-w-6xl px-6">
           <div className="mb-14 text-center">
             <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
               3 egyszerű lépés
             </span>
-            <h2 className="mt-3 text-4xl font-bold tracking-tight sm:text-5xl">
+            <h2 className="mt-3 text-4xl font-bold sm:text-5xl">
               Hogyan működik?
             </h2>
             <p className="mt-3 text-muted-foreground">
-              Pár perc alatt indulhatsz — regisztrálj és máris dolgozhatsz.
+              Pár perc alatt indulhatsz: regisztrálj, és máris dolgozhatsz.
             </p>
           </div>
 
           <div className="relative">
-            {/* Háttér-vonal a desktopon (a 3 lépést összekötő szaggatott neon vonal) */}
             <div
               aria-hidden
               className="pointer-events-none absolute left-[16%] right-[16%] top-[68px] hidden md:block"
@@ -226,9 +149,8 @@ export default async function LandingPage() {
                   className="animate-slide-up group relative flex flex-col items-center text-center"
                   style={{ animationDelay: `${i * 160}ms` }}
                 >
-                  {/* Sorszám-badge + ikon — kettős kör pulzáló glow-val */}
                   <div className="relative mb-6">
-                    <div className="animate-glow relative flex h-32 w-32 items-center justify-center rounded-full border border-accent/30 bg-gradient-to-br from-accent/15 via-card to-card shadow-lg transition-transform duration-300 group-hover:scale-105">
+                    <div className="relative flex h-32 w-32 items-center justify-center rounded-full border border-accent/30 bg-card shadow-sm transition-transform duration-300 group-hover:scale-105">
                       <s.icon className="h-12 w-12 text-accent transition-transform duration-300 group-hover:scale-110" />
                     </div>
                     <span className="absolute -right-1 -top-1 flex h-10 w-10 items-center justify-center rounded-full bg-accent text-base font-bold text-accent-foreground shadow-lg">
@@ -237,42 +159,65 @@ export default async function LandingPage() {
                   </div>
 
                   <h3 className="mb-2 text-xl font-bold">{s.title}</h3>
-                  <p className="max-w-xs text-sm text-muted-foreground">{s.desc}</p>
+                  <p className="max-w-xs text-sm text-muted-foreground">
+                    {s.desc}
+                  </p>
                 </div>
               ))}
             </div>
           </div>
 
           <div className="mt-14 flex justify-center">
-            <Button asChild size="lg" className="bg-accent text-accent-foreground hover:bg-accent/90">
-              <Link href="/register">Indítsd el most →</Link>
+            <Button
+              asChild
+              size="lg"
+              className="bg-accent text-accent-foreground hover:bg-accent/90"
+            >
+              <Link href="/register">
+                Indítsd el most <ArrowRight className="h-5 w-5" />
+              </Link>
             </Button>
           </div>
         </div>
       </section>
 
-      {/* KATEGÓRIA BÖNGÉSZŐ */}
+      {/* Alkotói piactér — kép + lépések + kártyák */}
+      <MarketplaceSection />
+
+      {/* Miért Creatorz? — 4 kártyás előny-szekció */}
+      <WhyCreatorzSection />
+
       <NicheBrowser />
 
-      {/* KÉT OLDAL */}
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-20 md:grid-cols-2">
+      <section
+        id="markak"
+        className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-20 md:grid-cols-2"
+      >
         <SideCard
           title="Márka vagy?"
           image="/images/generated/feature-brand.webp"
-          perks={["Ingyenes böngészés és kapcsolatfelvétel", "Hirdetésfeladás díjmentesen", "Szűrés kategória, követőszám, ár szerint", "Ellenőrzött, értékelt tartalomgyártók"]}
+          perks={[
+            "Ingyenes böngészés és kapcsolatfelvétel",
+            "Hirdetésfeladás díjmentesen",
+            "Szűrés kategória, követőszám, ár szerint",
+            "Ellenőrzött, értékelt tartalomgyártók",
+          ]}
           cta="Márkaként kezdem"
         />
         <SideCard
           title="Tartalomgyártó vagy?"
           image="/images/generated/feature-creator.webp"
-          perks={["Ingyenes profil és portfólió", "Pályázz márkák hirdetéseire", "Építsd a hírneved értékelésekkel", "Opcionális kiemelés a directoryban"]}
+          perks={[
+            "Ingyenes profil és portfólió",
+            "Pályázz márkák hirdetéseire",
+            "Építsd a hírneved értékelésekkel",
+            "Opcionális kiemelés a directoryban",
+          ]}
           cta="Tartalomgyártóként csatlakozom"
           highlight
-          delay="1.7s"
         />
       </section>
 
-      {/* STATISZTIKA */}
       <section className="bg-[#0A0A0A] py-16 text-white">
         <div className="mx-auto grid max-w-6xl grid-cols-3 gap-8 px-6 text-center">
           <Stat value={`${cN[0]?.n ?? 0}`} label="Aktív tartalomgyártó" />
@@ -281,18 +226,9 @@ export default async function LandingPage() {
         </div>
       </section>
 
-      {/* KAPCSOLAT */}
       <section className="py-20">
         <div className="mx-auto max-w-3xl px-6">
-          <div className="relative overflow-hidden rounded-3xl border bg-card p-8 text-center shadow-sm sm:p-12">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full bg-accent/15 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -left-20 -bottom-20 h-56 w-56 rounded-full bg-accent/10 blur-3xl"
-            />
+          <div className="relative overflow-hidden rounded-lg border bg-card p-8 text-center shadow-sm sm:p-12">
             <div className="relative">
               <span className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
                 Itt vagyunk neked
@@ -302,7 +238,7 @@ export default async function LandingPage() {
               </h2>
               <p className="mt-3 max-w-xl text-muted-foreground sm:mx-auto">
                 Írj nekünk emailt, 24 órán belül válaszolunk. Bármilyen kérdés,
-                visszajelzés, hibabejelentés — itt vagyunk.
+                visszajelzés, hibabejelentés: itt vagyunk.
               </p>
               <a
                 href="mailto:info@creatorz.hu"
@@ -327,6 +263,197 @@ export default async function LandingPage() {
   );
 }
 
+function HomeHero() {
+  return (
+    <section className="relative isolate block overflow-hidden bg-[#0a0a0a] px-4 pb-10 pt-4 text-white sm:px-6 sm:pb-14 lg:min-h-[700px] lg:px-8 lg:pb-20">
+      <Image
+        src="/images/home-hero/hero-bg.webp"
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        className="object-cover opacity-[0.42]"
+      />
+      {/* Sötét gradient overlay */}
+      <div
+        aria-hidden
+        className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,10,10,0.78)_0%,rgba(10,10,10,0.92)_60%,#0a0a0a_100%)]"
+      />
+      {/* Két radiális lime glow */}
+      <div
+        aria-hidden
+        className="absolute -left-32 top-32 h-[420px] w-[420px] rounded-full bg-accent/20 blur-[140px] sm:h-[560px] sm:w-[560px]"
+      />
+      <div
+        aria-hidden
+        className="absolute -right-20 bottom-10 h-[360px] w-[360px] rounded-full bg-accent/15 blur-[160px] sm:h-[500px] sm:w-[500px]"
+      />
+      {/* Finom rács */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(163,230,53,0.4) 1px, transparent 1px), linear-gradient(90deg, rgba(163,230,53,0.4) 1px, transparent 1px)",
+          backgroundSize: "64px 64px",
+          maskImage:
+            "linear-gradient(180deg, transparent 0%, black 20%, black 80%, transparent 100%)",
+        }}
+      />
+
+      <div className="relative z-10 mx-auto flex w-full max-w-[1280px] flex-col">
+        <div className="grid flex-1 items-center gap-10 pt-8 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
+          {/* Bal: sz\u00f6veg */}
+          <div className="min-w-0 max-w-full lg:max-w-[640px]">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm">
+              <Users className="h-3.5 w-3.5" />
+              {"Magyar UGC k\u00f6z\u00f6ss\u00e9g"}
+            </div>
+
+            <h1 className="text-balance break-words text-[2rem] font-black leading-[1.04] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[62px]">
+              {"Magyar tartalomgy\u00e1rt\u00f3k \u00e9s m\u00e1rk\u00e1k "}
+              <span className="text-accent">{"tal\u00e1lkoz\u00f3helye."}</span>
+            </h1>
+
+            <p className="mt-5 max-w-full text-balance text-base leading-7 text-white/70 sm:text-lg sm:leading-8 lg:max-w-[560px]">
+              {
+                "Hiteles UGC tartalomgy\u00e1rt\u00f3k, vide\u00f3v\u00e1g\u00f3k, fot\u00f3sok \u00e9s operat\u0151r\u00f6k egy helyen. Tal\u00e1ld meg a t\u00f6k\u00e9letes partnert, ind\u00edts kamp\u00e1nyt, \u00e9s \u00e9p\u00edts hossz\u00fa t\u00e1v\u00fa egy\u00fcttm\u0171k\u00f6d\u00e9seket."
+              }
+            </p>
+
+            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="h-[54px] w-full rounded-full bg-accent px-7 text-base font-bold text-black shadow-[0_0_44px_rgba(163,230,53,0.38)] hover:bg-white sm:w-auto"
+              >
+                <Link href="/register?role=creator">
+                  {"Tartalomgy\u00e1rt\u00f3 vagyok"} <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+              <Button
+                asChild
+                size="lg"
+                variant="outline"
+                className="h-[54px] w-full rounded-full border-white/20 bg-white/[0.04] px-7 text-base font-bold text-white backdrop-blur hover:bg-white/10 hover:text-white sm:w-auto"
+              >
+                <Link href="/register?role=brand">
+                  {"M\u00e1rk\u00e1t k\u00e9pviselek"} <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
+
+          {/* Jobb: telefon mockup */}
+          <HeroVisual />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Hero vizu\u00e1l: a k\u00e9sz telefon-mockup a vil\u00e1g\u00edt\u00f3 platform-korongon \u00e1ll,
+ * k\u00f6r\u00fcl\u00f6tte a c\u00e9lzottan renderelt lebeg\u0151 UI-k\u00e1rty\u00e1k.
+ * A k\u00e1rty\u00e1k progressz\u00edven jelennek meg (md \u2192 lg \u2192 xl), mobilon tiszta
+ * a kompoz\u00edci\u00f3: csak a telefon + platform + glow l\u00e1tszik.
+ */
+function HeroVisual() {
+  return (
+    <div className="relative mx-auto flex h-[360px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[500px] lg:h-[600px] lg:max-w-[600px]">
+      {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
+      <div
+        aria-hidden
+        className="absolute bottom-[18%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-accent/25 blur-[110px] sm:h-[380px] sm:w-[380px]"
+      />
+
+      {/* Vil\u00e1g\u00edt\u00f3 platform-korong a telefon alatt */}
+      <Image
+        src="/images/home-hero/hero-platform.webp"
+        alt=""
+        width={1153}
+        height={372}
+        priority
+        sizes="(min-width: 1024px) 440px, 80vw"
+        className="absolute bottom-[2%] left-1/2 z-0 h-auto w-[86%] max-w-[440px] -translate-x-1/2 object-contain"
+      />
+
+      {/* Telefon mockup (m\u00e1r k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
+      <Image
+        src="/images/home-hero/hero-phone.webp"
+        alt={"UGC vide\u00f3 felv\u00e9tel telefonon"}
+        width={679}
+        height={1241}
+        priority
+        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 230px"
+        className="animate-float relative z-10 h-auto w-[230px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+      />
+
+      {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
+      {/* Bal fels\u0151: K\u00f6vet\u0151k */}
+      <Image
+        src="/images/home-hero/card-followers.webp"
+        alt=""
+        width={1156}
+        height={910}
+        sizes="190px"
+        className="animate-float absolute left-0 top-[4%] z-20 hidden h-auto w-[170px] rotate-[-3deg] object-contain drop-shadow-2xl md:block xl:w-[190px]"
+      />
+      {/* Jobb fels\u0151: Akt\u00edv kamp\u00e1ny */}
+      <Image
+        src="/images/home-hero/card-campaign.webp"
+        alt=""
+        width={1241}
+        height={740}
+        sizes="210px"
+        className="animate-float absolute right-0 top-[2%] z-20 hidden h-auto w-[185px] rotate-[3deg] object-contain drop-shadow-2xl md:block xl:w-[210px]"
+        style={{ animationDelay: "0.3s" }}
+      />
+      {/* Bal als\u00f3: UGC tartalmak */}
+      <Image
+        src="/images/home-hero/card-ugc.webp"
+        alt=""
+        width={1360}
+        height={831}
+        sizes="215px"
+        className="animate-float absolute bottom-[6%] left-[-2%] z-20 hidden h-auto w-[195px] rotate-[3deg] object-contain drop-shadow-2xl lg:block xl:w-[215px]"
+        style={{ animationDelay: "0.9s" }}
+      />
+      {/* Jobb als\u00f3: \u00dczenetek */}
+      <Image
+        src="/images/home-hero/card-messages.webp"
+        alt=""
+        width={1049}
+        height={698}
+        sizes="195px"
+        className="animate-float absolute bottom-[12%] right-0 z-20 hidden h-auto w-[180px] rotate-[-3deg] object-contain drop-shadow-2xl lg:block xl:w-[195px]"
+        style={{ animationDelay: "1.2s" }}
+      />
+      {/* Bal k\u00f6z\u00e9p: Elemz\u00e9sek (csak xl) */}
+      <Image
+        src="/images/home-hero/card-analytics.webp"
+        alt=""
+        width={1093}
+        height={922}
+        sizes="150px"
+        className="animate-float absolute left-[-3%] top-[42%] z-20 hidden h-auto w-[150px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block"
+        style={{ animationDelay: "0.6s" }}
+      />
+      {/* Jobb k\u00f6z\u00e9p: Megtekint\u00e9sek (csak xl) */}
+      <Image
+        src="/images/home-hero/card-views.webp"
+        alt=""
+        width={1197}
+        height={803}
+        sizes="170px"
+        className="animate-float absolute right-[-2%] top-[40%] z-20 hidden h-auto w-[170px] rotate-[4deg] object-contain drop-shadow-2xl xl:block"
+        style={{ animationDelay: "1.5s" }}
+      />
+    </div>
+  );
+}
+
+
 function Stat({ value, label }: { value: string; label: string }) {
   return (
     <div>
@@ -342,19 +469,18 @@ function SideCard({
   cta,
   highlight,
   image,
-  delay,
 }: {
   title: string;
   perks: string[];
   cta: string;
   highlight?: boolean;
   image?: string;
-  delay?: string;
 }) {
   return (
     <div
-      className={`animate-float overflow-hidden rounded-2xl border shadow-sm transition-shadow hover:shadow-xl ${highlight ? "border-accent ring-1 ring-accent" : ""}`}
-      style={{ animationDelay: delay }}
+      className={`overflow-hidden rounded-lg border bg-card shadow-sm transition-shadow hover:shadow-md ${
+        highlight ? "border-accent ring-1 ring-accent" : ""
+      }`}
     >
       {image && (
         <div className="relative h-44 w-full overflow-hidden">

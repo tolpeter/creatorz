@@ -17,8 +17,23 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
-import { CREATOR_CATEGORIES, CONTENT_TYPES, USAGE_RIGHTS } from "@/lib/constants";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ImageUploader } from "@/components/creator/image-uploader";
+import {
+  CREATOR_CATEGORIES,
+  CONTENT_TYPES,
+  USAGE_RIGHTS,
+  COLLABORATION_TYPES,
+} from "@/lib/constants";
 import { createAd } from "@/app/actions/ads";
+
+// "Kit keresel?" opciók — UGC creator + kreatív szakember típusok
+const TARGET_KIND_OPTIONS = [
+  { value: "ugc", label: "UGC tartalomgyártó" },
+  { value: "editor", label: "Videóvágó" },
+  { value: "photographer", label: "Fotós" },
+  { value: "videographer", label: "Operatőr" },
+] as const;
 
 export function AdForm() {
   const router = useRouter();
@@ -26,10 +41,15 @@ export function AdForm() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [categories, setCategories] = useState<string[]>([]);
+  const [targetKinds, setTargetKinds] = useState<string[]>(["ugc"]);
   const [contentType, setContentType] = useState("video");
+  const [collaborationType, setCollaborationType] = useState("project");
   const [itemCount, setItemCount] = useState("1");
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
+  const [budgetPublic, setBudgetPublic] = useState(false);
+  const [anonymous, setAnonymous] = useState(false);
   const [deadline, setDeadline] = useState("");
   const [location, setLocation] = useState("");
   const [usageRights, setUsageRights] = useState("organic");
@@ -41,10 +61,15 @@ export function AdForm() {
       title,
       description,
       categories,
+      targetKinds: targetKinds as ("ugc" | "editor" | "photographer" | "videographer")[],
       contentType: contentType as "video" | "photo" | "both",
+      collaborationType: collaborationType as "project" | "longterm" | "barter",
       itemCount: Number(itemCount),
-      budgetMinHuf: Number(budgetMin),
-      budgetMaxHuf: Number(budgetMax),
+      coverUrl,
+      budgetMinHuf: budgetMin ? Number(budgetMin) : "",
+      budgetMaxHuf: budgetMax ? Number(budgetMax) : "",
+      budgetPublic,
+      anonymous,
       deadline: deadline as unknown as Date,
       location,
       usageRights: usageRights as "organic" | "paid_ads" | "perpetual",
@@ -67,6 +92,19 @@ export function AdForm() {
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
+          <Label>Borítókép (opcionális)</Label>
+          <p className="text-xs text-muted-foreground">
+            Egy figyelemfelkeltő kép a hirdetésed tetejére és a listában.
+          </p>
+          <ImageUploader
+            bucket="banners"
+            variant="banner"
+            label=""
+            value={coverUrl}
+            onChange={setCoverUrl}
+          />
+        </div>
+        <div className="space-y-1.5">
           <Label>Cím *</Label>
           <Input value={title} maxLength={80} onChange={(e) => setTitle(e.target.value)} placeholder="pl. UGC videó keresése bőrápolási termékhez" />
           <p className="text-right text-xs text-muted-foreground">{title.length}/80</p>
@@ -75,6 +113,17 @@ export function AdForm() {
           <Label>Részletes leírás *</Label>
           <Textarea value={description} maxLength={2000} rows={5} onChange={(e) => setDescription(e.target.value)} placeholder="Mit vársz a creatortól? (min. 50 karakter)" />
           <p className="text-right text-xs text-muted-foreground">{description.length}/2000</p>
+        </div>
+        <div className="space-y-2">
+          <Label>Kit keresel? *</Label>
+          <p className="text-xs text-muted-foreground">
+            Több típust is megjelölhetsz — a megfelelő alkotók látják a hirdetést.
+          </p>
+          <ChipMultiSelect
+            options={TARGET_KIND_OPTIONS}
+            value={targetKinds}
+            onChange={(next) => setTargetKinds(next.length ? next : ["ugc"])}
+          />
         </div>
         <div className="space-y-2">
           <Label>Kategóriák (max 3) *</Label>
@@ -97,15 +146,56 @@ export function AdForm() {
             <Input type="number" min={1} max={20} value={itemCount} onChange={(e) => setItemCount(e.target.value)} />
           </div>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Min. költségvetés (Ft) *</Label>
-            <Input type="number" min={1000} value={budgetMin} onChange={(e) => setBudgetMin(e.target.value)} />
+        <div className="space-y-1.5">
+          <Label>Együttműködés típusa</Label>
+          <Select value={collaborationType} onValueChange={setCollaborationType}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {COLLABORATION_TYPES.map((c) => (
+                <SelectItem key={c.value} value={c.value}>
+                  {c.label} — {c.description}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Költségvetés (Ft) — opcionális</Label>
+          <p className="text-xs text-muted-foreground">
+            Alapból nem jelenik meg, a díjazás megbeszélés kérdése. Akkor töltsd
+            ki, ha szeretnéd, hogy a tartalomgyártók lássák a keretet.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Input
+              type="number"
+              min={1000}
+              value={budgetMin}
+              onChange={(e) => setBudgetMin(e.target.value)}
+              placeholder="Min. (pl. 30000)"
+            />
+            <Input
+              type="number"
+              min={1000}
+              value={budgetMax}
+              onChange={(e) => setBudgetMax(e.target.value)}
+              placeholder="Max. (pl. 80000)"
+            />
           </div>
-          <div className="space-y-1.5">
-            <Label>Max. költségvetés (Ft) *</Label>
-            <Input type="number" min={1000} value={budgetMax} onChange={(e) => setBudgetMax(e.target.value)} />
-          </div>
+          <label className="mt-2 flex items-start gap-2 rounded-lg bg-muted/60 p-3">
+            <Checkbox
+              checked={budgetPublic}
+              onCheckedChange={(v) => setBudgetPublic(v === true)}
+              className="mt-0.5"
+              disabled={!budgetMin && !budgetMax}
+            />
+            <span className="text-sm leading-snug">
+              <span className="font-medium">A költségkeret legyen publikus</span>
+              <span className="block text-xs text-muted-foreground">
+                Ha nincs bepipálva, a hirdetésen „Megegyezés szerint" jelenik meg,
+                és a díjazást személyesen egyeztetitek.
+              </span>
+            </span>
+          </label>
         </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -117,6 +207,21 @@ export function AdForm() {
             <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="pl. Budapest vagy Online" />
           </div>
         </div>
+        <label className="flex items-start gap-2 rounded-lg border border-accent/30 bg-[#f0f4e5] p-3">
+          <Checkbox
+            checked={anonymous}
+            onCheckedChange={(v) => setAnonymous(v === true)}
+            className="mt-0.5"
+          />
+          <span className="text-sm leading-snug">
+            <span className="font-medium text-[#3f6212]">Anonim hirdetés</span>
+            <span className="block text-xs text-muted-foreground">
+              A publikus hirdetésben NEM jelenik meg a cégnév, logó, weboldal.
+              A részleteket csak az érdeklődő tartalomgyártókkal osztod meg az
+              üzenetekben. (Az admin és a moderáció természetesen látja.)
+            </span>
+          </span>
+        </label>
         <div className="space-y-1.5">
           <Label>Felhasználási jog</Label>
           <Select value={usageRights} onValueChange={setUsageRights}>

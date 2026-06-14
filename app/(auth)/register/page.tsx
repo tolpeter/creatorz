@@ -5,34 +5,35 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import Image from "next/image";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Loader2,
+  Mail,
+  Lock,
+  Sparkles,
+  BadgeCheck,
+} from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { signUpAction } from "@/app/actions/auth";
 
-type Role = "creator" | "brand";
+// UI-választás: a "professional" valójában creator role + professional profileKind
+type RoleChoice = "creator" | "professional" | "brand";
 
 export default function RegisterPage() {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2>(1);
-  const [role, setRole] = useState<Role | null>(null);
+  const [role, setRole] = useState<RoleChoice | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [gdpr, setGdpr] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [confirmSent, setConfirmSent] = useState(false);
 
-  function chooseRole(r: Role) {
+  function chooseRole(r: RoleChoice) {
     setRole(r);
     setStep(2);
   }
@@ -41,75 +42,54 @@ export default function RegisterPage() {
     e.preventDefault();
     if (!role) return;
     setLoading(true);
-    const res = await signUpAction({ role, email, password, gdpr });
+    const res = await signUpAction({
+      role: role === "brand" ? "brand" : "creator",
+      profileKind: role === "professional" ? "professional" : "ugc",
+      email,
+      password,
+      gdpr,
+    });
     setLoading(false);
 
     if (res.error) {
       toast.error(res.error);
       return;
     }
-    if (res.needsConfirmation) {
-      setConfirmSent(true);
-      toast.success("Megerősítő emailt küldtünk!");
-      return;
-    }
-    toast.success("Sikeres regisztráció!");
+    // Sikeres signup → onboarding wizard. A megerősítő emailt az onboarding
+    // VÉGÉN küldjük ki, és a /verify-email oldalra terelünk.
+    toast.success("Sikeres regisztráció! Folytasd a profilod kitöltésével.");
     router.push(res.redirectTo ?? "/dashboard");
     router.refresh();
   }
 
-  if (confirmSent) {
-    return (
-      <Card className="w-full max-w-md">
-        <CardHeader>
-          <CardTitle>Ellenőrizd az email fiókod</CardTitle>
-          <CardDescription>
-            Küldtünk egy megerősítő linket a(z) <strong>{email}</strong> címre.
-            Kattints rá a regisztráció befejezéséhez.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button asChild variant="outline" className="w-full">
-            <Link href="/login">Vissza a bejelentkezéshez</Link>
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  // (A korábbi "check email" képernyő törölve — a verifikáció az onboarding
+  //  után fut, a /verify-email oldalon.)
 
+  // ---- 1. lépés: szerepválasztás ----
   if (step === 1) {
     return (
-      <div className="relative w-full max-w-5xl overflow-hidden rounded-3xl">
-        {/* Lebegő blob háttér (a wrapper overflow-hidden levágja a kilógást) */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -left-32 -top-24 h-80 w-80 animate-blob rounded-full bg-accent/15 blur-3xl"
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-24 top-1/3 h-80 w-80 animate-blob rounded-full bg-accent/10 blur-3xl"
-          style={{ animationDelay: "4s" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-24 left-1/4 h-72 w-72 animate-blob rounded-full bg-accent/12 blur-3xl"
-          style={{ animationDelay: "8s" }}
-        />
-
+      <div className="relative w-full max-w-5xl rounded-3xl">
         <div className="relative space-y-8">
           <div className="space-y-3 text-center">
-            <h1 className="text-3xl font-bold sm:text-4xl">Csatlakozz a Creatorz-hoz</h1>
+            <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-[#f0f4e5] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#3f6212]">
+              <Sparkles className="h-3.5 w-3.5" />
+              Ingyenes csatlakozás
+            </span>
+            <h1 className="text-balance text-3xl font-black sm:text-4xl">
+              Csatlakozz a <span className="text-[#4d7c0f]">Creatorz</span>-hoz
+            </h1>
             <p className="text-muted-foreground">
               Válaszd ki, hogyan szeretnél regisztrálni
             </p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             <RoleCard
               onClick={() => chooseRole("creator")}
               alt="Tartalomgyártó vagyok"
               image="/images/register-creator.webp"
             />
+            <ProfessionalRoleCard onClick={() => chooseRole("professional")} />
             <RoleCard
               onClick={() => chooseRole("brand")}
               alt="Márka vagyok"
@@ -119,7 +99,10 @@ export default function RegisterPage() {
 
           <p className="text-center text-sm text-muted-foreground">
             Van már fiókod?{" "}
-            <Link href="/login" className="font-medium text-accent underline">
+            <Link
+              href="/login"
+              className="font-semibold text-foreground underline decoration-accent decoration-2 underline-offset-2 hover:text-accent"
+            >
               Jelentkezz be
             </Link>
           </p>
@@ -128,47 +111,138 @@ export default function RegisterPage() {
     );
   }
 
+  // ---- 2. lépés: űrlap (split-screen) ----
+  const isCreator = role === "creator";
+  const isProfessional = role === "professional";
+  const benefits = isProfessional
+    ? [
+        "Portfólió-alapú profil, linkekkel",
+        "Drive / YouTube videóid beágyazva",
+        "Márkák találnak meg a munkáid alapján",
+      ]
+    : isCreator
+      ? [
+          "Ingyenes profil, 2 perc alatt kész",
+          "Pályázz márka-briefekre",
+          "Építs portfóliót és gyűjts értékeléseket",
+        ]
+      : [
+          "Találd meg a tökéletes alkotót",
+          "Adj fel briefet — ingyen",
+          "Közvetlen kapcsolat, gyors együttműködés",
+        ];
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
+    <div className="grid w-full max-w-5xl overflow-hidden rounded-3xl border border-black/10 bg-white shadow-[0_30px_90px_rgba(0,0,0,0.18)] lg:grid-cols-2">
+      {/* BAL: brandelt, animált panel */}
+      <div className="relative hidden min-h-[600px] overflow-hidden bg-[#0a0a0a] lg:block">
+        <Image
+          src="/images/generated/login-hero.webp"
+          alt=""
+          fill
+          priority
+          sizes="50vw"
+          className="object-cover opacity-80"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 bg-[linear-gradient(180deg,rgba(10,10,10,0.35)_0%,rgba(10,10,10,0.6)_55%,rgba(10,10,10,0.96)_100%)]"
+        />
+        <div
+          aria-hidden
+          className="animate-blob pointer-events-none absolute -left-20 top-10 h-64 w-64 rounded-full bg-accent/25 blur-3xl"
+        />
+        <div
+          aria-hidden
+          className="animate-blob pointer-events-none absolute -right-16 bottom-24 h-56 w-56 rounded-full bg-accent/20 blur-3xl"
+          style={{ animationDelay: "5s" }}
+        />
+        <div
+          aria-hidden
+          className="animate-float absolute right-6 top-8 flex items-center gap-2 rounded-2xl border border-white/15 bg-black/55 px-3 py-2 text-white backdrop-blur"
+        >
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-accent text-black">
+            <Sparkles className="h-4 w-4" />
+          </span>
+          <span className="text-xs font-semibold">100% magyar közösség</span>
+        </div>
+
+        <div className="absolute inset-x-0 bottom-0 p-8 text-white">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
+            {isProfessional
+              ? "Kreatív szakembereknek"
+              : isCreator
+                ? "Tartalomgyártóknak"
+                : "Márkáknak"}
+          </span>
+          <h2 className="mt-4 text-balance text-3xl font-black leading-tight">
+            Csatlakozz a <span className="text-accent">Creatorz</span>-hoz
+          </h2>
+          <ul className="mt-5 space-y-2 text-sm text-white/85">
+            {benefits.map((t) => (
+              <li key={t} className="flex items-center gap-2">
+                <BadgeCheck className="h-4 w-4 shrink-0 text-accent" />
+                {t}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* JOBB: regisztrációs űrlap */}
+      <div className="animate-slide-up flex flex-col justify-center p-7 sm:p-10">
         <button
           type="button"
           onClick={() => setStep(1)}
-          className="mb-2 inline-flex w-fit items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          className="mb-4 inline-flex w-fit items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Vissza
         </button>
-        <CardTitle>
-          {role === "creator" ? "Tartalomgyártó regisztráció" : "Márka regisztráció"}
-        </CardTitle>
-        <CardDescription>Add meg az adataidat a fiók létrehozásához</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+
+        <h1 className="text-2xl font-black sm:text-3xl">
+          {isProfessional
+            ? "Kreatív szakember regisztráció"
+            : isCreator
+              ? "Tartalomgyártó regisztráció"
+              : "Márka regisztráció"}
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Add meg az adataidat a fiók létrehozásához.
+        </p>
+
+        <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <div className="space-y-1.5">
             <Label htmlFor="email">Email cím</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="te@pelda.hu"
-            />
+            <div className="relative">
+              <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="te@pelda.hu"
+                className="h-11 pl-10"
+              />
+            </div>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label htmlFor="password">Jelszó</Label>
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              minLength={8}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Legalább 8 karakter"
-            />
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="password"
+                type="password"
+                autoComplete="new-password"
+                required
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Legalább 8 karakter"
+                className="h-11 pl-10"
+              />
+            </div>
           </div>
           <div className="flex items-start gap-2">
             <Checkbox
@@ -179,19 +253,64 @@ export default function RegisterPage() {
             />
             <Label htmlFor="gdpr" className="text-sm font-normal leading-snug">
               Elfogadom az{" "}
-              <Link href="/about" className="underline">
+              <Link href="/about" className="underline decoration-accent">
                 adatkezelési tájékoztatót
               </Link>{" "}
               és az ÁSZF-et.
             </Label>
           </div>
-          <Button type="submit" className="w-full" disabled={loading}>
-            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="h-11 w-full bg-[#0a0a0a] text-base font-semibold text-white transition-all hover:bg-accent hover:text-black hover:shadow-[0_10px_36px_rgba(163,230,53,0.45)]"
+          >
+            {loading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ArrowRight className="h-4 w-4" />
+            )}
             Fiók létrehozása
           </Button>
         </form>
-      </CardContent>
-    </Card>
+
+        <p className="mt-6 text-center text-sm text-muted-foreground">
+          Van már fiókod?{" "}
+          <Link
+            href="/login"
+            className="font-semibold text-foreground underline decoration-accent decoration-2 underline-offset-2 hover:text-accent"
+          >
+            Jelentkezz be
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * A kreatív szakember kártya: az új generált képbe már bele van égetve a teljes
+ * felirat ("Kreatív szakember vagyok / Videós, Fotós, Operatőr") és a nyíl is,
+ * tehát semmilyen overlay nem kell — ugyanúgy mint a másik két kártya.
+ */
+function ProfessionalRoleCard({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Videóvágó, Fotós, Operatőr vagyok"
+      className="group relative block w-full overflow-hidden rounded-3xl bg-white shadow-sm outline-none transition-all duration-500 ease-out hover:-translate-y-2 hover:shadow-2xl focus-visible:-translate-y-2 focus-visible:shadow-2xl focus-visible:ring-2 focus-visible:ring-accent"
+      style={{ aspectRatio: "788 / 565" }}
+    >
+      <Image
+        src="/images/register-professional.webp?v=2"
+        alt="Videóvágó, Fotós, Operatőr vagyok"
+        fill
+        priority
+        unoptimized
+        sizes="(max-width: 768px) 100vw, 500px"
+        className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.04]"
+      />
+    </button>
   );
 }
 

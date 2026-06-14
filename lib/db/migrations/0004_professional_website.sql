@@ -1,0 +1,1 @@
+ALTER TABLE "creator_profiles" ADD COLUMN "website_url" text;

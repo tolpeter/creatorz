@@ -15,3 +15,26 @@ export function formatHuDate(date: Date | string): string {
     d.getDate()
   ).padStart(2, "0")}.`;
 }
+
+/**
+ * Opcionális büdzsé-tartomány megjelenítése.
+ * Ha egyik érték sincs megadva: "Megegyezés szerint".
+ */
+export function formatBudgetRange(
+  min: number | null | undefined,
+  max: number | null | undefined,
+  fallback = "Megegyezés szerint"
+): string {
+  if (min == null && max == null) return fallback;
+  if (min != null && max != null) return `${formatHuf(min)} - ${formatHuf(max)}`;
+  return formatHuf((max ?? min) as number);
+}
+
+/** Opcionális ár megjelenítése (pl. pályázati ár-ajánlat). */
+export function formatHufOptional(
+  amount: number | null | undefined,
+  fallback = "Megegyezés szerint"
+): string {
+  if (amount == null) return fallback;
+  return formatHuf(amount);
+}

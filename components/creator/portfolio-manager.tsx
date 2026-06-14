@@ -43,9 +43,9 @@ import {
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
 import { CREATOR_CATEGORIES, MAX_PORTFOLIO_ITEMS } from "@/lib/constants";
 import { uploadFile } from "@/lib/supabase/upload";
-import { generateVideoThumbnail } from "@/lib/utils/video-thumbnail";
 import {
   addPortfolioItem,
+  addVideoLink,
   deletePortfolioItem,
   reorderPortfolio,
 } from "@/app/actions/portfolio";
@@ -222,7 +222,8 @@ function AddDialog({
   onOpenChange: (v: boolean) => void;
   onAdded: () => void;
 }) {
-  const [type, setType] = useState<"video" | "photo">("photo");
+  const [mode, setMode] = useState<"videolink" | "photo">("videolink");
+  const [videoUrl, setVideoUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
@@ -230,7 +231,8 @@ function AddDialog({
   const [loading, setLoading] = useState(false);
 
   function reset() {
-    setType("photo");
+    setMode("videolink");
+    setVideoUrl("");
     setFile(null);
     setTitle("");
     setDescription("");
@@ -238,31 +240,38 @@ function AddDialog({
   }
 
   async function submit() {
-    if (!file) {
-      toast.error("Válassz ki egy fájlt");
-      return;
-    }
     setLoading(true);
     try {
+      if (mode === "videolink") {
+        if (!videoUrl.trim()) {
+          toast.error("Illeszd be a videó linkjét");
+          return;
+        }
+        const res = await addVideoLink({ url: videoUrl.trim() });
+        if (res.error) {
+          toast.error(res.error);
+          return;
+        }
+        toast.success("Videó hozzáadva a profilodhoz");
+        reset();
+        onAdded();
+        return;
+      }
+
+      // Fotó feltöltés
+      if (!file) {
+        toast.error("Válassz ki egy képfájlt");
+        return;
+      }
       const up = await uploadFile("portfolio", file);
       if (up.error || !up.url) {
         toast.error(`Feltöltés sikertelen: ${up.error ?? "ismeretlen hiba"}`);
         return;
       }
-
-      let thumbnailUrl: string | null = null;
-      if (type === "video") {
-        const thumb = await generateVideoThumbnail(file);
-        if (thumb) {
-          const tup = await uploadFile("portfolio", thumb);
-          if (tup.url) thumbnailUrl = tup.url;
-        }
-      }
-
       const res = await addPortfolioItem({
-        type,
+        type: "photo",
         url: up.url,
-        thumbnailUrl,
+        thumbnailUrl: null,
         title,
         description,
         categories,
@@ -271,7 +280,7 @@ function AddDialog({
         toast.error(res.error);
         return;
       }
-      toast.success("Portfolio elem hozzáadva");
+      toast.success("Fotó hozzáadva");
       reset();
       onAdded();
     } finally {
@@ -283,56 +292,92 @@ function AddDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Új portfolio elem</DialogTitle>
-          <DialogDescription>Tölts fel egy videót vagy fotót.</DialogDescription>
+          <DialogTitle>Új portfólió elem</DialogTitle>
+          <DialogDescription>
+            Linkeld be a TikTok/YouTube videódat (előképet behúzzuk), vagy tölts
+            fel egy fotót.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label>Típus</Label>
-            <Select value={type} onValueChange={(val) => setType(val as "video" | "photo")}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="photo">Fotó</SelectItem>
-                <SelectItem value="video">Videó</SelectItem>
-              </SelectContent>
-            </Select>
+          {/* Mód-választó */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setMode("videolink")}
+              className={
+                "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium " +
+                (mode === "videolink"
+                  ? "border-accent bg-accent/10 text-foreground"
+                  : "text-muted-foreground hover:bg-muted")
+              }
+            >
+              <Video className="h-4 w-4" /> Videó linkelése
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("photo")}
+              className={
+                "flex items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium " +
+                (mode === "photo"
+                  ? "border-accent bg-accent/10 text-foreground"
+                  : "text-muted-foreground hover:bg-muted")
+              }
+            >
+              <ImageIcon className="h-4 w-4" /> Fotó feltöltése
+            </button>
           </div>
-          <div className="space-y-1.5">
-            <Label>Fájl</Label>
-            <Input
-              type="file"
-              accept={type === "video" ? "video/*" : "image/*"}
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Cím (opcionális)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Leírás (opcionális)</Label>
-            <Textarea
-              value={description}
-              rows={2}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label>Kategóriák (max 3)</Label>
-            <ChipMultiSelect
-              options={CREATOR_CATEGORIES}
-              value={categories}
-              onChange={setCategories}
-              max={3}
-            />
-          </div>
+
+          {mode === "videolink" ? (
+            <div className="space-y-1.5">
+              <Label>TikTok vagy YouTube videó linkje</Label>
+              <Input
+                value={videoUrl}
+                onChange={(e) => setVideoUrl(e.target.value)}
+                placeholder="https://www.tiktok.com/@felhasznalo/video/..."
+              />
+              <p className="text-xs text-muted-foreground">
+                A videó a TikTokon/YouTube-on marad — mi csak az előképét húzzuk
+                be a profilodra.
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <Label>Képfájl</Label>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cím (opcionális)</Label>
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Leírás (opcionális)</Label>
+                <Textarea
+                  value={description}
+                  rows={2}
+                  onChange={(e) => setDescription(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Kategóriák (max 3)</Label>
+                <ChipMultiSelect
+                  options={CREATOR_CATEGORIES}
+                  value={categories}
+                  onChange={setCategories}
+                  max={3}
+                />
+              </div>
+            </>
+          )}
         </div>
         <DialogFooter>
           <Button type="button" onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Feltöltés
+            {mode === "videolink" ? "Videó hozzáadása" : "Fotó feltöltése"}
           </Button>
         </DialogFooter>
       </DialogContent>

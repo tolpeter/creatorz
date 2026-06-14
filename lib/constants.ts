@@ -2,6 +2,39 @@ export const APP_NAME = "Creatorz";
 export const APP_DOMAIN = "creatorz.hu";
 export const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 
+// Kreatív szakember szerepkörök (csak professional profilnál)
+export const PROFESSIONAL_ROLES = [
+  { value: "editor", label: "Videóvágó" },
+  { value: "photographer", label: "Fotós" },
+  { value: "videographer", label: "Operatőr" },
+] as const;
+
+// A directory típus-szűrő opciói
+export const DIRECTORY_TYPES = [
+  { value: "all", label: "Összes alkotó" },
+  { value: "ugc", label: "UGC tartalomgyártó" },
+  { value: "editor", label: "Videóvágó" },
+  { value: "photographer", label: "Fotós" },
+  { value: "videographer", label: "Operatőr" },
+] as const;
+
+// Szakterület javaslatok (chip-ek, szabadon bővíthető)
+export const SPECIALTY_SUGGESTIONS = [
+  "Reklámfilm", "Esküvő", "Esemény", "Termékfotó", "Portré",
+  "Klip", "Vlog", "Dokumentum", "Social media", "Termékvideó",
+  "Ingatlan", "Gasztro", "Divat", "Sport", "Interjú",
+] as const;
+
+// Tartalom-bejelentés okai
+export const REPORT_REASONS = [
+  { value: "spam", label: "Spam vagy megtévesztő" },
+  { value: "inappropriate", label: "Nem megfelelő / sértő tartalom" },
+  { value: "scam", label: "Csalás gyanúja" },
+  { value: "fake", label: "Hamis profil / adatok" },
+  { value: "copyright", label: "Szerzői jog megsértése" },
+  { value: "other", label: "Egyéb" },
+] as const;
+
 // Categories (creator stílusok)
 export const CREATOR_CATEGORIES = [
   { value: "gasztro", label: "Gasztro", emoji: "🍳" },
@@ -12,7 +45,7 @@ export const CREATOR_CATEGORIES = [
   { value: "lifestyle", label: "Lifestyle", emoji: "✨" },
   { value: "tech", label: "Tech", emoji: "📱" },
   { value: "otthon", label: "Otthon", emoji: "🏠" },
-  { value: "anyukak", label: "Anyukáknak", emoji: "👶" },
+  { value: "anyukak", label: "Baba-Mama", emoji: "👶" },
   { value: "auto", label: "Autó", emoji: "🚗" },
   { value: "fitness", label: "Fitness", emoji: "💪" },
   { value: "wellness", label: "Wellness", emoji: "🧘" },
@@ -39,6 +72,36 @@ export const USAGE_RIGHTS = [
   { value: "organic", label: "Organic social media" },
   { value: "paid_ads", label: "Paid ads (fizetett hirdetés)" },
   { value: "perpetual", label: "Perpetual (örökös jog)" },
+] as const;
+
+// Kapcsolat-űrlap előre kiválasztható tárgyai (utolsó: Egyéb → saját tárgy)
+export const CONTACT_SUBJECTS = [
+  "Általános kérdés",
+  "Regisztráció / fiók",
+  "Hirdetés / pályázat",
+  "Fizetés / előfizetés",
+  "Hibabejelentés",
+  "Együttműködési ajánlat",
+  "Egyéb",
+] as const;
+
+// Együttműködés típusa — a márka állítja be, a creator szűrhet rá
+export const COLLABORATION_TYPES = [
+  {
+    value: "project",
+    label: "Projekt alapú",
+    description: "Egyszeri megbízás, konkrét feladatra",
+  },
+  {
+    value: "longterm",
+    label: "Hosszútávú",
+    description: "Folyamatos, visszatérő együttműködés",
+  },
+  {
+    value: "barter",
+    label: "Barter",
+    description: "Termék vagy szolgáltatás ellenében",
+  },
 ] as const;
 
 export const LANGUAGES = [

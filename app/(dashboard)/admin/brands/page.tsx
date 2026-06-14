@@ -1,11 +1,31 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { brandProfiles, ads } from "@/lib/db/schema";
+import { AdminSearch } from "@/components/admin/admin-search";
+import { ExportButton } from "@/components/admin/export-button";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Márkák" };
 
-export default async function AdminBrandsPage() {
+export default async function AdminBrandsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const sp = await searchParams;
+  const q = (sp.q ?? "").trim();
+
+  const conditions: SQL[] = [];
+  if (q) {
+    const like = `%${q}%`;
+    conditions.push(
+      or(
+        ilike(brandProfiles.companyName, like),
+        ilike(brandProfiles.industry, like),
+      )!,
+    );
+  }
+
   const rows = await db
     .select({
       id: brandProfiles.id,
@@ -17,16 +37,23 @@ export default async function AdminBrandsPage() {
     })
     .from(brandProfiles)
     .leftJoin(ads, eq(ads.brandId, brandProfiles.id))
+    .where(conditions.length ? and(...conditions) : undefined)
     .groupBy(brandProfiles.id)
     .orderBy(desc(brandProfiles.createdAt))
     .limit(200);
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Márkák</h1>
-        <p className="text-muted-foreground">{rows.length} márka</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Márkák</h1>
+          <p className="text-muted-foreground">{rows.length} találat</p>
+        </div>
+        <ExportButton type="brands" />
       </div>
+
+      <AdminSearch q={q} placeholder="Keresés cégnév vagy iparág alapján…" />
+
       <div className="overflow-x-auto rounded-lg border">
         <table className="w-full text-sm">
           <thead className="border-b bg-muted/50 text-left">

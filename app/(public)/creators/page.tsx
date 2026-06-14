@@ -1,11 +1,19 @@
 import Link from "next/link";
-import { ArrowRight, Sparkles, SlidersHorizontal } from "lucide-react";
-import { loadMoreCreators, type BrowseFiltersInput } from "@/app/actions/browse";
+import { ArrowRight, SlidersHorizontal, Sparkles } from "lucide-react";
+import {
+  loadFeaturedCreators,
+  loadMoreCreators,
+  countCreators,
+  type BrowseFiltersInput,
+} from "@/app/actions/browse";
 import { BrowseFilters } from "@/components/creator/browse-filters";
 import { SortSelect } from "@/components/creator/sort-select";
 import { CreatorsInfiniteGrid } from "@/components/creator/creators-infinite-grid";
+import { FeaturedCreatorsRail } from "@/components/creator/featured-creators-rail";
+import { getCurrentBrand } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { DIRECTORY_TYPES } from "@/lib/constants";
 
 export const metadata = {
   title: "Tartalomgyártók böngészése",
@@ -13,8 +21,9 @@ export const metadata = {
 };
 
 type SP = Record<string, string | string[] | undefined>;
-function one(v: string | string[] | undefined): string | undefined {
-  return Array.isArray(v) ? v[0] : v;
+
+function one(value: string | string[] | undefined): string | undefined {
+  return Array.isArray(value) ? value[0] : value;
 }
 
 export default async function CreatorsBrowsePage({
@@ -24,7 +33,9 @@ export default async function CreatorsBrowsePage({
 }) {
   const sp = await searchParams;
 
+  const tipus = one(sp.tipus) ?? "all";
   const filters: BrowseFiltersInput = {
+    tipus,
     search: one(sp.search),
     categories: one(sp.categories)?.split(",").filter(Boolean) ?? [],
     languages: one(sp.languages)?.split(",").filter(Boolean) ?? [],
@@ -40,8 +51,14 @@ export default async function CreatorsBrowsePage({
     sort: one(sp.sort) ?? "featured",
   };
 
-  // Első oldal a server action-ből (12 db)
-  const { items: creators, hasMore } = await loadMoreCreators(0, filters);
+  const [{ items: creators, hasMore }, totalCount, featuredCreators] =
+    await Promise.all([
+      loadMoreCreators(0, filters),
+      countCreators(filters),
+      loadFeaturedCreators(12),
+    ]);
+
+  const canSave = Boolean(await getCurrentBrand().catch(() => null));
 
   const activeFilterCount = [
     filters.search,
@@ -59,69 +76,127 @@ export default async function CreatorsBrowsePage({
   ].filter(Boolean).length;
 
   return (
-    // Full-bleed: kitör a public layout max-w-6xl tárolójából
     <div
-      className="relative -my-6"
+      className="relative -my-6 bg-[#f6f7f2]"
       style={{
         marginLeft: "calc(50% - 50vw)",
         marginRight: "calc(50% - 50vw)",
         width: "100vw",
       }}
     >
-      <div className="grid gap-0 lg:grid-cols-[300px_1fr]">
-        {/* SIDEBAR */}
-        <aside className="border-b bg-card p-4 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r">
-          <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-bold">Szűrők</h2>
-            <div className="flex items-center gap-1.5 text-muted-foreground">
-              <SlidersHorizontal className="h-4 w-4" />
+      <div className="mx-auto grid max-w-[1500px] gap-0 lg:grid-cols-[320px_minmax(0,1fr)]">
+        <aside className="border-b border-black/10 bg-white/90 lg:sticky lg:top-16 lg:max-h-[calc(100vh-4rem)] lg:self-start lg:overflow-y-auto lg:border-b-0 lg:border-r">
+          <details className="group lg:hidden">
+            <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3">
+              <span className="flex items-center gap-2 text-sm font-semibold">
+                <SlidersHorizontal className="h-4 w-4" />
+                Szűrők
+              </span>
               {activeFilterCount > 0 && (
                 <Badge className="bg-accent text-accent-foreground hover:bg-accent">
                   {activeFilterCount}
                 </Badge>
               )}
+            </summary>
+            <div className="border-t p-4">
+              <BrowseFilters />
             </div>
+          </details>
+
+          <div className="hidden p-5 lg:block">
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold">Szűrők</h2>
+                <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                  Finomhangold a válogatást, hogy csak releváns profilokat nézz
+                  végig.
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 text-muted-foreground">
+                <SlidersHorizontal className="h-4 w-4" />
+                {activeFilterCount > 0 && (
+                  <Badge className="bg-accent text-accent-foreground hover:bg-accent">
+                    {activeFilterCount}
+                  </Badge>
+                )}
+              </div>
+            </div>
+            <BrowseFilters />
           </div>
-          <BrowseFilters />
         </aside>
 
-        {/* CONTENT */}
-        <div className="space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0 space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <h1 className="text-3xl font-bold">Tartalomgyártók</h1>
-              <p className="text-sm text-muted-foreground">{creators.length}+ találat</p>
+              <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
+                Tartalomgyártók, Kreatív szakemberek
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {totalCount === 0
+                  ? "Nincs a szűrőknek megfelelő találat."
+                  : `${totalCount} profil`}
+              </p>
             </div>
             <SortSelect />
           </div>
 
-          {/* Infinite grid */}
+          <FeaturedCreatorsRail creators={featuredCreators} />
+
+          <div className="flex flex-wrap gap-2">
+            {DIRECTORY_TYPES.map((type) => {
+              const params = new URLSearchParams();
+              for (const [key, value] of Object.entries(sp)) {
+                const v = Array.isArray(value) ? value[0] : value;
+                if (v && key !== "tipus") params.set(key, v);
+              }
+              if (type.value !== "all") params.set("tipus", type.value);
+              const qs = params.toString();
+              const active = tipus === type.value;
+
+              return (
+                <Link
+                  key={type.value}
+                  href={`/creators${qs ? `?${qs}` : ""}`}
+                  className={
+                    active
+                      ? "rounded-full bg-accent px-4 py-2 text-sm font-bold text-black shadow-sm"
+                      : "rounded-full border border-black/15 bg-white px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:bg-accent/10"
+                  }
+                >
+                  {type.label}
+                </Link>
+              );
+            })}
+          </div>
+
           <CreatorsInfiniteGrid
+            key={JSON.stringify(filters)}
             initial={creators}
             initialHasMore={hasMore}
             filters={filters}
+            canSave={canSave}
           />
 
-          {/* Alsó CTA */}
-          <div className="relative overflow-hidden rounded-2xl border bg-card p-6 sm:p-7">
-            <div
-              aria-hidden
-              className="pointer-events-none absolute -right-12 -top-12 h-40 w-40 rounded-full bg-accent/15 blur-3xl"
-            />
+          <div className="relative overflow-hidden rounded-lg border border-black/10 bg-[#0b0d0a] p-6 text-white sm:p-7">
             <div className="relative flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-start gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
+                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg bg-white/10">
                   <Sparkles className="h-7 w-7 text-accent" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold">Nem találtad meg, akit keresel?</h3>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Írd le, milyen tartalomgyártót keresel, és segítünk megtalálni a tökéletes
-                    partnert.
+                  <h3 className="text-lg font-bold">
+                    Nem találtad meg, akit keresel?
+                  </h3>
+                  <p className="mt-1 text-sm text-white/65">
+                    Írd le, milyen tartalomgyártót keresel, és segítünk
+                    megtalálni a tökéletes partnert.
                   </p>
                 </div>
               </div>
-              <Button asChild className="shrink-0">
+              <Button
+                asChild
+                className="shrink-0 bg-accent text-black hover:bg-white"
+              >
                 <Link href="/kapcsolat">
                   Keresési igény leadása <ArrowRight className="h-4 w-4" />
                 </Link>

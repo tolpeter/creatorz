@@ -15,6 +15,11 @@ export default async function CreatorOnboardingPage() {
   const creator = await getCurrentCreator();
   if (!creator) redirect("/login");
 
+  // Kreatív szakember a saját, egyszerűbb onboardingjára kerül
+  if (creator.profile.profileKind === "professional") {
+    redirect("/onboarding/professional");
+  }
+
   const p = creator.profile;
   const initial: OnboardingInitial = {
     username: p.username,
@@ -34,7 +39,6 @@ export default async function CreatorOnboardingPage() {
     facebookFollowers: p.facebookFollowers != null ? String(p.facebookFollowers) : "",
     youtubeUrl: p.youtubeUrl ?? "",
     youtubeSubscribers: p.youtubeSubscribers != null ? String(p.youtubeSubscribers) : "",
-    rateCard: (p.rateCard ?? []) as OnboardingInitial["rateCard"],
   };
 
   return (

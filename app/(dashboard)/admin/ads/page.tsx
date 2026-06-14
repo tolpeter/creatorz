@@ -5,7 +5,8 @@ import { ads, brandProfiles } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
 import { AdModerationActions } from "@/components/admin/ad-moderation-actions";
-import { formatHuf, formatHuDate } from "@/lib/utils/format";
+import { ExportButton } from "@/components/admin/export-button";
+import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Hirdetések" };
 
@@ -16,6 +17,7 @@ export default async function AdminAdsPage() {
       title: ads.title,
       description: ads.description,
       status: ads.status,
+      isFeatured: ads.isFeatured,
       budgetMinHuf: ads.budgetMinHuf,
       budgetMaxHuf: ads.budgetMaxHuf,
       deadline: ads.deadline,
@@ -32,7 +34,10 @@ export default async function AdminAdsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Hirdetések moderálása</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Hirdetések moderálása</h1>
+        <ExportButton type="ads" />
+      </div>
 
       <section className="space-y-3">
         <h2 className="font-semibold">Moderálásra vár ({pending.length})</h2>
@@ -50,10 +55,10 @@ export default async function AdminAdsPage() {
               <CardContent className="space-y-3">
                 <p className="text-sm text-muted-foreground">{a.description}</p>
                 <p className="text-sm">
-                  {formatHuf(a.budgetMinHuf)} – {formatHuf(a.budgetMaxHuf)} · Határidő:{" "}
+                  {formatBudgetRange(a.budgetMinHuf, a.budgetMaxHuf)} · Határidő:{" "}
                   {formatHuDate(a.deadline)}
                 </p>
-                <AdModerationActions adId={a.id} />
+                <AdModerationActions adId={a.id} status={a.status} featured={a.isFeatured} />
               </CardContent>
             </Card>
           ))

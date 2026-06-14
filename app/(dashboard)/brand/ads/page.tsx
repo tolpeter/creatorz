@@ -7,7 +7,7 @@ import { ads } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
-import { formatHuf, formatHuDate } from "@/lib/utils/format";
+import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Hirdetéseim" };
 
@@ -36,8 +36,19 @@ export default async function BrandAdsPage() {
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-          Még nincs hirdetésed. Add fel az elsőt!
+        <div className="flex flex-col items-center rounded-lg border border-dashed p-12 text-center">
+          <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f0f4e5] text-[#4d7c0f]">
+            <Plus className="h-6 w-6" />
+          </span>
+          <p className="mt-4 font-semibold">Még nincs hirdetésed</p>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            Adj fel egy briefet, és a tartalomgyártók pár kattintással pályáznak rá — ingyenes.
+          </p>
+          <Button asChild className="mt-5">
+            <Link href="/brand/ads/new">
+              <Plus className="h-4 w-4" /> Első hirdetés feladása
+            </Link>
+          </Button>
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
@@ -60,7 +71,7 @@ export default async function BrandAdsPage() {
                     </Link>
                   </td>
                   <td className="p-3 whitespace-nowrap">
-                    {formatHuf(a.budgetMinHuf)} – {formatHuf(a.budgetMaxHuf)}
+                    {formatBudgetRange(a.budgetMinHuf, a.budgetMaxHuf)}
                   </td>
                   <td className="p-3 whitespace-nowrap">{formatHuDate(a.deadline)}</td>
                   <td className="p-3">{a.applicationCount}</td>

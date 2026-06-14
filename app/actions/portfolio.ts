@@ -56,6 +56,81 @@ export async function addPortfolioItem(input: z.input<typeof addSchema>) {
   return { success: true, id: inserted[0]?.id };
 }
 
+// ---------- Videó-link hozzáadása (TikTok / YouTube) oEmbed előképpel ----------
+const videoLinkSchema = z.object({
+  url: z.string().url("Adj meg egy érvényes linket").max(600),
+});
+
+/**
+ * A creator beilleszti a TikTok (vagy YouTube) videó linkjét; az oEmbed-ből
+ * behúzzuk az előképet (thumbnail) + címet, és portfolió-elemként mentjük.
+ */
+export async function addVideoLink(input: z.input<typeof videoLinkSchema>) {
+  const creator = await getCurrentCreator();
+  if (!creator) return { error: "Nincs bejelentkezve" };
+
+  const parsed = videoLinkSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen link" };
+  }
+  const url = parsed.data.url.trim();
+  const isTikTok = /tiktok\.com/i.test(url);
+  const isYouTube = /youtube\.com|youtu\.be/i.test(url);
+  if (!isTikTok && !isYouTube) {
+    return { error: "Csak TikTok vagy YouTube videó linkje adható meg." };
+  }
+
+  const countRows = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(portfolioItems)
+    .where(eq(portfolioItems.creatorId, creator.profile.id));
+  if ((countRows[0]?.n ?? 0) >= MAX_PORTFOLIO_ITEMS) {
+    return { error: `Legfeljebb ${MAX_PORTFOLIO_ITEMS} portfolió elem lehet.` };
+  }
+
+  // oEmbed lekérés (előkép + cím)
+  let thumbnailUrl: string | null = null;
+  let title: string | null = null;
+  try {
+    const oembed = isTikTok
+      ? `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`
+      : `https://www.youtube.com/oembed?url=${encodeURIComponent(url)}&format=json`;
+    const res = await fetch(oembed, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+    });
+    if (res.ok) {
+      const data = (await res.json()) as {
+        thumbnail_url?: string;
+        title?: string;
+      };
+      thumbnailUrl = data.thumbnail_url ?? null;
+      title = data.title ?? null;
+    }
+  } catch {
+    /* előkép nélkül is mentjük */
+  }
+
+  const maxOrder = await db
+    .select({ m: sql<number>`coalesce(max(${portfolioItems.sortOrder}), -1)::int` })
+    .from(portfolioItems)
+    .where(eq(portfolioItems.creatorId, creator.profile.id));
+
+  const inserted = await db
+    .insert(portfolioItems)
+    .values({
+      creatorId: creator.profile.id,
+      type: "video",
+      url,
+      thumbnailUrl,
+      title: title?.slice(0, 200) ?? null,
+      sortOrder: (maxOrder[0]?.m ?? -1) + 1,
+    })
+    .returning({ id: portfolioItems.id });
+
+  revalidatePath("/creator/portfolio");
+  return { success: true, id: inserted[0]?.id, thumbnailUrl, title };
+}
+
 const updateSchema = z.object({
   id: z.string().uuid(),
   title: z.string().max(200).optional().or(z.literal("")),

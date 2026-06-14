@@ -12,7 +12,7 @@ export default async function CreatorProfilePage() {
   if (!creator) redirect("/login");
 
   const p = creator.profile;
-  const eq = p.equipment ?? {};
+  const verified = Boolean(p.verified);
   const initial: ProfileEditorInitial = {
     username: p.username,
     displayName: p.displayName,
@@ -24,13 +24,7 @@ export default async function CreatorProfilePage() {
     categories: p.categories ?? [],
     languages: p.languages ?? ["hu"],
     avatarUrl: p.avatarUrl ?? null,
-    bannerUrl: p.bannerUrl ?? null,
-    equipment: {
-      phone: eq.phone ?? "",
-      camera: eq.camera ?? "",
-      microphone: eq.microphone ?? "",
-      editing: eq.editing ?? "",
-    },
+    introVideoUrl: p.introVideoUrl ?? null,
     instagramUrl: p.instagramUrl ?? "",
     instagramFollowers: p.instagramFollowers != null ? String(p.instagramFollowers) : "",
     tiktokUrl: p.tiktokUrl ?? "",
@@ -39,7 +33,6 @@ export default async function CreatorProfilePage() {
     facebookFollowers: p.facebookFollowers != null ? String(p.facebookFollowers) : "",
     youtubeUrl: p.youtubeUrl ?? "",
     youtubeSubscribers: p.youtubeSubscribers != null ? String(p.youtubeSubscribers) : "",
-    rateCard: (p.rateCard ?? []) as ProfileEditorInitial["rateCard"],
   };
 
   return (
@@ -47,10 +40,11 @@ export default async function CreatorProfilePage() {
       <div>
         <h1 className="text-2xl font-bold">Profil szerkesztése</h1>
         <p className="text-muted-foreground">
-          Minden fül külön menthető.
+          Az egyes fülek külön-külön menthetők, így bármikor frissítheted az
+          adataidat.
         </p>
       </div>
-      <ProfileEditor initial={initial} />
+      <ProfileEditor initial={initial} verified={verified} />
     </div>
   );
 }

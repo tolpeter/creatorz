@@ -2,17 +2,25 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { BrowseCreatorCard, type BrowseCard } from "@/components/creator/browse-creator-card";
-import { loadMoreCreators, type BrowseFiltersInput } from "@/app/actions/browse";
+import {
+  BrowseCreatorCard,
+  type BrowseCard,
+} from "@/components/creator/browse-creator-card";
+import {
+  loadMoreCreators,
+  type BrowseFiltersInput,
+} from "@/app/actions/browse";
 
 export function CreatorsInfiniteGrid({
   initial,
   initialHasMore,
   filters,
+  canSave = false,
 }: {
   initial: BrowseCard[];
   initialHasMore: boolean;
   filters: BrowseFiltersInput;
+  canSave?: boolean;
 }) {
   const [items, setItems] = useState<BrowseCard[]>(initial);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -39,7 +47,7 @@ export function CreatorsInfiniteGrid({
       (entries) => {
         if (entries[0]?.isIntersecting) fetchMore();
       },
-      { rootMargin: "300px" }
+      { rootMargin: "300px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -47,7 +55,7 @@ export function CreatorsInfiniteGrid({
 
   if (items.length === 0) {
     return (
-      <div className="rounded-2xl border border-dashed p-12 text-center text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-black/15 bg-white p-12 text-center text-muted-foreground">
         Nincs a szűrőknek megfelelő tartalomgyártó.
       </div>
     );
@@ -55,7 +63,7 @@ export function CreatorsInfiniteGrid({
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
         {items.map((c, i) => {
           const isNew = i >= initialCountRef.current;
           return (
@@ -64,11 +72,13 @@ export function CreatorsInfiniteGrid({
               className={isNew ? "animate-slide-up" : undefined}
               style={
                 isNew
-                  ? { animationDelay: `${((i - initialCountRef.current) % 12) * 50}ms` }
+                  ? {
+                      animationDelay: `${((i - initialCountRef.current) % 12) * 50}ms`,
+                    }
                   : undefined
               }
             >
-              <BrowseCreatorCard c={c} />
+              <BrowseCreatorCard c={c} canSave={canSave} />
             </div>
           );
         })}
@@ -76,7 +86,10 @@ export function CreatorsInfiniteGrid({
 
       {/* Sentinel az IntersectionObserver-nek */}
       {hasMore && (
-        <div ref={sentinelRef} className="flex items-center justify-center py-8">
+        <div
+          ref={sentinelRef}
+          className="flex items-center justify-center py-8"
+        >
           {loading && (
             <span className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" />

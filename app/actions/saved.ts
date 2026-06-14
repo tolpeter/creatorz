@@ -3,9 +3,24 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { savedCreators } from "@/lib/db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentBrand } from "@/lib/auth";
+
+/** A bejelentkezett márka által mentett creator-id-k (opcionálisan egy halmazból). */
+export async function getSavedCreatorIds(within?: string[]): Promise<string[]> {
+  const brand = await getCurrentBrand();
+  if (!brand) return [];
+  const rows = await db
+    .select({ creatorId: savedCreators.creatorId })
+    .from(savedCreators)
+    .where(
+      within && within.length
+        ? and(eq(savedCreators.brandId, brand.profile.id), inArray(savedCreators.creatorId, within))
+        : eq(savedCreators.brandId, brand.profile.id),
+    );
+  return rows.map((r) => r.creatorId);
+}
 
 export async function toggleSavedCreator(creatorId: string) {
   const brand = await getCurrentBrand();
