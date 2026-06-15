@@ -6,6 +6,12 @@ import { stripe } from "@/lib/stripe/client";
 import { db } from "@/lib/db";
 import { subscriptions, featurePurchases, creatorProfiles } from "@/lib/db/schema";
 
+// Build-time NE próbálja statikusan elemezni — minden kérés futásidőben.
+// Enélkül a Next 16 turbopack a `collecting page data` fázisban
+// eval-elné a route-modult, ami a Stripe Proxy első property-access-én crash-elne.
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
 type SubStatus = "active" | "past_due" | "canceled" | "unpaid" | "incomplete";
 
 function mapStatus(status: string): SubStatus {
