@@ -7,7 +7,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-center gap-8 overflow-x-hidden bg-[#f6f7f2] px-4 py-12">
+    <div className="relative flex min-h-screen w-full flex-col items-center justify-start gap-6 overflow-x-hidden bg-[#f6f7f2] px-4 py-8 sm:justify-center sm:gap-8 sm:py-12">
       {/* Lime-os animált háttér-blob-ok (a landing-design szellemében) */}
       <div
         aria-hidden
