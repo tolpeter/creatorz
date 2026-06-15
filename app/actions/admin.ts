@@ -15,7 +15,10 @@ async function requireAdmin() {
   return current;
 }
 
-export async function updateSetting(key: string, value: boolean | number) {
+export async function updateSetting(
+  key: string,
+  value: boolean | number | string,
+) {
   if (!(await requireAdmin())) return { error: "Csak admin" };
   if (!(key in DEFAULT_SETTINGS)) return { error: "Ismeretlen beállítás" };
 
@@ -26,6 +29,12 @@ export async function updateSetting(key: string, value: boolean | number) {
 
   revalidatePath("/admin/settings");
   revalidatePath("/creator/subscription");
+  // Jogi adatok módosulása ezt is friss kell, hogy mutassa:
+  if (key.startsWith("legal_")) {
+    revalidatePath("/adatvedelem");
+    revalidatePath("/aszf");
+    revalidatePath("/cookies");
+  }
   return { success: true };
 }
 

@@ -1,27 +1,33 @@
 import { LegalPage } from "@/components/layout/legal-page";
+import { LegalEntityBlock } from "@/components/layout/legal-entity-block";
+import { getLegalEntity } from "@/lib/settings";
 
 export const metadata = {
   title: "Általános Szerződési Feltételek",
   description: "A Creatorz.hu szolgáltatás használatának feltételei.",
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const entity = await getLegalEntity();
+  // Magánszemély üzemeltetőnél ez NEM klasszikus ÁSZF, csak felhasználási feltétel
+  // (mert nincs fizetős szerződéses szolgáltatás). Élesedéskor (EV/KFT) átáll.
+  const title =
+    entity.type === "individual"
+      ? "Felhasználási feltételek"
+      : "Általános Szerződési Feltételek";
+  const shortName = entity.type === "individual" ? "Feltételek" : "ÁSZF";
+
   return (
-    <LegalPage title="Általános Szerződési Feltételek" updated="2026.06.14.">
+    <LegalPage title={title} updated="2026.06.14.">
       <p className="rounded-lg border border-black/10 bg-[#f6f7f2] p-4 text-sm text-muted-foreground">
-        A jelen Általános Szerződési Feltételek (a továbbiakban: „ÁSZF") a
-        Creatorz.hu szolgáltatás (a továbbiakban: „Szolgáltatás") használatának
-        feltételeit szabályozzák. A Szolgáltatás használatával — különösen a
-        regisztrációval — kifejezetten elfogadod a jelen ÁSZF-et.
+        A jelen {title} (a továbbiakban: „{shortName}") a Creatorz.hu szolgáltatás
+        (a továbbiakban: „Szolgáltatás") használatának feltételeit szabályozzák.
+        A Szolgáltatás használatával — különösen a regisztrációval — kifejezetten
+        elfogadod a jelen {shortName}-et.
       </p>
 
       <h2>1. A Szolgáltató</h2>
-      <ul>
-        <li><strong>Név:</strong> [Cégnév / Egyéni vállalkozó név]</li>
-        <li><strong>Székhely:</strong> [Cím]</li>
-        <li><strong>Adószám:</strong> [Adószám]</li>
-        <li><strong>Email:</strong> info@creatorz.hu</li>
-      </ul>
+      <LegalEntityBlock />
 
       <h2>2. A Szolgáltatás leírása</h2>
       <p>

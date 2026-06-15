@@ -1,4 +1,5 @@
 import { LegalPage } from "@/components/layout/legal-page";
+import { LegalEntityBlock } from "@/components/layout/legal-entity-block";
 
 export const metadata = {
   title: "Adatkezelési tájékoztató",
@@ -18,13 +19,11 @@ export default function PrivacyPage() {
       </p>
 
       <h2>1. Az Adatkezelő adatai</h2>
-      <ul>
-        <li><strong>Név:</strong> Creatorz.hu — [Cégnév / Egyéni vállalkozó név]</li>
-        <li><strong>Székhely:</strong> [Cím — élesítéskor pontosítandó]</li>
-        <li><strong>Adószám:</strong> [Adószám]</li>
-        <li><strong>Email:</strong> info@creatorz.hu</li>
-        <li><strong>Adatvédelmi tisztviselő (DPO):</strong> nem kötelező (250 fő alatti vállalkozás), de a fenti email-címen elérhető vagyunk.</li>
-      </ul>
+      <LegalEntityBlock />
+      <p className="text-sm text-muted-foreground">
+        <strong>Adatvédelmi tisztviselő (DPO):</strong> nem kötelező (250 fő alatti
+        adatkezelő), a fenti email-címen elérhető.
+      </p>
 
       <h2>2. Milyen adatokat kezelünk és miért?</h2>
 

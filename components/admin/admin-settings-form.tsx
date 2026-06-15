@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { updateSetting } from "@/app/actions/admin";
-import type { SettingsMap } from "@/lib/settings";
+import type { LegalEntityType, SettingsMap } from "@/lib/settings";
 
 export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
   const [s, setS] = useState<SettingsMap>(initial);
@@ -28,6 +28,23 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
       const res = await updateSetting(key, Number(s[key]));
       if (res.error) toast.error(res.error);
       else toast.success("Mentve");
+    });
+  }
+
+  function saveStr(key: keyof SettingsMap) {
+    startTransition(async () => {
+      const res = await updateSetting(key, String(s[key] ?? ""));
+      if (res.error) toast.error(res.error);
+      else toast.success("Mentve");
+    });
+  }
+
+  function setLegalType(value: LegalEntityType) {
+    setS((prev) => ({ ...prev, legal_entity_type: value }));
+    startTransition(async () => {
+      const res = await updateSetting("legal_entity_type", value);
+      if (res.error) toast.error(res.error);
+      else toast.success("Jogi típus frissítve — a jogi oldalak átálltak");
     });
   }
 
@@ -94,6 +111,116 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
               </Button>
             </div>
           ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Jogi adatok (Adatkezelő)</CardTitle>
+          <CardDescription>
+            Az itt megadott adatok automatikusan megjelennek az
+            Adatkezelési tájékoztatóban, az ÁSZF-ben és a Cookie tájékoztatóban.
+            Élesedéskor (magánszemély → EV → KFT) csak a típust kapcsold át,
+            töltsd ki az új mezőket — a jogi oldalak azonnal átálltak.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label>Adatkezelő típusa</Label>
+            <select
+              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={s.legal_entity_type}
+              onChange={(e) => setLegalType(e.target.value as LegalEntityType)}
+            >
+              <option value="individual">Magánszemély adatkezelő</option>
+              <option value="ev">Egyéni vállalkozó (EV)</option>
+              <option value="kft">Korlátolt felelősségű társaság (KFT)</option>
+            </select>
+            <p className="text-xs text-muted-foreground">
+              A magánszemély típusnál a /aszf oldal címe automatikusan
+              „Felhasználási feltételek" lesz (mert nincs fizetős szerződéses
+              szolgáltatás).
+            </p>
+          </div>
+
+          {(
+            [
+              { key: "legal_name", label: "Név" },
+              { key: "legal_address", label: "Cím / Székhely" },
+              { key: "legal_email", label: "Kapcsolat email" },
+            ] as const
+          ).map((n) => (
+            <div key={n.key} className="flex items-end gap-2">
+              <div className="flex-1 space-y-1.5">
+                <Label>{n.label}</Label>
+                <Input
+                  value={String(s[n.key] ?? "")}
+                  onChange={(e) =>
+                    setS((prev) => ({ ...prev, [n.key]: e.target.value }))
+                  }
+                />
+              </div>
+              <Button variant="outline" onClick={() => saveStr(n.key)}>
+                Mentés
+              </Button>
+            </div>
+          ))}
+
+          {s.legal_entity_type !== "individual" && (
+            <div className="space-y-4 rounded-lg border border-black/10 bg-[#f6f7f2] p-4">
+              <p className="text-xs font-semibold text-muted-foreground">
+                {s.legal_entity_type === "ev"
+                  ? "Egyéni vállalkozó adatai"
+                  : "Cég adatai"}
+              </p>
+              {(
+                [
+                  { key: "legal_tax_id", label: "Adószám" },
+                  ...(s.legal_entity_type === "ev"
+                    ? ([
+                        {
+                          key: "legal_ev_reg_number",
+                          label: "EV nyilvántartási szám",
+                        },
+                      ] as const)
+                    : ([
+                        { key: "legal_kft_court", label: "Cégbíróság" },
+                        { key: "legal_kft_reg_number", label: "Cégjegyzékszám" },
+                      ] as const)),
+                ] as const
+              ).map((n) => (
+                <div key={n.key} className="flex items-end gap-2">
+                  <div className="flex-1 space-y-1.5">
+                    <Label>{n.label}</Label>
+                    <Input
+                      value={String(s[n.key] ?? "")}
+                      onChange={(e) =>
+                        setS((prev) => ({ ...prev, [n.key]: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <Button variant="outline" onClick={() => saveStr(n.key)}>
+                    Mentés
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-end gap-2">
+            <div className="flex-1 space-y-1.5">
+              <Label>NAIH bejelentési szám (opcionális)</Label>
+              <Input
+                value={String(s.legal_naih_id ?? "")}
+                onChange={(e) =>
+                  setS((prev) => ({ ...prev, legal_naih_id: e.target.value }))
+                }
+              />
+            </div>
+            <Button variant="outline" onClick={() => saveStr("legal_naih_id")}>
+              Mentés
+            </Button>
+          </div>
         </CardContent>
       </Card>
     </div>
