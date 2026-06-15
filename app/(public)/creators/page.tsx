@@ -1,7 +1,7 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { ArrowRight, SlidersHorizontal, Sparkles } from "lucide-react";
 import {
-  loadFeaturedCreators,
   loadMoreCreators,
   countCreators,
   type BrowseFiltersInput,
@@ -9,8 +9,8 @@ import {
 import { BrowseFilters } from "@/components/creator/browse-filters";
 import { SortSelect } from "@/components/creator/sort-select";
 import { CreatorsInfiniteGrid } from "@/components/creator/creators-infinite-grid";
-import { FeaturedCreatorsRail } from "@/components/creator/featured-creators-rail";
-import { getCurrentBrand } from "@/lib/auth";
+import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
+import { getSetting } from "@/lib/settings";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DIRECTORY_TYPES } from "@/lib/constants";
@@ -51,12 +51,20 @@ export default async function CreatorsBrowsePage({
     sort: one(sp.sort) ?? "featured",
   };
 
-  const [{ items: creators, hasMore }, totalCount, featuredCreators] =
-    await Promise.all([
-      loadMoreCreators(0, filters),
-      countCreators(filters),
-      loadFeaturedCreators(12),
-    ]);
+  // Public-browse kapu: ha az admin kikapcsolta és nincs bejelentkezve,
+  // a /login-re terelünk.
+  const [publicView, currentUser] = await Promise.all([
+    getSetting("public_view_creators").catch(() => false),
+    getCurrentUser().catch(() => null),
+  ]);
+  if (!publicView && !currentUser) {
+    redirect("/login?next=/creators");
+  }
+
+  const [{ items: creators, hasMore }, totalCount] = await Promise.all([
+    loadMoreCreators(0, filters),
+    countCreators(filters),
+  ]);
 
   const canSave = Boolean(await getCurrentBrand().catch(() => null));
 
@@ -139,8 +147,6 @@ export default async function CreatorsBrowsePage({
             </div>
             <SortSelect />
           </div>
-
-          <FeaturedCreatorsRail creators={featuredCreators} />
 
           <div className="flex flex-wrap gap-2">
             {DIRECTORY_TYPES.map((type) => {

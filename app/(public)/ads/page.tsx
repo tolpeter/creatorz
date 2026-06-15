@@ -10,6 +10,7 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
+import { redirect } from "next/navigation";
 import Image from "next/image";
 import { db } from "@/lib/db";
 import { ads, brandProfiles } from "@/lib/db/schema";
@@ -17,6 +18,8 @@ import { AdCard, type AdCardData } from "@/components/ad/ad-card";
 import { AdsFilters } from "@/components/ad/ads-filters";
 import { AdsSortSelect } from "@/components/ad/ads-sort-select";
 import { Badge } from "@/components/ui/badge";
+import { getCurrentUser } from "@/lib/auth";
+import { getSetting } from "@/lib/settings";
 import {
   BriefcaseBusiness,
   SlidersHorizontal,
@@ -37,6 +40,16 @@ export default async function AdsFeedPage({
   searchParams: Promise<SP>;
 }) {
   const sp = await searchParams;
+
+  // Public-browse kapu: ha az admin kikapcsolta és nincs bejelentkezve → /login.
+  const [publicView, currentUser] = await Promise.all([
+    getSetting("public_view_ads").catch(() => false),
+    getCurrentUser().catch(() => null),
+  ]);
+  if (!publicView && !currentUser) {
+    redirect("/login?next=/ads");
+  }
+
   const conditions: SQL[] = [eq(ads.status, "active")];
 
   const categories = one(sp.categories)?.split(",").filter(Boolean) ?? [];
