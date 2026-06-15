@@ -137,10 +137,13 @@
 }
 
 /* Réteg nélküli szabály: garantáltan felülírja a layered base-t.
-   Megakadályozza a full-bleed (100vw) szekciók okozta vízszintes elhúzást. */
+   Megakadályozza a full-bleed (100vw) szekciók okozta vízszintes elhúzást,
+   illetve iOS Safari "pull-to-refresh" gesztusát, ami a görgetést elnyeli
+   és visszadobja az oldalt a tetejére. */
 html,
 body {
   overflow-x: clip;
+  overscroll-behavior-y: contain;
 }
 
 /* Creatorz egyedi utility-k */
