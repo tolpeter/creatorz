@@ -33,23 +33,9 @@ export async function sendEmailSafe(opts: {
       subject: opts.subject,
       html: opts.html,
     });
-    if (error) {
-      console.error("[email] Resend send HIBA:", {
-        from: EMAIL_FROM,
-        to: opts.to,
-        subject: opts.subject,
-        message: error.message,
-        name: error.name,
-      });
-      return { sent: false, error: error.message };
-    }
+    if (error) return { sent: false, error: error.message };
     return { sent: true };
   } catch (e) {
-    console.error("[email] Resend exception:", {
-      from: EMAIL_FROM,
-      to: opts.to,
-      message: (e as Error).message,
-    });
     return { sent: false, error: (e as Error).message };
   }
 }

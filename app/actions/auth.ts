@@ -55,17 +55,10 @@ export async function signUpAction(input: SignUpInput) {
     user_metadata: { role },
   });
   if (createErr) {
-    console.error("[signup] admin.createUser HIBA:", {
-      message: createErr.message,
-      status: (createErr as { status?: number }).status,
-      code: (createErr as { code?: string }).code,
-      name: createErr.name,
-    });
     return { error: authErrorMessage(createErr.message) };
   }
   const authUser = created.user;
   if (!authUser) {
-    console.error("[signup] createUser visszaadott data.user nélkül:", created);
     return { error: "Nem sikerült létrehozni a felhasználót" };
   }
 
@@ -75,11 +68,6 @@ export async function signUpAction(input: SignUpInput) {
     password,
   });
   if (signInErr) {
-    console.error("[signup] signInWithPassword HIBA:", {
-      message: signInErr.message,
-      status: (signInErr as { status?: number }).status,
-      code: (signInErr as { code?: string }).code,
-    });
     return { error: authErrorMessage(signInErr.message) };
   }
 
