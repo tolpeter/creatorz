@@ -87,6 +87,11 @@ export default async function AdminMessagesPage({
                         Új
                       </Badge>
                     )}
+                    {m.replied && (
+                      <Badge className="bg-[#3f6212] text-white hover:bg-[#3f6212]">
+                        Megválaszolva
+                      </Badge>
+                    )}
                     <span className="font-bold">{m.subject}</span>
                   </div>
                   <p className="mt-0.5 text-sm text-muted-foreground">
@@ -100,11 +105,26 @@ export default async function AdminMessagesPage({
                     · {formatHuDate(m.createdAt)}
                   </p>
                 </div>
-                <ContactMessageActions id={m.id} read={m.read} />
               </div>
               <p className="mt-3 whitespace-pre-wrap rounded-xl bg-muted/50 p-3 text-sm leading-6">
                 {m.message}
               </p>
+              {m.replied && m.replyBody && (
+                <div className="mt-2 rounded-xl border border-[#3f6212]/20 bg-[#f0f4e5] p-3 text-sm leading-6">
+                  <p className="mb-1 text-xs font-semibold text-[#3f6212]">
+                    A válaszod
+                    {m.repliedAt ? ` · ${formatHuDate(m.repliedAt)}` : ""}:
+                  </p>
+                  <p className="whitespace-pre-wrap">{m.replyBody}</p>
+                </div>
+              )}
+              <div className="mt-3">
+                <ContactMessageActions
+                  id={m.id}
+                  read={m.read}
+                  replied={m.replied}
+                />
+              </div>
             </div>
           ))}
         </div>

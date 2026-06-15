@@ -21,6 +21,9 @@ export async function sendEmailSafe(opts: {
   to: string;
   subject: string;
   html: string;
+  /** Válasz-cím — pl. a kapcsolati üzenet feladójának email-je, hogy az
+   *  admin a saját postaládájából közvetlenül tudjon válaszolni. */
+  replyTo?: string;
 }): Promise<{ sent: boolean; error?: string }> {
   const client = getResend();
   if (!client) {
@@ -32,6 +35,7 @@ export async function sendEmailSafe(opts: {
       to: opts.to,
       subject: opts.subject,
       html: opts.html,
+      ...(opts.replyTo ? { replyTo: opts.replyTo } : {}),
     });
     if (error) return { sent: false, error: error.message };
     return { sent: true };

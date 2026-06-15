@@ -437,6 +437,11 @@ export const contactMessages = pgTable("contact_messages", {
   subject: varchar("subject", { length: 160 }).notNull(),
   message: text("message").notNull(),
   read: boolean("read").notNull().default(false),
+  // Admin-válasz követése: a /admin/messages felületről küldött válasz szövege
+  // és időpontja. Így látszik, melyik üzenetre válaszoltunk már.
+  replied: boolean("replied").notNull().default(false),
+  replyBody: text("reply_body"),
+  repliedAt: timestamp("replied_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (table) => ({
   readIdx: index("contact_messages_read_idx").on(table.read),
