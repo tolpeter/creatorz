@@ -3,6 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -11,29 +12,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { setUserSuspended, setUserRole } from "@/app/actions/admin";
+import { setUserSuspended, setUserRole, deleteUser } from "@/app/actions/admin";
 
 export function UserRowActions({
   userId,
   role,
   suspended,
+  label,
 }: {
   userId: string;
   role: string;
   suspended: boolean;
+  /** Megjelenítendő név/email a törlés-megerősítéshez. */
+  label?: string;
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
 
-  function run(fn: () => Promise<{ error?: string }>) {
+  function run(fn: () => Promise<{ error?: string }>, okMsg = "Mentve") {
     start(async () => {
       const res = await fn();
       if (res.error) toast.error(res.error);
       else {
-        toast.success("Mentve");
+        toast.success(okMsg);
         router.refresh();
       }
     });
+  }
+
+  function confirmDelete() {
+    const who = label ? `\n\n${label}` : "";
+    const ok = window.confirm(
+      `Biztosan VÉGLEGESEN törlöd ezt a felhasználót?${who}\n\nEz törli a fiókot, a profilját, hirdetéseit és minden hozzá tartozó adatot. A művelet nem visszavonható!`,
+    );
+    if (!ok) return;
+    run(() => deleteUser(userId), "Felhasználó törölve");
   }
 
   return (
@@ -53,11 +66,20 @@ export function UserRowActions({
       </Select>
       <Button
         size="sm"
-        variant={suspended ? "outline" : "destructive"}
+        variant={suspended ? "outline" : "secondary"}
         disabled={pending}
         onClick={() => run(() => setUserSuspended(userId, !suspended))}
       >
         {suspended ? "Visszaállítás" : "Felfüggesztés"}
+      </Button>
+      <Button
+        size="sm"
+        variant="destructive"
+        disabled={pending || role === "admin"}
+        title={role === "admin" ? "Admin nem törölhető" : "Végleges törlés"}
+        onClick={confirmDelete}
+      >
+        <Trash2 className="h-3.5 w-3.5" />
       </Button>
     </div>
   );

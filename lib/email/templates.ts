@@ -35,10 +35,32 @@ export function renderVerificationEmail(input: {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
-// JELSZÓ-VISSZAÁLLÍTÁS (Supabase Auth-hoz — ezt az HTML-t kell beilleszteni
-// a Supabase Dashboard → Authentication → Email Templates → Reset Password)
-// A {{ .ConfirmationURL }} változót a Supabase tölti ki.
+// JELSZÓ-VISSZAÁLLÍTÁS (saját Resend-es rendszer — branded, magyar email)
 // ──────────────────────────────────────────────────────────────────────────
+export function renderPasswordResetEmail(input: {
+  name?: string;
+  resetUrl: string;
+  hoursValid: number;
+}): { subject: string; html: string } {
+  return {
+    subject: "Jelszó visszaállítása — Creatorz",
+    html: renderBrandedEmail({
+      preheader: "Állíts be új jelszót a Creatorz fiókodhoz.",
+      heading: "Új jelszó beállítása",
+      greeting: input.name ? `Szia ${input.name}!` : "Szia!",
+      intro:
+        "Jelszó-visszaállítást kértél a <strong>Creatorz</strong> fiókodhoz. Kattints az alábbi gombra, és állíts be egy új jelszót.",
+      cta: { label: "Új jelszó beállítása", href: input.resetUrl },
+      bodyHtml: `
+        <p style="margin:0 0 6px;">Vagy másold be ezt a linket a böngésződbe:</p>
+        <p style="margin:0;word-break:break-all;"><a href="${input.resetUrl}" style="color:#4d7c0f;">${input.resetUrl}</a></p>
+      `,
+      footnote: `Ez a link ${input.hoursValid} órán át érvényes. Ha nem te kérted a jelszó-visszaállítást, hagyd figyelmen kívül ezt az emailt — a fiókod biztonságban van.`,
+    }),
+  };
+}
+
+// (Megtartva: a Supabase saját email-template-jéhez, ha valaha visszatérnénk rá.)
 export function renderPasswordResetEmailForSupabase(): string {
   return renderBrandedEmail({
     preheader: "Új jelszó beállítása a Creatorz fiókodhoz.",

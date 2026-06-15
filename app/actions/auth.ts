@@ -11,6 +11,7 @@ import { ensureUniqueUsername } from "@/lib/utils/username";
 import { dashboardPathForRole } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
 import { sendVerificationEmail } from "@/lib/email-verification";
+import { sendPasswordResetEmail } from "@/lib/password-reset";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -282,14 +283,9 @@ export async function sendPasswordResetAction(input: z.input<typeof magicLinkSch
     return { error: "Túl sok visszaállítási kérés. Próbáld újra később." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${APP_URL}/api/auth/callback?next=/update-password`,
-  });
-
-  if (error) {
-    return { error: "Nem sikerült elküldeni a jelszó-visszaállító emailt" };
-  }
+  // Saját, branded Resend-es jelszó-visszaállítás. Biztonsági okból mindig
+  // success-szel térünk vissza (nem áruljuk el, létezik-e a fiók).
+  await sendPasswordResetEmail(parsed.data.email);
   return { success: true };
 }
 
@@ -297,6 +293,7 @@ const updatePasswordSchema = z.object({
   password: z.string().min(8, "Az új jelszó legalább 8 karakter legyen"),
 });
 
+/** Bejelentkezett user jelszó-módosítása (pl. beállítások). */
 export async function updatePasswordAction(input: z.input<typeof updatePasswordSchema>) {
   const parsed = updatePasswordSchema.safeParse(input);
   if (!parsed.success) {
@@ -310,6 +307,60 @@ export async function updatePasswordAction(input: z.input<typeof updatePasswordS
   if (error) {
     return { error: "Nem sikerült frissíteni a jelszót. Nyisd meg újra az emailben kapott linket." };
   }
+  return { success: true };
+}
+
+const resetWithTokenSchema = z.object({
+  token: z.string().min(16, "Érvénytelen token"),
+  password: z.string().min(8, "Az új jelszó legalább 8 karakter legyen"),
+});
+
+/**
+ * Token-alapú jelszó-visszaállítás: a /reset-password/[token] oldalról hívva.
+ * A tokent ellenőrzi, lejárat után elutasít, majd a Supabase admin API-val
+ * beállítja az új jelszót és törli a tokent.
+ */
+export async function resetPasswordWithToken(
+  input: z.input<typeof resetWithTokenSchema>,
+) {
+  const parsed = resetWithTokenSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const { token, password } = parsed.data;
+
+  const [row] = await db
+    .select({
+      id: users.id,
+      authId: users.authId,
+      expiresAt: users.passwordResetExpiresAt,
+    })
+    .from(users)
+    .where(eq(users.passwordResetToken, token))
+    .limit(1);
+
+  if (!row) return { error: "Érvénytelen vagy lejárt link. Kérj újat." };
+  if (!row.expiresAt || row.expiresAt.getTime() < Date.now()) {
+    return { error: "A jelszó-visszaállító link lejárt — kérj újat." };
+  }
+
+  const admin = createAdminClient();
+  const { error } = await admin.auth.admin.updateUserById(row.authId, {
+    password,
+  });
+  if (error) {
+    return { error: "Nem sikerült beállítani az új jelszót. Próbáld újra." };
+  }
+
+  await db
+    .update(users)
+    .set({
+      passwordResetToken: null,
+      passwordResetExpiresAt: null,
+      updatedAt: new Date(),
+    })
+    .where(eq(users.id, row.id));
+
   return { success: true };
 }
 

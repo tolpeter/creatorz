@@ -83,7 +83,7 @@ export default async function AdminUsersPage({
                   {u.lastLoginAt ? formatHuDate(u.lastLoginAt) : "—"}
                 </td>
                 <td className="p-3">
-                  <UserRowActions userId={u.id} role={u.role} suspended={u.suspended} />
+                  <UserRowActions userId={u.id} role={u.role} suspended={u.suspended} label={u.email} />
                 </td>
               </tr>
             ))}

@@ -1,15 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
   ArrowRight,
   Loader2,
   Check,
-  Sparkles,
-  BadgeCheck,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -40,6 +37,11 @@ import {
   MAX_CREATOR_CATEGORIES,
 } from "@/lib/constants";
 import { generateUsername } from "@/lib/utils/slug";
+import {
+  SocialAutoRow,
+  SocialManualRow,
+} from "@/components/creator/social-rows";
+import { SocialTile } from "@/components/creator/platform-icon";
 import {
   completeCreatorOnboarding,
   connectCreatorSocials,
@@ -80,12 +82,10 @@ function ageFromIso(iso: string): number {
 }
 
 export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitial }) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [connecting, setConnecting] = useState(false);
+  const [connecting, setConnecting] = useState<"tiktok" | "youtube" | null>(null);
   const [usernameEdited, setUsernameEdited] = useState(false);
-  const [syncedKeys, setSyncedKeys] = useState<string[]>([]);
   const [v, setV] = useState<OnboardingInitial>(initial);
 
   function set<K extends keyof OnboardingInitial>(key: K, val: OnboardingInitial[K]) {
@@ -139,48 +139,37 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
     setStep((s) => Math.min(s + 1, STEPS.length - 1));
   }
 
-  async function connectSocials() {
-    if (!v.instagramUrl && !v.tiktokUrl && !v.facebookUrl && !v.youtubeUrl) {
-      toast.error("Adj meg legalább egy social profil linket");
+  // Csak TikTok és YouTube szinkronizálható automatikusan. (Instagram/Facebook
+  // követőszámot kézzel kell megadni — lásd lent.)
+  async function connectOne(platform: "tiktok" | "youtube") {
+    const url = platform === "tiktok" ? v.tiktokUrl : v.youtubeUrl;
+    if (!url.trim()) {
+      toast.error("Előbb illeszd be a profil URL-jét");
       return;
     }
-    setConnecting(true);
-    const res = await connectCreatorSocials({
-      instagramUrl: v.instagramUrl,
-      tiktokUrl: v.tiktokUrl,
-      facebookUrl: v.facebookUrl,
-      youtubeUrl: v.youtubeUrl,
-    });
-    setConnecting(false);
+    setConnecting(platform);
+    const res = await connectCreatorSocials(
+      platform === "tiktok" ? { tiktokUrl: url } : { youtubeUrl: url },
+    );
+    setConnecting(null);
     if (res.error) {
       toast.error(res.error);
       return;
     }
-    const newlySynced: string[] = [];
-    setV((prev) => ({
-      ...prev,
-      instagramFollowers:
-        res.instagramFollowers != null ? String(res.instagramFollowers) : prev.instagramFollowers,
-      tiktokFollowers:
-        res.tiktokFollowers != null ? String(res.tiktokFollowers) : prev.tiktokFollowers,
-      facebookFollowers:
-        res.facebookFollowers != null ? String(res.facebookFollowers) : prev.facebookFollowers,
-      youtubeSubscribers:
-        res.youtubeSubscribers != null ? String(res.youtubeSubscribers) : prev.youtubeSubscribers,
-    }));
-    if (res.instagramFollowers != null) newlySynced.push("instagramFollowers");
-    if (res.tiktokFollowers != null) newlySynced.push("tiktokFollowers");
-    if (res.facebookFollowers != null) newlySynced.push("facebookFollowers");
-    if (res.youtubeSubscribers != null) newlySynced.push("youtubeSubscribers");
-    setSyncedKeys((prev) => Array.from(new Set([...prev, ...newlySynced])));
-
-    const failed = res.failed ?? [];
-    if (failed.length > 0) {
-      toast.warning(
-        `${newlySynced.length > 0 ? "Részben összekapcsolva. " : ""}Ezeket nem sikerült most lekérni: ${failed.join(", ")} — add meg kézzel a követőszámot.`
-      );
+    const fetched =
+      platform === "tiktok" ? res.tiktokFollowers : res.youtubeSubscribers;
+    if (fetched != null) {
+      setV((prev) => ({
+        ...prev,
+        ...(platform === "tiktok"
+          ? { tiktokFollowers: String(fetched) }
+          : { youtubeSubscribers: String(fetched) }),
+      }));
+      toast.success("Összekapcsolva — a számot behúztuk!");
     } else {
-      toast.success("Összekapcsolva — a számokat behúztuk!");
+      toast.warning(
+        "Most nem sikerült lekérni — add meg kézzel a számot. A 4 napos frissítés később újrapróbálja.",
+      );
     }
   }
 
@@ -191,41 +180,47 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       return;
     }
     setLoading(true);
-    const res = await completeCreatorOnboarding({
-      username: v.username,
-      displayName: v.displayName,
-      bio: v.bio,
-      city: v.city,
-      county: v.county,
-      birthDate: v.birthDate,
-      gender: v.gender,
-      categories: v.categories,
-      languages: v.languages,
-      instagramUrl: v.instagramUrl,
-      instagramFollowers: v.instagramFollowers ? Number(v.instagramFollowers) : null,
-      tiktokUrl: v.tiktokUrl,
-      tiktokFollowers: v.tiktokFollowers ? Number(v.tiktokFollowers) : null,
-      facebookUrl: v.facebookUrl,
-      facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
-      youtubeUrl: v.youtubeUrl,
-      youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
-    });
+    let res: { error?: string; success?: boolean };
+    try {
+      res = await completeCreatorOnboarding({
+        username: v.username,
+        displayName: v.displayName,
+        bio: v.bio,
+        city: v.city,
+        county: v.county,
+        birthDate: v.birthDate,
+        gender: v.gender,
+        categories: v.categories,
+        languages: v.languages,
+        instagramUrl: v.instagramUrl,
+        instagramFollowers: v.instagramFollowers ? Number(v.instagramFollowers) : null,
+        tiktokUrl: v.tiktokUrl,
+        tiktokFollowers: v.tiktokFollowers ? Number(v.tiktokFollowers) : null,
+        facebookUrl: v.facebookUrl,
+        facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
+        youtubeUrl: v.youtubeUrl,
+        youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
+      });
+    } catch {
+      setLoading(false);
+      toast.error("Hiba a mentés közben. Próbáld újra.");
+      return;
+    }
     if (res.error) {
       setLoading(false);
       toast.error(res.error);
       return;
     }
     toast.success("Profil elmentve!");
-    // Még egy utolsó lépés: email-megerősítés. A küldés hibája NEM
-    // akadályozhatja meg az átirányítást — a /verify-email oldalon
-    // úgyis van "újraküldés" gomb.
+    // Email-megerősítés kiküldése — a hibája NEM akadályozhatja az átirányítást.
     try {
       await triggerVerificationEmail();
     } catch {
-      // ignoráljuk — az átirányítás a fontos
+      // ignoráljuk
     }
-    router.push("/verify-email");
-    router.refresh();
+    // Hard navigáció: a router.push néha nem navigál Server Action után
+    // (revalidation-ütközés). A window.location MINDIG átvisz.
+    window.location.href = "/verify-email";
   }
 
   return (
@@ -380,77 +375,70 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
 
         {step === 2 && (
           <>
-            <div className="rounded-lg border border-accent/30 bg-accent/[0.06] p-4 text-sm">
-              <p className="flex items-center gap-2 font-semibold">
-                <Sparkles className="h-4 w-4 text-accent" />
-                Add meg a linket — ahol lehet, a számot behúzzuk
-              </p>
-              <p className="mt-1 text-muted-foreground">
-                Illeszd be a profiljaid linkjét, és kattints az
-                <strong> „Összekapcsol” </strong> gombra. Ahol a szinkron
-                működik, automatikusan behúzzuk a követőszámot (és 4 naponta
-                frissítjük). Ahol nem sikerül, <strong>add meg kézzel</strong> a
-                számot a mezőben. <em>Ha kitöltesz egy linket, a követőszám
-                megadása kötelező.</em> Ez a lépés kihagyható, később is
-                megteheted a profilodnál.
+            <p className="text-sm text-muted-foreground">
+              Ez a lépés kihagyható, később a profilodnál is megteheted. Ha
+              kitöltesz egy linket, a követőszám megadása kötelező.
+            </p>
+
+            {/* TikTok — automata szinkron */}
+            <SocialAutoRow
+              platform="tiktok"
+              label="TikTok"
+              unit="követő"
+              url={v.tiktokUrl}
+              count={v.tiktokFollowers}
+              onUrl={(val) => set("tiktokUrl", val)}
+              onCount={(val) => set("tiktokFollowers", val)}
+              onConnect={() => connectOne("tiktok")}
+              connecting={connecting === "tiktok"}
+            />
+
+            {/* YouTube — automata szinkron */}
+            <SocialAutoRow
+              platform="youtube"
+              label="YouTube"
+              unit="feliratkozó"
+              url={v.youtubeUrl}
+              count={v.youtubeSubscribers}
+              onUrl={(val) => set("youtubeUrl", val)}
+              onCount={(val) => set("youtubeSubscribers", val)}
+              onConnect={() => connectOne("youtube")}
+              connecting={connecting === "youtube"}
+            />
+
+            {/* IG/FB — kézi megadás magyarázat */}
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex shrink-0 items-center gap-1.5">
+                <SocialTile platform="instagram" className="h-6 w-6" />
+                <SocialTile platform="facebook" className="h-6 w-6" />
+              </div>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Az Instagram és a Facebook követőszámát kézzel kell megadni — ha
+                megadod a linket, a követőszám kötelező.
               </p>
             </div>
-            {(
-              [
-                ["instagramUrl", "instagramFollowers", "Instagram", "követő"],
-                ["tiktokUrl", "tiktokFollowers", "TikTok", "követő"],
-                ["facebookUrl", "facebookFollowers", "Facebook", "követő"],
-                ["youtubeUrl", "youtubeSubscribers", "YouTube", "feliratkozó"],
-              ] as const
-            ).map(([urlKey, followKey, label, unit]) => {
-              const synced = syncedKeys.includes(followKey);
-              return (
-                <div key={label} className="space-y-1.5">
-                  <Label>{label} profil URL</Label>
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <Input
-                      value={v[urlKey]}
-                      onChange={(e) => set(urlKey, e.target.value)}
-                      placeholder="https://…"
-                      className="sm:flex-1"
-                    />
-                    <div className="relative flex min-w-[160px] items-center">
-                      <Input
-                        type="number"
-                        min={0}
-                        inputMode="numeric"
-                        value={v[followKey]}
-                        onChange={(e) => set(followKey, e.target.value)}
-                        placeholder={`${unit}szám`}
-                        className={synced ? "pr-9" : ""}
-                        aria-label={`${label} ${unit}szám`}
-                      />
-                      {synced && (
-                        <BadgeCheck
-                          className="pointer-events-none absolute right-2.5 h-4 w-4 text-accent"
-                          aria-label="Szinkronizálva"
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-            <div className="flex justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={connectSocials}
-                disabled={connecting}
-              >
-                {connecting ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Sparkles className="h-4 w-4" />
-                )}
-                {connecting ? "Összekapcsolás…" : "Összekapcsol"}
-              </Button>
-            </div>
+
+            {/* Instagram — kézi */}
+            <SocialManualRow
+              platform="instagram"
+              label="Instagram"
+              unit="követő"
+              url={v.instagramUrl}
+              count={v.instagramFollowers}
+              onUrl={(val) => set("instagramUrl", val)}
+              onCount={(val) => set("instagramFollowers", val)}
+            />
+
+            {/* Facebook — kézi */}
+            <SocialManualRow
+              platform="facebook"
+              label="Facebook"
+              unit="követő"
+              url={v.facebookUrl}
+              count={v.facebookFollowers}
+              onUrl={(val) => set("facebookUrl", val)}
+              onCount={(val) => set("facebookFollowers", val)}
+            />
           </>
         )}
 

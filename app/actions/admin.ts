@@ -6,6 +6,7 @@ import { settings, users, creatorProfiles, reviews } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_SETTINGS, type SettingsKey } from "@/lib/settings";
 import { recalcAfterHide } from "@/app/actions/_review-helpers";
 
@@ -13,6 +14,47 @@ async function requireAdmin() {
   const current = await getCurrentUser();
   if (current?.dbUser?.role !== "admin") return null;
   return current;
+}
+
+/**
+ * Felhasználó VÉGLEGES törlése: a Supabase auth user + a public DB sor
+ * (cascade törli a profilt, hirdetéseket, üzeneteket stb.). Admin nem
+ * törölhető, és magadat sem törölheted.
+ */
+export async function deleteUser(userId: string) {
+  const current = await requireAdmin();
+  if (!current) return { error: "Csak admin" };
+
+  const [target] = await db
+    .select({ id: users.id, authId: users.authId, role: users.role })
+    .from(users)
+    .where(eq(users.id, userId))
+    .limit(1);
+  if (!target) return { error: "A felhasználó nem található" };
+  if (target.id === current.dbUser?.id) {
+    return { error: "Magadat nem törölheted." };
+  }
+  if (target.role === "admin") {
+    return { error: "Admin fiók nem törölhető." };
+  }
+
+  // 1) Supabase auth user törlése (best-effort — ha már nincs, megyünk tovább).
+  if (target.authId) {
+    try {
+      const admin = createAdminClient();
+      await admin.auth.admin.deleteUser(target.authId);
+    } catch {
+      // ignoráljuk — a DB-sor törlése a lényeg
+    }
+  }
+  // 2) public DB sor — a FK-k ON DELETE CASCADE-del takarítanak.
+  await db.delete(users).where(eq(users.id, userId));
+
+  revalidatePath("/admin/users");
+  revalidatePath("/admin/creators");
+  revalidatePath("/admin/brands");
+  revalidatePath("/admin");
+  return { success: true };
 }
 
 export async function updateSetting(

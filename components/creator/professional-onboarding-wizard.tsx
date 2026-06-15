@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   ArrowLeft,
@@ -66,7 +65,6 @@ export function ProfessionalOnboardingWizard({
 }: {
   initial: ProfessionalOnboardingInitial;
 }) {
-  const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [usernameEdited, setUsernameEdited] = useState(false);
@@ -131,21 +129,28 @@ export function ProfessionalOnboardingWizard({
       return;
     }
     setLoading(true);
-    const res = await completeProfessionalOnboarding({
-      displayName: v.displayName,
-      username: v.username,
-      avatarUrl: v.avatarUrl ?? "",
-      bio: v.bio,
-      city: v.city,
-      county: v.county,
-      professionalRoles: v.professionalRoles,
-      specialties: v.specialties,
-      portfolio: portfolio
-        .filter((p) => p.url.trim())
-        .map((p) => ({ url: p.url.trim(), title: p.title.trim() })),
-      websiteUrl: v.websiteUrl.trim(),
-      instagramUrl: v.instagramUrl.trim(),
-    });
+    let res: { error?: string; success?: boolean };
+    try {
+      res = await completeProfessionalOnboarding({
+        displayName: v.displayName,
+        username: v.username,
+        avatarUrl: v.avatarUrl ?? "",
+        bio: v.bio,
+        city: v.city,
+        county: v.county,
+        professionalRoles: v.professionalRoles,
+        specialties: v.specialties,
+        portfolio: portfolio
+          .filter((p) => p.url.trim())
+          .map((p) => ({ url: p.url.trim(), title: p.title.trim() })),
+        websiteUrl: v.websiteUrl.trim(),
+        instagramUrl: v.instagramUrl.trim(),
+      });
+    } catch {
+      setLoading(false);
+      toast.error("Hiba a mentés közben. Próbáld újra.");
+      return;
+    }
     if (res.error) {
       setLoading(false);
       toast.error(res.error);
@@ -156,10 +161,10 @@ export function ProfessionalOnboardingWizard({
     try {
       await triggerVerificationEmail();
     } catch {
-      // ignoráljuk — az átirányítás a fontos
+      // ignoráljuk
     }
-    router.push("/verify-email");
-    router.refresh();
+    // Hard navigáció: a router.push néha nem navigál Server Action után.
+    window.location.href = "/verify-email";
   }
 
   return (
