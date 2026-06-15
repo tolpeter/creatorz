@@ -40,8 +40,9 @@ const basicsSchema = z.object({
   languages: z.array(z.string()).min(1),
 });
 
-/** Életkor (teljes év) számítása ISO születési dátumból. */
-export function ageFromBirthDate(iso: string): number {
+/** Életkor (teljes év) számítása ISO születési dátumból.
+ *  NEM exportált — `"use server"` fájlban csak async export lehet. */
+function ageFromBirthDate(iso: string): number {
   const b = new Date(iso);
   const now = new Date();
   let age = now.getFullYear() - b.getFullYear();
