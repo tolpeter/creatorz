@@ -417,6 +417,7 @@ export async function triggerVerificationEmail() {
     .select({
       id: users.id,
       email: users.email,
+      role: users.role,
       emailVerified: users.emailVerified,
     })
     .from(users)
@@ -426,9 +427,28 @@ export async function triggerVerificationEmail() {
   if (!appUser) return { error: "A felhasználói rekord nem található" };
   if (appUser.emailVerified) return { success: true, alreadyVerified: true };
 
+  // A regisztrált név lekérése: creator → displayName, brand → companyName
+  let displayName: string | undefined;
+  if (appUser.role === "creator") {
+    const [profile] = await db
+      .select({ displayName: creatorProfiles.displayName })
+      .from(creatorProfiles)
+      .where(eq(creatorProfiles.userId, appUser.id))
+      .limit(1);
+    displayName = profile?.displayName ?? undefined;
+  } else if (appUser.role === "brand") {
+    const [profile] = await db
+      .select({ companyName: brandProfiles.companyName })
+      .from(brandProfiles)
+      .where(eq(brandProfiles.userId, appUser.id))
+      .limit(1);
+    displayName = profile?.companyName ?? undefined;
+  }
+
   const res = await sendVerificationEmail({
     userId: appUser.id,
     email: appUser.email,
+    displayName,
   });
   if (!res.sent) {
     return { error: res.error ?? "Nem sikerült elküldeni az emailt" };
