@@ -146,14 +146,18 @@ export function ProfessionalOnboardingWizard({
       websiteUrl: v.websiteUrl.trim(),
       instagramUrl: v.instagramUrl.trim(),
     });
-    setLoading(false);
     if (res.error) {
+      setLoading(false);
       toast.error(res.error);
       return;
     }
     toast.success("Profil elmentve!");
-    // Még egy utolsó lépés: email-megerősítés
-    await triggerVerificationEmail();
+    // Email-megerősítés — a küldés hibája NEM akadályozhatja az átirányítást.
+    try {
+      await triggerVerificationEmail();
+    } catch {
+      // ignoráljuk — az átirányítás a fontos
+    }
     router.push("/verify-email");
     router.refresh();
   }

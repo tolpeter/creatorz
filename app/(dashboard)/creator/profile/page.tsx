@@ -19,7 +19,7 @@ export default async function CreatorProfilePage() {
     bio: p.bio ?? "",
     city: p.city ?? "",
     county: p.county ?? "",
-    age: p.age != null ? String(p.age) : "",
+    birthDate: p.birthDate ?? "",
     gender: p.gender ?? "",
     categories: p.categories ?? [],
     languages: p.languages ?? ["hu"],

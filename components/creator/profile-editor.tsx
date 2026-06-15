@@ -62,7 +62,7 @@ export type ProfileEditorInitial = {
   bio: string;
   city: string;
   county: string;
-  age: string;
+  birthDate: string;
   gender: string;
   categories: string[];
   languages: string[];
@@ -373,14 +373,16 @@ export function ProfileEditor({
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label>Kor</Label>
+                <Label>Születési dátum</Label>
                 <Input
-                  type="number"
-                  min={13}
-                  max={100}
-                  value={v.age}
-                  onChange={(e) => set("age", e.target.value)}
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  value={v.birthDate}
+                  onChange={(e) => set("birthDate", e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  A profilodon csak az életkorod látszik.
+                </p>
               </div>
               <div className="space-y-1.5">
                 <Label>Nem</Label>
@@ -425,7 +427,7 @@ export function ProfileEditor({
                     bio: v.bio,
                     city: v.city,
                     county: v.county,
-                    age: v.age ? Number(v.age) : null,
+                    birthDate: v.birthDate,
                     gender: v.gender,
                     categories: v.categories,
                     languages: v.languages,

@@ -244,21 +244,40 @@ export default function RegisterPage() {
               />
             </div>
           </div>
-          <div className="flex items-start gap-2">
+          <label
+            htmlFor="gdpr"
+            className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 transition-colors ${
+              gdpr
+                ? "border-accent/60 bg-[#f0f4e5]"
+                : "border-black/10 bg-white hover:border-black/20"
+            }`}
+          >
             <Checkbox
               id="gdpr"
               checked={gdpr}
               onCheckedChange={(v) => setGdpr(v === true)}
               className="mt-0.5"
             />
-            <Label htmlFor="gdpr" className="text-sm font-normal leading-snug">
+            <span className="text-sm font-normal leading-relaxed text-foreground">
               Elfogadom az{" "}
-              <Link href="/about" className="underline decoration-accent">
+              <Link
+                href="/adatvedelem"
+                target="_blank"
+                className="font-medium underline decoration-accent decoration-2 underline-offset-2 hover:text-[#4d7c0f]"
+              >
                 adatkezelési tájékoztatót
               </Link>{" "}
-              és az ÁSZF-et.
-            </Label>
-          </div>
+              és a{" "}
+              <Link
+                href="/aszf"
+                target="_blank"
+                className="font-medium underline decoration-accent decoration-2 underline-offset-2 hover:text-[#4d7c0f]"
+              >
+                felhasználási feltételeket
+              </Link>
+              .
+            </span>
+          </label>
           <Button
             type="submit"
             disabled={loading}

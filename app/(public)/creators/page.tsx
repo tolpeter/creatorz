@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
 import { ArrowRight, SlidersHorizontal, Sparkles } from "lucide-react";
+import { MembersOnlyGate } from "@/components/layout/members-only-gate";
 import {
   loadMoreCreators,
   countCreators,
@@ -58,7 +58,13 @@ export default async function CreatorsBrowsePage({
     getCurrentUser().catch(() => null),
   ]);
   if (!publicView && !currentUser) {
-    redirect("/login?next=/creators");
+    return (
+      <MembersOnlyGate
+        next="/creators"
+        title="Az alkotók böngészése csak tagoknak elérhető"
+        description="Regisztrálj ingyen, és máris böngészheted a magyar tartalomgyártókat és kreatív szakembereket, vagy lépj be a fiókodba."
+      />
+    );
   }
 
   const [{ items: creators, hasMore }, totalCount] = await Promise.all([

@@ -113,6 +113,9 @@ export const creatorProfiles = pgTable("creator_profiles", {
   bio: text("bio"),  // max 500 chars enforced in zod
   city: varchar("city", { length: 100 }),
   county: varchar("county", { length: 50 }),
+  // Pontos születési dátum (regisztrációkor kérjük). Az életkort (age) ebből
+  // számoljuk és tároljuk, a profilon CSAK az életkor jelenik meg.
+  birthDate: date("birth_date"),
   age: integer("age"),
   gender: varchar("gender", { length: 20 }),
   categories: jsonb("categories").$type<string[]>().notNull().default([]),

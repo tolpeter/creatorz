@@ -40,7 +40,6 @@ import {
   MAX_CREATOR_CATEGORIES,
 } from "@/lib/constants";
 import { generateUsername } from "@/lib/utils/slug";
-import { formatNumber } from "@/lib/utils/format";
 import {
   completeCreatorOnboarding,
   connectCreatorSocials,
@@ -53,7 +52,7 @@ export type OnboardingInitial = {
   bio: string;
   city: string;
   county: string;
-  age: string;
+  birthDate: string;
   gender: string;
   categories: string[];
   languages: string[];
@@ -69,12 +68,24 @@ export type OnboardingInitial = {
 
 const STEPS = ["Alapadatok", "Kategória & nyelvek", "Social fiókok"];
 
+/** Életkor ISO (YYYY-MM-DD) születési dátumból. */
+function ageFromIso(iso: string): number {
+  const b = new Date(iso);
+  if (Number.isNaN(b.getTime())) return 0;
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
+
 export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitial }) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState(false);
   const [usernameEdited, setUsernameEdited] = useState(false);
+  const [syncedKeys, setSyncedKeys] = useState<string[]>([]);
   const [v, setV] = useState<OnboardingInitial>(initial);
 
   function set<K extends keyof OnboardingInitial>(key: K, val: OnboardingInitial[K]) {
@@ -93,9 +104,28 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
     if (step === 0) {
       if (v.displayName.trim().length < 2) return "Adj meg egy megjelenített nevet (min. 2 karakter)";
       if (generateUsername(v.username).length < 3) return "A felhasználónév min. 3 karakter (ékezet nélkül)";
+      if (!v.birthDate) return "Add meg a születési dátumod";
+      const age = ageFromIso(v.birthDate);
+      if (age < 13 || age > 100) return "Az életkornak 13 és 100 év között kell lennie";
+      if (!v.gender) return "Válaszd ki a nemed";
     }
     if (step === 1) {
       if (v.languages.length < 1) return "Válassz legalább egy nyelvet";
+    }
+    if (step === 2) {
+      // Ha egy social URL ki van töltve, a követőszám is kötelező (vagy
+      // szinkronból, vagy manuálisan megadva).
+      const missing = (
+        [
+          [v.instagramUrl, v.instagramFollowers, "Instagram"],
+          [v.tiktokUrl, v.tiktokFollowers, "TikTok"],
+          [v.facebookUrl, v.facebookFollowers, "Facebook"],
+          [v.youtubeUrl, v.youtubeSubscribers, "YouTube"],
+        ] as const
+      ).find(([url, count]) => url.trim() && !(Number(count) > 0));
+      if (missing) {
+        return `Add meg a(z) ${missing[2]} követő/feliratkozó számát (vagy töröld a linket).`;
+      }
     }
     return null;
   }
@@ -126,6 +156,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       toast.error(res.error);
       return;
     }
+    const newlySynced: string[] = [];
     setV((prev) => ({
       ...prev,
       instagramFollowers:
@@ -137,10 +168,16 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       youtubeSubscribers:
         res.youtubeSubscribers != null ? String(res.youtubeSubscribers) : prev.youtubeSubscribers,
     }));
+    if (res.instagramFollowers != null) newlySynced.push("instagramFollowers");
+    if (res.tiktokFollowers != null) newlySynced.push("tiktokFollowers");
+    if (res.facebookFollowers != null) newlySynced.push("facebookFollowers");
+    if (res.youtubeSubscribers != null) newlySynced.push("youtubeSubscribers");
+    setSyncedKeys((prev) => Array.from(new Set([...prev, ...newlySynced])));
+
     const failed = res.failed ?? [];
     if (failed.length > 0) {
       toast.warning(
-        `Összekapcsolva. Ezeket nem sikerült most lekérni: ${failed.join(", ")}. Később automatikusan újrapróbáljuk.`
+        `${newlySynced.length > 0 ? "Részben összekapcsolva. " : ""}Ezeket nem sikerült most lekérni: ${failed.join(", ")} — add meg kézzel a követőszámot.`
       );
     } else {
       toast.success("Összekapcsolva — a számokat behúztuk!");
@@ -160,7 +197,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       bio: v.bio,
       city: v.city,
       county: v.county,
-      age: v.age ? Number(v.age) : null,
+      birthDate: v.birthDate,
       gender: v.gender,
       categories: v.categories,
       languages: v.languages,
@@ -173,14 +210,20 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       youtubeUrl: v.youtubeUrl,
       youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
     });
-    setLoading(false);
     if (res.error) {
+      setLoading(false);
       toast.error(res.error);
       return;
     }
     toast.success("Profil elmentve!");
-    // Még egy utolsó lépés: email-megerősítés
-    await triggerVerificationEmail();
+    // Még egy utolsó lépés: email-megerősítés. A küldés hibája NEM
+    // akadályozhatja meg az átirányítást — a /verify-email oldalon
+    // úgyis van "újraküldés" gomb.
+    try {
+      await triggerVerificationEmail();
+    } catch {
+      // ignoráljuk — az átirányítás a fontos
+    }
     router.push("/verify-email");
     router.refresh();
   }
@@ -280,18 +323,20 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="age">Kor (opcionális)</Label>
+                <Label htmlFor="birthDate">Születési dátum *</Label>
                 <Input
-                  id="age"
-                  type="number"
-                  min={13}
-                  max={100}
-                  value={v.age}
-                  onChange={(e) => set("age", e.target.value)}
+                  id="birthDate"
+                  type="date"
+                  max={new Date().toISOString().slice(0, 10)}
+                  value={v.birthDate}
+                  onChange={(e) => set("birthDate", e.target.value)}
                 />
+                <p className="text-xs text-muted-foreground">
+                  A profilodon csak az életkorod jelenik meg, a pontos dátum nem.
+                </p>
               </div>
               <div className="space-y-1.5">
-                <Label>Nem (opcionális)</Label>
+                <Label>Nem *</Label>
                 <Select value={v.gender || undefined} onValueChange={(val) => set("gender", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Válassz" />
@@ -338,14 +383,16 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
             <div className="rounded-lg border border-accent/30 bg-accent/[0.06] p-4 text-sm">
               <p className="flex items-center gap-2 font-semibold">
                 <Sparkles className="h-4 w-4 text-accent" />
-                Csak a linket add meg — a számokat az AI behúzza
+                Add meg a linket — ahol lehet, a számot behúzzuk
               </p>
               <p className="mt-1 text-muted-foreground">
                 Illeszd be a profiljaid linkjét, és kattints az
-                <strong> „Összekapcsol” </strong> gombra. A követő- és
-                feliratkozószámokat automatikusan lekérjük, és onnantól 4
-                naponta frissítjük. Ez a lépés kihagyható, később is megteheted
-                a profilodnál.
+                <strong> „Összekapcsol” </strong> gombra. Ahol a szinkron
+                működik, automatikusan behúzzuk a követőszámot (és 4 naponta
+                frissítjük). Ahol nem sikerül, <strong>add meg kézzel</strong> a
+                számot a mezőben. <em>Ha kitöltesz egy linket, a követőszám
+                megadása kötelező.</em> Ez a lépés kihagyható, később is
+                megteheted a profilodnál.
               </p>
             </div>
             {(
@@ -356,7 +403,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
                 ["youtubeUrl", "youtubeSubscribers", "YouTube", "feliratkozó"],
               ] as const
             ).map(([urlKey, followKey, label, unit]) => {
-              const count = v[followKey];
+              const synced = syncedKeys.includes(followKey);
               return (
                 <div key={label} className="space-y-1.5">
                   <Label>{label} profil URL</Label>
@@ -367,17 +414,22 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
                       placeholder="https://…"
                       className="sm:flex-1"
                     />
-                    <div className="flex min-w-[150px] items-center gap-1.5 rounded-md bg-muted px-3 py-2 text-sm">
-                      {count ? (
-                        <>
-                          <BadgeCheck className="h-4 w-4 text-accent" />
-                          <span className="font-semibold">
-                            {formatNumber(Number(count))}
-                          </span>
-                          <span className="text-muted-foreground">{unit}</span>
-                        </>
-                      ) : (
-                        <span className="text-muted-foreground">Még nincs adat</span>
+                    <div className="relative flex min-w-[160px] items-center">
+                      <Input
+                        type="number"
+                        min={0}
+                        inputMode="numeric"
+                        value={v[followKey]}
+                        onChange={(e) => set(followKey, e.target.value)}
+                        placeholder={`${unit}szám`}
+                        className={synced ? "pr-9" : ""}
+                        aria-label={`${label} ${unit}szám`}
+                      />
+                      {synced && (
+                        <BadgeCheck
+                          className="pointer-events-none absolute right-2.5 h-4 w-4 text-accent"
+                          aria-label="Szinkronizálva"
+                        />
                       )}
                     </div>
                   </div>

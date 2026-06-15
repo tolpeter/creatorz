@@ -25,17 +25,30 @@ const basicsSchema = z.object({
   bio: z.string().max(500).optional().or(z.literal("")),
   city: z.string().max(100).optional().or(z.literal("")),
   county: z.string().max(50).optional().or(z.literal("")),
-  // A z.coerce.number() a null/üres-stringet 0-ra konvertálja, ami fail-eli a
-  // min(13)-at. Ezért preprocess-szel előbb undefined-re tesszük az "üres" eseteket,
-  // és az .optional()-t a preprocess belsejébe tesszük, hogy a coerce ne fusson.
-  age: z.preprocess(
-    (v) => (v == null || v === "" ? undefined : v),
-    z.coerce.number().int().min(13).max(100).optional(),
-  ),
-  gender: z.string().max(20).optional().or(z.literal("")),
+  // Pontos születési dátum (YYYY-MM-DD). Ebből számoljuk az életkort.
+  // Kötelező, és a megadott dátum alapján 13–100 év közötti kell legyen.
+  birthDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "Add meg a születési dátumod")
+    .refine((s) => {
+      const age = ageFromBirthDate(s);
+      return age >= 13 && age <= 100;
+    }, "Az életkornak 13 és 100 év között kell lennie"),
+  // Nem: kötelező.
+  gender: z.string().min(1, "Válaszd ki a nemed").max(20),
   categories: z.array(z.string()).max(3),
   languages: z.array(z.string()).min(1),
 });
+
+/** Életkor (teljes év) számítása ISO születési dátumból. */
+export function ageFromBirthDate(iso: string): number {
+  const b = new Date(iso);
+  const now = new Date();
+  let age = now.getFullYear() - b.getFullYear();
+  const m = now.getMonth() - b.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < b.getDate())) age--;
+  return age;
+}
 
 export async function updateCreatorBasics(input: z.input<typeof basicsSchema>) {
   const creator = await requireCreator();
@@ -71,8 +84,9 @@ export async function updateCreatorBasics(input: z.input<typeof basicsSchema>) {
       bio: data.bio || null,
       city: data.city || null,
       county: data.county || null,
-      age: data.age ?? null,
-      gender: data.gender || null,
+      birthDate: data.birthDate,
+      age: ageFromBirthDate(data.birthDate),
+      gender: data.gender,
       categories: data.categories,
       languages: data.languages,
       updatedAt: new Date(),
@@ -446,8 +460,9 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       bio: d.bio || null,
       city: d.city || null,
       county: d.county || null,
-      age: d.age ?? null,
-      gender: d.gender || null,
+      birthDate: d.birthDate,
+      age: ageFromBirthDate(d.birthDate),
+      gender: d.gender,
       categories: d.categories,
       languages: d.languages,
       instagramUrl: d.instagramUrl || null,

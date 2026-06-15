@@ -10,8 +10,8 @@ import {
   sql,
   type SQL,
 } from "drizzle-orm";
-import { redirect } from "next/navigation";
 import Image from "next/image";
+import { MembersOnlyGate } from "@/components/layout/members-only-gate";
 import { db } from "@/lib/db";
 import { ads, brandProfiles } from "@/lib/db/schema";
 import { AdCard, type AdCardData } from "@/components/ad/ad-card";
@@ -47,7 +47,13 @@ export default async function AdsFeedPage({
     getCurrentUser().catch(() => null),
   ]);
   if (!publicView && !currentUser) {
-    redirect("/login?next=/ads");
+    return (
+      <MembersOnlyGate
+        next="/ads"
+        title="A hirdetések böngészése csak tagoknak elérhető"
+        description="Regisztrálj ingyen tartalomgyártóként, és máris láthatod a márkák aktív briefjeit, amikre pályázhatsz — vagy lépj be a fiókodba."
+      />
+    );
   }
 
   const conditions: SQL[] = [eq(ads.status, "active")];
