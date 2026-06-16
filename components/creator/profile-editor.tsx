@@ -297,8 +297,8 @@ export function ProfileEditor({
       )}
 
       <Tabs defaultValue="basics" className="w-full space-y-4">
-        <div className="rounded-2xl border border-black/10 bg-white p-2 shadow-sm">
-          <TabsList className="grid h-auto w-full grid-cols-1 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-3">
+        <div className="rounded-2xl border border-black/10 bg-white p-1.5 shadow-sm">
+          <TabsList className="flex h-auto w-full gap-1.5 rounded-none bg-transparent p-0">
             {(
               [
                 ["basics", "Alapadatok"],
@@ -309,7 +309,7 @@ export function ProfileEditor({
               <TabsTrigger
                 key={val}
                 value={val}
-                className="h-11 rounded-xl px-3 text-sm font-bold text-muted-foreground after:hidden data-active:bg-accent data-active:text-black data-active:shadow-sm"
+                className="h-10 flex-1 whitespace-nowrap rounded-xl px-2 text-xs font-bold text-muted-foreground after:hidden data-active:bg-accent data-active:text-black data-active:shadow-sm sm:h-11 sm:px-3 sm:text-sm"
               >
                 {label}
               </TabsTrigger>
