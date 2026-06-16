@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { creatorProfiles, brandProfiles, ads, users } from "@/lib/db/schema";
+import { creatorProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +22,8 @@ import { NicheBrowser } from "@/components/shared/niche-browser";
 import { SiteHeader } from "@/components/layout/site-header";
 import { MarketplaceSection } from "@/components/shared/marketplace-section";
 import { WhyCreatorzSection } from "@/components/shared/why-creatorz-section";
+import { MobileAppPopup } from "@/components/shared/mobile-app-popup";
+import { getSetting } from "@/lib/settings";
 
 export default async function LandingPage() {
   let current: Awaited<ReturnType<typeof getCurrentUser>> = null;
@@ -30,6 +32,10 @@ export default async function LandingPage() {
   } catch {
     current = null;
   }
+
+  const mobileAppPopup = await getSetting("mobile_app_popup_enabled").catch(
+    () => false,
+  );
 
   const featuredRows = await db
     .select({
@@ -64,14 +70,6 @@ export default async function LandingPage() {
     isFeatured: Boolean(r.isFeatured || r.isAdminFeatured),
   }));
 
-  const [cN, bN, aN] = await Promise.all([
-    db.select({ n: sql<number>`count(*)::int` }).from(creatorProfiles),
-    db.select({ n: sql<number>`count(*)::int` }).from(brandProfiles),
-    db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(ads)
-      .where(eq(ads.status, "active")),
-  ]);
 
   const steps = [
     {
@@ -93,6 +91,7 @@ export default async function LandingPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <MobileAppPopup enabled={mobileAppPopup} />
       <SiteHeader isLoggedIn={Boolean(current?.dbUser)} />
       <HomeHero />
 
@@ -216,14 +215,6 @@ export default async function LandingPage() {
           cta="Tartalomgyártóként csatlakozom"
           highlight
         />
-      </section>
-
-      <section className="bg-[#0A0A0A] py-16 text-white">
-        <div className="mx-auto grid max-w-6xl grid-cols-3 gap-8 px-6 text-center">
-          <Stat value={`${cN[0]?.n ?? 0}`} label="Aktív tartalomgyártó" />
-          <Stat value={`${aN[0]?.n ?? 0}`} label="Aktív hirdetés" />
-          <Stat value={`${bN[0]?.n ?? 0}`} label="Regisztrált márka" />
-        </div>
       </section>
 
       <section className="py-20">
@@ -453,15 +444,6 @@ function HeroVisual() {
   );
 }
 
-
-function Stat({ value, label }: { value: string; label: string }) {
-  return (
-    <div>
-      <div className="text-4xl font-bold text-accent">{value}</div>
-      <div className="text-sm opacity-80">{label}</div>
-    </div>
-  );
-}
 
 function SideCard({
   title,

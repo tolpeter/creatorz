@@ -15,6 +15,8 @@ export const DEFAULT_SETTINGS = {
   // Public-browse kapuk: ha false, csak bejelentkezett user látja a listát.
   public_view_creators: false,
   public_view_ads: false,
+  // Mobil-app "hamarosan" popup a főoldalon.
+  mobile_app_popup_enabled: false,
   // -----------------------------------------------------------------------
   // Jogi adatkezelő-adatok (admin-ról szerkeszthetők). Élesedéskor cégváltás
   // (magánszemély → EV → KFT) esetén csak ezeket kell módosítani, a jogi
@@ -46,6 +48,7 @@ export type SettingsMap = {
   analytics_enabled: boolean;
   public_view_creators: boolean;
   public_view_ads: boolean;
+  mobile_app_popup_enabled: boolean;
   legal_entity_type: LegalEntityType;
   legal_name: string;
   legal_address: string;
