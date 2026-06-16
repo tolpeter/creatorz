@@ -56,7 +56,7 @@ export function MobileAppPopup({ enabled }: { enabled: boolean }) {
         {/* A kreatív (teljes designolt kép) */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/mobilapp.webp"
+          src="/images/mobilapp2.webp"
           alt="Hamarosan: Creatorz mobil app — Android és iOS"
           className="block w-full"
         />

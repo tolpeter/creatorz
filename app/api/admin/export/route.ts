@@ -6,6 +6,7 @@ import {
   brandProfiles,
   ads,
   reviews,
+  newsletterSubscribers,
 } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -105,6 +106,20 @@ async function build(type: string): Promise<{ headers: string[]; rows: unknown[]
       return {
         headers: ["marka", "tartalomgyarto", "ertekeles", "szoveg", "rejtett", "datum"],
         rows: r.map((v) => [v.brandName, v.creatorName, v.overall, v.text, v.hidden, v.createdAt]),
+      };
+    }
+    case "newsletter": {
+      const r = await db
+        .select({
+          email: newsletterSubscribers.email,
+          source: newsletterSubscribers.source,
+          createdAt: newsletterSubscribers.createdAt,
+        })
+        .from(newsletterSubscribers)
+        .orderBy(desc(newsletterSubscribers.createdAt));
+      return {
+        headers: ["email", "forras", "feliratkozott"],
+        rows: r.map((s) => [s.email, s.source, s.createdAt]),
       };
     }
     default:

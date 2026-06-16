@@ -14,6 +14,7 @@ import {
   TrendingUp,
   MessageSquare,
   Newspaper,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -24,6 +25,7 @@ import {
 const navItems = [
   { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true, key: "overview" },
   { href: "/admin/messages", label: "Üzenetek", icon: MessageSquare, key: "messages" },
+  { href: "/admin/newsletter", label: "Hírlevél", icon: Mail, key: "newsletter" },
   { href: "/admin/settings", label: "Beállítások", icon: Settings, key: "settings" },
   { href: "/admin/users", label: "Felhasználók", icon: Users, key: "users" },
   { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },

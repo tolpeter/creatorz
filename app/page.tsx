@@ -351,7 +351,7 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[360px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[500px] lg:h-[600px] lg:max-w-[600px]">
+    <div className="relative mx-auto flex h-[440px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
@@ -366,7 +366,7 @@ function HeroVisual() {
         height={372}
         priority
         sizes="(min-width: 1024px) 440px, 80vw"
-        className="absolute bottom-[2%] left-1/2 z-0 h-auto w-[86%] max-w-[440px] -translate-x-1/2 object-contain"
+        className="absolute bottom-[2%] left-1/2 z-0 h-auto w-[78%] max-w-[300px] -translate-x-1/2 object-contain sm:max-w-[440px]"
       />
 
       {/* Telefon mockup (m\u00e1r k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
@@ -376,8 +376,8 @@ function HeroVisual() {
         width={679}
         height={1241}
         priority
-        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 230px"
-        className="animate-float relative z-10 h-auto w-[230px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 195px"
+        className="animate-float relative z-10 h-auto w-[195px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
       />
 
       {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
