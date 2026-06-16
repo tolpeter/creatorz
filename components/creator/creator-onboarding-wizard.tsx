@@ -42,6 +42,7 @@ import {
   SocialManualRow,
 } from "@/components/creator/social-rows";
 import { SocialTile } from "@/components/creator/platform-icon";
+import { ImageUploader } from "@/components/creator/image-uploader";
 import {
   completeCreatorOnboarding,
   connectCreatorSocials,
@@ -49,6 +50,7 @@ import {
 import { triggerVerificationEmail } from "@/app/actions/auth";
 
 export type OnboardingInitial = {
+  avatarUrl: string | null;
   username: string;
   displayName: string;
   bio: string;
@@ -185,6 +187,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       res = await completeCreatorOnboarding({
         username: v.username,
         displayName: v.displayName,
+        avatarUrl: v.avatarUrl ?? "",
         bio: v.bio,
         city: v.city,
         county: v.county,
@@ -252,6 +255,18 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       <CardContent className="space-y-5">
         {step === 0 && (
           <>
+            <div className="rounded-xl border border-accent/30 bg-accent/[0.05] p-4">
+              <ImageUploader
+                bucket="avatars"
+                variant="avatar"
+                label="Profilkép"
+                value={v.avatarUrl}
+                onChange={(url) => set("avatarUrl", url)}
+              />
+              <p className="mt-2 text-center text-xs text-muted-foreground">
+                Egy valódi arc akár 3× több megkeresést hoz a márkáktól.
+              </p>
+            </div>
             <div className="space-y-1.5">
               <Label htmlFor="displayName">Megjelenített név *</Label>
               <Input

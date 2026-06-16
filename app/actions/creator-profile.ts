@@ -427,6 +427,7 @@ const onboardingSchema = basicsSchema.extend({
   facebookFollowers: z.coerce.number().int().min(0).optional().nullable(),
   youtubeUrl: z.string().max(300).optional().or(z.literal("")),
   youtubeSubscribers: z.coerce.number().int().min(0).optional().nullable(),
+  avatarUrl: z.string().max(600).optional().or(z.literal("")),
 });
 
 export async function completeCreatorOnboarding(input: z.input<typeof onboardingSchema>) {
@@ -483,6 +484,8 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       birthDate: d.birthDate,
       age: ageFromBirthDate(d.birthDate),
       gender: d.gender,
+      // Avatar: csak akkor írjuk felül, ha most adtak meg újat.
+      ...(d.avatarUrl ? { avatarUrl: d.avatarUrl } : {}),
       categories: d.categories,
       languages: d.languages,
       instagramUrl: d.instagramUrl || null,

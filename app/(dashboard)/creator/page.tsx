@@ -23,6 +23,7 @@ import { adApplications, messages, portfolioItems, profileViews } from "@/lib/db
 import { getCurrentCreator } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DashboardAvatarUpload } from "@/components/creator/dashboard-avatar-upload";
 
 export default async function CreatorOverviewPage() {
   const creator = await getCurrentCreator();
@@ -223,6 +224,18 @@ export default async function CreatorOverviewPage() {
           </div>
         </div>
       </section>
+
+      {/* Profilkép feltöltés — külön, jól látható (csak ha még nincs) */}
+      {!p.avatarUrl && (
+        <div className="rounded-lg border border-accent/40 bg-accent/[0.06] p-5">
+          <h2 className="text-base font-bold">Tölts fel egy profilképet</h2>
+          <p className="mb-3 mt-0.5 text-sm text-muted-foreground">
+            Egy valódi arc akár 3× több megkeresést hoz a márkáktól. Húzd ide a
+            képet, vagy kattints a feltöltéshez.
+          </p>
+          <DashboardAvatarUpload initialUrl={p.avatarUrl ?? null} />
+        </div>
+      )}
 
       {/* Ki nézte a profilod (#5) */}
       <div className="flex flex-col gap-3 rounded-lg border border-accent/30 bg-[#f6f7f2] p-5 sm:flex-row sm:items-center sm:justify-between">

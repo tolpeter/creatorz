@@ -7,7 +7,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="relative flex min-h-screen w-full flex-col items-center justify-start gap-6 bg-[#f6f7f2] px-4 py-8 sm:justify-center sm:gap-8 sm:py-12">
+    <div className="relative flex min-h-[100dvh] w-full flex-col items-center justify-start gap-6 bg-[#f6f7f2] px-4 py-8 sm:justify-center sm:gap-8 sm:py-12">
       {/* Háttér-dekoráció: FIXED + overflow-hidden konténerben, hogy NE
           befolyásolja a dokumentum magasságát és NE okozzon scroll-ugrást
           mobile-on (az animált blob-ok translate-je egyébként megnövelné a

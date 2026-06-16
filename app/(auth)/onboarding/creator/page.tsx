@@ -22,6 +22,7 @@ export default async function CreatorOnboardingPage() {
 
   const p = creator.profile;
   const initial: OnboardingInitial = {
+    avatarUrl: p.avatarUrl ?? null,
     username: p.username,
     displayName: p.displayName,
     bio: p.bio ?? "",
