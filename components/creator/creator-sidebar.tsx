@@ -15,6 +15,10 @@ import {
   Handshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DashboardMobileNav,
+  type DashboardNavItem,
+} from "@/components/layout/dashboard-mobile-nav";
 
 const navItems = [
   {
@@ -91,7 +95,16 @@ export function CreatorSidebar({
   );
 
   return (
-    <nav className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2 shadow-sm md:h-full md:w-64 md:flex-col md:gap-1 md:overflow-y-auto md:rounded-none md:border-0 md:border-r md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
+    <>
+      {/* Mobil: lenyíló menü a vízszintesen húzható sor helyett */}
+      <DashboardMobileNav
+        items={visibleItems as readonly DashboardNavItem[]}
+        unreadMessages={unreadMessages}
+        rootHref="/creator"
+      />
+
+      {/* Desktop: klasszikus oldalsáv */}
+      <nav className="hidden gap-2 rounded-lg border bg-card p-2 shadow-sm md:flex md:h-full md:w-64 md:flex-col md:gap-1 md:overflow-y-auto md:rounded-none md:border-0 md:border-r md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
       <div className="hidden px-3 pb-3 pt-2 md:block">
         <p className="text-xs font-semibold uppercase tracking-wide text-accent">
           Creator Stúdió
@@ -150,6 +163,7 @@ export function CreatorSidebar({
           </p>
         )}
       </div>
-    </nav>
+      </nav>
+    </>
   );
 }

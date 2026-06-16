@@ -16,6 +16,10 @@ import {
   Newspaper,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DashboardMobileNav,
+  type DashboardNavItem,
+} from "@/components/layout/dashboard-mobile-nav";
 
 const navItems = [
   { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true, key: "overview" },
@@ -41,7 +45,13 @@ export function AdminSidebar({
   const pathname = usePathname();
   const badgeMap: Record<string, number> = { messages: unreadContact, ...badges };
   return (
-    <nav className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2 shadow-sm md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
+    <>
+      <DashboardMobileNav
+        items={navItems as readonly DashboardNavItem[]}
+        unreadMessages={unreadContact}
+        rootHref="/admin"
+      />
+      <nav className="hidden gap-2 rounded-lg border bg-card p-2 shadow-sm md:flex md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
       <div className="hidden px-3 pb-3 pt-2 md:block">
         <p className="text-xs font-semibold uppercase text-accent">
           Admin Control
@@ -78,6 +88,7 @@ export function AdminSidebar({
           </Link>
         );
       })}
-    </nav>
+      </nav>
+    </>
   );
 }

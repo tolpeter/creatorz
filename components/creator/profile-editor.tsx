@@ -296,7 +296,7 @@ export function ProfileEditor({
         </div>
       )}
 
-      <Tabs defaultValue="basics" className="w-full">
+      <Tabs defaultValue="basics" className="w-full space-y-4">
         <div className="rounded-2xl border border-black/10 bg-white p-2 shadow-sm">
           <TabsList className="grid h-auto w-full grid-cols-1 gap-2 rounded-none bg-transparent p-0 sm:grid-cols-3">
             {(

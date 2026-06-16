@@ -14,6 +14,10 @@ import {
   Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DashboardMobileNav,
+  type DashboardNavItem,
+} from "@/components/layout/dashboard-mobile-nav";
 
 const navItems = [
   {
@@ -71,7 +75,13 @@ export function BrandSidebar({
   const pathname = usePathname();
 
   return (
-    <nav className="flex gap-2 overflow-x-auto rounded-lg border bg-card p-2 shadow-sm md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
+    <>
+      <DashboardMobileNav
+        items={navItems as readonly DashboardNavItem[]}
+        unreadMessages={unreadMessages}
+        rootHref="/brand"
+      />
+      <nav className="hidden gap-2 rounded-lg border bg-card p-2 shadow-sm md:flex md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
       <div className="hidden px-3 pb-3 pt-2 md:block">
         <p className="text-xs font-semibold uppercase text-accent">Brand Hub</p>
         <p className="mt-1 text-sm text-white/60">
@@ -106,6 +116,7 @@ export function BrandSidebar({
           </Link>
         );
       })}
-    </nav>
+      </nav>
+    </>
   );
 }

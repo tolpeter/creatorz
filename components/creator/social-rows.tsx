@@ -46,7 +46,7 @@ export function SocialAutoRow({
           <Input
             value={url}
             onChange={(e) => onUrl(e.target.value)}
-            placeholder="https://…"
+            placeholder="@felhasználónév vagy URL"
             className="mt-1.5"
           />
         </div>
@@ -121,7 +121,7 @@ export function SocialManualRow({
           <Input
             value={url}
             onChange={(e) => onUrl(e.target.value)}
-            placeholder="https://…"
+            placeholder="@felhasználónév vagy URL"
             className="mt-1.5"
           />
         </div>

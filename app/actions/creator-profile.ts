@@ -11,6 +11,7 @@ import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
 import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
+import { normalizeSocialUrl } from "@/lib/utils/social";
 
 async function requireCreator() {
   const creator = await getCurrentCreator();
@@ -170,7 +171,13 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
 
   const parsed = socialSchema.safeParse(input);
   if (!parsed.success) return { error: "Érvénytelen adatok" };
-  const d = parsed.data;
+  const d = {
+    ...parsed.data,
+    instagramUrl: normalizeSocialUrl("instagram", parsed.data.instagramUrl),
+    tiktokUrl: normalizeSocialUrl("tiktok", parsed.data.tiktokUrl),
+    facebookUrl: normalizeSocialUrl("facebook", parsed.data.facebookUrl),
+    youtubeUrl: normalizeSocialUrl("youtube", parsed.data.youtubeUrl),
+  };
 
   const missingCount = [
     { label: "Instagram", url: d.instagramUrl, count: d.instagramFollowers },
@@ -304,7 +311,13 @@ export async function connectCreatorSocials(
 
   const parsed = connectSchema.safeParse(input);
   if (!parsed.success) return { error: "Érvénytelen URL-ek" };
-  const d = parsed.data;
+  // Felhasználónév → teljes URL (pl. "ptrlgys" → https://www.tiktok.com/@ptrlgys)
+  const d = {
+    instagramUrl: normalizeSocialUrl("instagram", parsed.data.instagramUrl),
+    tiktokUrl: normalizeSocialUrl("tiktok", parsed.data.tiktokUrl),
+    facebookUrl: normalizeSocialUrl("facebook", parsed.data.facebookUrl),
+    youtubeUrl: normalizeSocialUrl("youtube", parsed.data.youtubeUrl),
+  };
 
   if (!d.instagramUrl && !d.tiktokUrl && !d.facebookUrl && !d.youtubeUrl) {
     return { error: "Adj meg legalább egy social profil linket" };
@@ -424,7 +437,13 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
   }
-  const d = parsed.data;
+  const d = {
+    ...parsed.data,
+    instagramUrl: normalizeSocialUrl("instagram", parsed.data.instagramUrl),
+    tiktokUrl: normalizeSocialUrl("tiktok", parsed.data.tiktokUrl),
+    facebookUrl: normalizeSocialUrl("facebook", parsed.data.facebookUrl),
+    youtubeUrl: normalizeSocialUrl("youtube", parsed.data.youtubeUrl),
+  };
 
   const username = generateUsername(d.username);
   if (username.length < 3) {
