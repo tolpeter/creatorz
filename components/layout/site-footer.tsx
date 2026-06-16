@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Logo } from "@/components/layout/logo";
 import { CookieSettingsButton } from "@/components/shared/cookie-settings-button";
+import { NewsletterForm } from "@/components/shared/newsletter-form";
 
 export function SiteFooter() {
   const cols = [
@@ -50,6 +51,24 @@ export function SiteFooter() {
 
   return (
     <footer className="border-t bg-[#0A0A0A] text-white/70">
+      {/* Hírlevél-feliratkozás */}
+      <div className="border-b border-white/10">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-8 md:flex-row md:items-center md:justify-between">
+          <div className="md:max-w-md">
+            <p className="text-lg font-black text-white">
+              Iratkozz fel a hírlevélre
+            </p>
+            <p className="mt-1 text-sm text-white/60">
+              Új funkciók, tippek és a mobil app indulása — egyenesen a
+              postaládádba.
+            </p>
+          </div>
+          <div className="w-full md:max-w-md">
+            <NewsletterForm source="footer" variant="dark" />
+          </div>
+        </div>
+      </div>
+
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <div className="sm:col-span-2 lg:col-span-1">
           <Logo variant="light" className="text-xl" />

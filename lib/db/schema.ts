@@ -454,6 +454,18 @@ export const contactMessages = pgTable("contact_messages", {
   createdIdx: index("contact_messages_created_idx").on(table.createdAt),
 }));
 
+// ============= HÍRLEVÉL-FELIRATKOZÓK (lábléc + app-popup egy helyre) =======
+export const newsletterSubscribers = pgTable("newsletter_subscribers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: varchar("email", { length: 200 }).notNull(),
+  // Honnan iratkozott fel: 'footer' | 'app_popup' | egyéb.
+  source: varchar("source", { length: 40 }).notNull().default("footer"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  emailIdx: uniqueIndex("newsletter_email_idx").on(table.email),
+  createdIdx: index("newsletter_created_idx").on(table.createdAt),
+}));
+
 // ============= SAVED CREATORS (BRAND ⭐ CREATOR) =============
 export const savedCreators = pgTable("saved_creators", {
   brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
