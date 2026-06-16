@@ -643,12 +643,14 @@ async function getTikTokVideoEmbeds(items: typeof portfolioItems.$inferSelect[])
   const embeds = await Promise.all(
     tiktokItems.map(async (item): Promise<TikTokSliderVideo | null> => {
       const embed = await getTikTokEmbed(item.url);
-      if (!embed?.html) return null;
+      // Könnyű előkép (thumbnail) — nem a nehéz iframe-et töltjük, így mobilon is
+      // gyors, betölt és húzható. Ha nincs thumbnail, a kártya play-ikont mutat.
       return {
         id: item.id,
         url: item.url,
-        html: embed.html,
-        title: item.title ?? embed.title ?? null,
+        thumbnailUrl: item.thumbnailUrl ?? embed?.thumbnail_url ?? null,
+        title: item.title ?? embed?.title ?? null,
+        author: embed?.author_name ?? null,
       };
     }),
   );
