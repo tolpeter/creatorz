@@ -28,6 +28,9 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
   if (!visible.length) return null;
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
+    // Touch/pen: a natív görgetés (overflow-x-auto + touch-action) intézi —
+    // a pointer-capture egyébként elnyelné a mobil swipe-ot.
+    if (e.pointerType !== "mouse") return;
     if (e.button !== 0) return;
     const rail = railRef.current;
     if (!rail) return;

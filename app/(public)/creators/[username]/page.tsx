@@ -484,8 +484,8 @@ export default async function CreatorDetailPage({
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
-        <div className="space-y-6">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
           {tiktokVideoEmbeds.length ? (
             <TikTokVideoSlider videos={tiktokVideoEmbeds} />
           ) : profile.tiktokUrl ? (
@@ -567,7 +567,7 @@ export default async function CreatorDetailPage({
           ) : null}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+        <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
           {socialReachItems.length > 0 ? (
             <SidePanel title="Közösségi jelenlét" icon={<Zap className="h-4 w-4" />}>
               <SocialStats profile={profile} />
