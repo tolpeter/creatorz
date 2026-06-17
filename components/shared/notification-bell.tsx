@@ -85,7 +85,7 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 top-11 z-50 w-[340px] max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-black/10 bg-white text-foreground shadow-2xl">
+        <div className="fixed inset-x-3 top-16 z-50 overflow-hidden rounded-2xl border border-black/10 bg-white text-foreground shadow-2xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-11 sm:w-[340px]">
           <div className="flex items-center justify-between border-b px-4 py-3">
             <p className="text-sm font-bold">Értesítések</p>
             {unread > 0 && (

@@ -193,5 +193,64 @@ export async function replyToUser(input: z.input<typeof replySchema>) {
 
   revalidatePath("/creator/messages");
   revalidatePath("/brand/messages");
+  revalidatePath("/admin/inbox");
+  return { success: true };
+}
+
+// ===========================================================================
+// Admin → tartalomgyártó *induló* üzenet (admin közvetlenül megkereshet creatort)
+// ===========================================================================
+
+const adminMsgSchema = z.object({
+  toUsername: z.string().min(1),
+  body: z.string().min(1, "Az üzenet nem lehet üres").max(5000),
+});
+
+export async function adminMessageCreator(input: z.input<typeof adminMsgSchema>) {
+  const current = await getCurrentUser();
+  if (current?.dbUser?.role !== "admin") return { error: "Csak admin" };
+
+  const parsed = adminMsgSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const d = parsed.data;
+
+  const [recipient] = await db
+    .select({
+      creatorUserId: creatorProfiles.userId,
+      displayName: creatorProfiles.displayName,
+      email: users.email,
+    })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(eq(creatorProfiles.username, d.toUsername))
+    .limit(1);
+  if (!recipient) return { error: "A tartalomgyártó nem található" };
+
+  await db.insert(messages).values({
+    fromUserId: current.dbUser.id,
+    toUserId: recipient.creatorUserId,
+    body: d.body,
+  });
+
+  await db.insert(notifications).values({
+    userId: recipient.creatorUserId,
+    type: "message",
+    title: "Új üzenet: Creatorz csapat",
+    body: d.body.slice(0, 120),
+    link: "/creator/messages",
+  });
+
+  const email = renderNewMessageEmail({
+    recipientName: recipient.displayName,
+    senderName: "Creatorz csapat",
+    preview: d.body.slice(0, 220),
+    inboxUrl: `${APP_URL}/creator/messages`,
+  });
+  await sendEmailSafe({ to: recipient.email, ...email });
+
+  revalidatePath("/admin/inbox");
+  revalidatePath("/creator/messages");
   return { success: true };
 }
