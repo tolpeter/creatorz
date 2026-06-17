@@ -71,11 +71,14 @@ export const blogPosts = pgTable("blog_posts", {
 export const profileViews = pgTable("profile_views", {
   id: uuid("id").primaryKey().defaultRandom(),
   creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
-  brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
+  // A megtekintő felhasználó (lehet márka VAGY másik tartalomgyártó). Ez a fő
+  // azonosító a napi dedup-hoz. A brandId visszamenőleg megmaradt (régi sorok).
+  viewerUserId: uuid("viewer_user_id").references(() => users.id, { onDelete: "cascade" }),
+  brandId: uuid("brand_id").references(() => brandProfiles.id, { onDelete: "cascade" }),
   viewedDate: date("viewed_date").notNull(),  // napi dedup (YYYY-MM-DD)
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => ({
-  uniqDay: uniqueIndex("profile_views_unique_day_idx").on(t.creatorId, t.brandId, t.viewedDate),
+  uniqViewerDay: uniqueIndex("profile_views_unique_viewer_day_idx").on(t.creatorId, t.viewerUserId, t.viewedDate),
   creatorIdx: index("profile_views_creator_idx").on(t.creatorId),
 }));
 

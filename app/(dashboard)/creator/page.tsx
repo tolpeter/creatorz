@@ -48,7 +48,7 @@ export default async function CreatorOverviewPage() {
     db
       .select({
         total: sql<number>`count(*)::int`,
-        brands: sql<number>`count(distinct ${profileViews.brandId})::int`,
+        brands: sql<number>`count(distinct ${profileViews.viewerUserId})::int`,
       })
       .from(profileViews)
       .where(
@@ -251,7 +251,7 @@ export default async function CreatorOverviewPage() {
             </p>
             <p className="text-sm text-muted-foreground">
               {weeklyViewBrands > 0
-                ? `${weeklyViewBrands} különböző márkától. Tartsd frissen a profilod, hogy többen megtaláljanak!`
+                ? `${weeklyViewBrands} különböző látogatótól. Tartsd frissen a profilod, hogy többen megtaláljanak!`
                 : "Tölts fel portfóliót és bemutatkozó videót, hogy a márkák rád találjanak."}
             </p>
           </div>

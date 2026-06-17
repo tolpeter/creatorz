@@ -27,13 +27,14 @@ import {
   savedCreators,
   users,
 } from "@/lib/db/schema";
-import { getCurrentBrand } from "@/lib/auth";
+import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { activityLabel, getResponseStats } from "@/lib/creator-stats";
 import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { CREATOR_CATEGORIES, LANGUAGES } from "@/lib/constants";
 import { getTikTokEmbed } from "@/lib/utils/oembed";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SocialTile } from "@/components/creator/platform-icon";
@@ -159,19 +160,30 @@ export default async function CreatorDetailPage({
       .where(and(eq(savedCreators.brandId, brand.profile.id), eq(savedCreators.creatorId, profile.id)))
       .limit(1);
     initialSaved = saved.length > 0;
+  }
 
-    void db
-      .insert(profileViews)
-      .values({
-        creatorId: profile.id,
-        brandId: brand.profile.id,
-        viewedDate: new Date().toISOString().slice(0, 10),
-      })
-      .onConflictDoNothing()
-      .then(
-        () => {},
-        () => {},
-      );
+  // Profil-megtekintés rögzítése — BÁRMELY bejelentkezett felhasználótól
+  // (márka VAGY másik tartalomgyártó), kivéve magát a profil tulajdonosát.
+  // Napi dedup viewer-enként.
+  try {
+    const viewer = await getCurrentUser();
+    if (viewer?.dbUser && viewer.dbUser.id !== profile.userId) {
+      void db
+        .insert(profileViews)
+        .values({
+          creatorId: profile.id,
+          viewerUserId: viewer.dbUser.id,
+          brandId: brand?.profile.id ?? null,
+          viewedDate: new Date().toISOString().slice(0, 10),
+        })
+        .onConflictDoNothing()
+        .then(
+          () => {},
+          () => {},
+        );
+    }
+  } catch {
+    // megtekintés-rögzítés best-effort
   }
 
   let similar: CreatorCardData[] = [];
@@ -354,12 +366,7 @@ export default async function CreatorDetailPage({
         <div className="relative grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(430px,0.85fr)] lg:items-center lg:p-6">
           <div className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4">
             <div className="relative">
-              <Avatar className="h-20 w-20 border border-accent/40 ring-4 ring-accent/18 sm:h-32 sm:w-32">
-                <AvatarImage src={profile.avatarUrl ?? undefined} alt={profile.displayName} />
-                <AvatarFallback className="bg-white text-3xl font-black text-black">
-                  <Logo variant="dark" className="text-sm sm:text-lg" />
-                </AvatarFallback>
-              </Avatar>
+              <AvatarLightbox src={profile.avatarUrl} alt={profile.displayName} />
             </div>
 
             <div className="min-w-0 text-left">
