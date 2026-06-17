@@ -2,7 +2,7 @@ import { db } from "@/lib/db";
 import { creatorProfiles } from "@/lib/db/schema";
 import { eq, or, isNotNull } from "drizzle-orm";
 import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
-import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
+import { scrapeTikTokStats } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 
@@ -49,9 +49,12 @@ export async function GET(req: Request) {
     }
     if (c.tiktokUrl) {
       try {
-        const n = await scrapeTikTokFollowers(c.tiktokUrl);
-        if (n !== null) {
-          updates.tiktokFollowers = n;
+        const stats = await scrapeTikTokStats(c.tiktokUrl);
+        if (stats.followers !== null) {
+          updates.tiktokFollowers = stats.followers;
+          if (stats.likes != null) updates.tiktokLikes = stats.likes;
+          if (stats.avgViews != null) updates.tiktokAvgViews = stats.avgViews;
+          if (stats.videoCount != null) updates.tiktokVideoCount = stats.videoCount;
           updates.tiktokVerified = true;
           updates.tiktokLastChecked = now;
         }

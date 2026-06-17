@@ -8,7 +8,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentCreator } from "@/lib/auth";
 import { generateUsername } from "@/lib/utils/username";
 import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
-import { scrapeTikTokFollowers } from "@/lib/scrapers/tiktok";
+import { scrapeTikTokStats } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 import { normalizeSocialUrl } from "@/lib/utils/social";
@@ -351,13 +351,17 @@ export async function connectCreatorSocials(
   }
   if (d.tiktokUrl) {
     try {
-      const n = await scrapeTikTokFollowers(d.tiktokUrl);
-      if (n != null && n > 0) {
+      const stats = await scrapeTikTokStats(d.tiktokUrl);
+      if (stats.followers != null && stats.followers > 0) {
         set.tiktokUrl = d.tiktokUrl;
-        set.tiktokFollowers = n;
+        set.tiktokFollowers = stats.followers;
+        // Bővített statisztika — csak ha sikerült kinyerni.
+        if (stats.likes != null) set.tiktokLikes = stats.likes;
+        if (stats.avgViews != null) set.tiktokAvgViews = stats.avgViews;
+        if (stats.videoCount != null) set.tiktokVideoCount = stats.videoCount;
         set.tiktokVerified = true;
         set.tiktokLastChecked = now;
-        out.tiktokFollowers = n;
+        out.tiktokFollowers = stats.followers;
       } else out.failed!.push("TikTok");
     } catch {
       out.failed!.push("TikTok");

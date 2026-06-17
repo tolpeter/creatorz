@@ -150,6 +150,10 @@ export const creatorProfiles = pgTable("creator_profiles", {
   instagramLastChecked: timestamp("instagram_last_checked"),
   tiktokUrl: text("tiktok_url"),
   tiktokFollowers: integer("tiktok_followers"),
+  // Bővített TikTok-statisztika (publikus profil HTML-ből, scrape+AI).
+  tiktokLikes: integer("tiktok_likes"), // összes szív/like a profilon
+  tiktokAvgViews: integer("tiktok_avg_views"), // átlagos megtekintés / videó
+  tiktokVideoCount: integer("tiktok_video_count"),
   tiktokVerified: boolean("tiktok_verified").notNull().default(false),
   tiktokLastChecked: timestamp("tiktok_last_checked"),
   facebookUrl: text("facebook_url"),
