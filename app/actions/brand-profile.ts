@@ -79,3 +79,22 @@ export async function updateBrandProfile(input: z.input<typeof profileSchema>) {
   revalidatePath("/brand/profile");
   return { success: true };
 }
+
+const logoSchema = z.object({ logoUrl: z.string().max(600).optional().nullable() });
+
+/** Csak a logó frissítése (a vezérlőpulti gyors-feltöltőhöz). */
+export async function updateBrandLogo(input: z.input<typeof logoSchema>) {
+  const brand = await getCurrentBrand();
+  if (!brand) return { error: "Nincs bejelentkezve" };
+  const parsed = logoSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen adat" };
+
+  await db
+    .update(brandProfiles)
+    .set({ logoUrl: parsed.data.logoUrl || null, updatedAt: new Date() })
+    .where(eq(brandProfiles.id, brand.profile.id));
+
+  revalidatePath("/brand");
+  revalidatePath("/brand/profile");
+  return { success: true };
+}

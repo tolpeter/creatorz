@@ -15,6 +15,8 @@ import { db } from "@/lib/db";
 import { savedCreators, ads, messages } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { BrandLogoUpload } from "@/components/brand/brand-logo-upload";
 
 export default async function BrandOverviewPage() {
   const brand = await getCurrentBrand();
@@ -41,22 +43,67 @@ export default async function BrandOverviewPage() {
 
   return (
     <div className="space-y-6">
-      {/* HERO HEADER */}
-      <div className="relative overflow-hidden rounded-2xl border bg-card p-6 sm:p-8">
+      {/* HERO HEADER — prémium, sötét banner */}
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#0b0d0a] p-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:p-8">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full bg-accent/15 blur-3xl"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_10%,rgba(163,230,53,0.22),transparent_32%),linear-gradient(135deg,rgba(163,230,53,0.08),transparent_45%)]"
         />
-        <div className="relative flex items-start gap-4">
-          <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-accent/15">
-            <Sparkles className="h-7 w-7 text-accent" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full bg-accent/20 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-4">
+            <Avatar className="h-16 w-16 border border-white/20 bg-white/10">
+              <AvatarImage src={brand.profile.logoUrl ?? undefined} />
+              <AvatarFallback className="bg-white/10 text-lg font-black text-white">
+                {brand.profile.companyName.charAt(0).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/35 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
+                <Sparkles className="h-3 w-3" /> Márka irányítópult
+              </span>
+              <h1 className="mt-1.5 truncate text-2xl font-black sm:text-3xl">
+                {brand.profile.companyName}
+              </h1>
+              {brand.profile.industry && (
+                <p className="text-sm text-white/60">{brand.profile.industry}</p>
+              )}
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold sm:text-3xl">{brand.profile.companyName}</h1>
-            <p className="text-muted-foreground">Márka irányítópult</p>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="bg-accent font-bold text-black hover:bg-white">
+              <Link href="/brand/ads/new">
+                <Plus className="h-4 w-4" /> Új hirdetés
+              </Link>
+            </Button>
+            <Button
+              asChild
+              variant="outline"
+              className="border-white/20 bg-white/5 text-white hover:bg-white/15 hover:text-white"
+            >
+              <Link href="/creators">
+                Tartalomgyártók <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
           </div>
         </div>
-      </div>
+      </section>
+
+      {/* LOGÓ-FELTÖLTÉS PROMPT — ha még nincs logó */}
+      {!brand.profile.logoUrl && (
+        <div className="rounded-2xl border border-accent/40 bg-accent/[0.06] p-5">
+          <h2 className="text-base font-bold">Tölts fel egy logót</h2>
+          <p className="mb-3 mt-0.5 text-sm text-muted-foreground">
+            A logó megjelenik a hirdetéseiden és a tartalomgyártók felé — sokkal
+            megbízhatóbb benyomást kelt. Húzd ide a képet, vagy kattints a
+            feltöltéshez.
+          </p>
+          <BrandLogoUpload initialUrl={brand.profile.logoUrl ?? null} />
+        </div>
+      )}
 
       {/* FELSŐ 2 STAT KÁRTYA */}
       <div className="grid gap-4 md:grid-cols-2">

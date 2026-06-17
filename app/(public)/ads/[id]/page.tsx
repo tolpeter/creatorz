@@ -92,7 +92,14 @@ export default async function AdDetailPage({
   // weboldalt. A részleteket csak az érdeklődő creator látja az üzenetekben.
   const publicBrandName = ad.anonymous ? "Bizalmas márka" : row.brandName;
   const publicBrandLogo = ad.anonymous ? null : row.brandLogo;
-  const publicBrandWebsite = ad.anonymous ? null : row.brandWebsite;
+  // Hiányzó protokoll pótlása — különben a "skinbar.hu" relatív linkként
+  // /ads/skinbar.hu-ra mutatna.
+  const rawWebsite = ad.anonymous ? null : row.brandWebsite;
+  const publicBrandWebsite = rawWebsite
+    ? /^https?:\/\//i.test(rawWebsite)
+      ? rawWebsite
+      : `https://${rawWebsite}`
+    : null;
   const publicBrandRating = ad.anonymous ? null : row.brandRating;
   const publicBrandReviewCount = ad.anonymous ? 0 : row.brandReviewCount;
 
