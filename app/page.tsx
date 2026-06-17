@@ -293,7 +293,7 @@ function HomeHero() {
       />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1280px] flex-col">
-        <div className="grid flex-1 items-center gap-10 pt-8 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
+        <div className="grid flex-1 items-center gap-2 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
           {/* Bal: sz\u00f6veg */}
           <div className="min-w-0 max-w-full lg:max-w-[640px]">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm">
@@ -351,7 +351,7 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[380px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
+    <div className="relative mx-auto flex h-[330px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
@@ -376,8 +376,8 @@ function HeroVisual() {
         width={679}
         height={1241}
         priority
-        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 195px"
-        className="animate-float relative z-10 h-auto w-[195px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 170px"
+        className="animate-float relative z-10 h-auto w-[170px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
       />
 
       {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
