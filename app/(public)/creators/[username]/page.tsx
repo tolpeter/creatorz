@@ -493,6 +493,16 @@ export default async function CreatorDetailPage({
 
       <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
+          {/* Mobilon: Közösségi jelenlét közvetlenül a TikTok-blokk felett.
+              (Desktopon ugyanez az oldalsávban — lásd lent, hidden lg:block.) */}
+          {socialReachItems.length > 0 ? (
+            <div className="lg:hidden">
+              <SidePanel title="Közösségi jelenlét" icon={<Zap className="h-4 w-4" />}>
+                <SocialStats profile={profile} />
+              </SidePanel>
+            </div>
+          ) : null}
+
           {tiktokVideoEmbeds.length ? (
             <TikTokVideoSlider videos={tiktokVideoEmbeds} />
           ) : profile.tiktokUrl ? (
@@ -575,10 +585,13 @@ export default async function CreatorDetailPage({
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
+          {/* Desktopon az oldalsávban; mobilon a bal oszlopban (lásd fent). */}
           {socialReachItems.length > 0 ? (
-            <SidePanel title="Közösségi jelenlét" icon={<Zap className="h-4 w-4" />}>
-              <SocialStats profile={profile} />
-            </SidePanel>
+            <div className="hidden lg:block">
+              <SidePanel title="Közösségi jelenlét" icon={<Zap className="h-4 w-4" />}>
+                <SocialStats profile={profile} />
+              </SidePanel>
+            </div>
           ) : null}
 
           <SidePanel title="Bizalmi jelzések" icon={<ShieldCheck className="h-4 w-4" />}>
