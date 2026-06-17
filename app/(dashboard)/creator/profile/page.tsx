@@ -29,6 +29,8 @@ export default async function CreatorProfilePage() {
     instagramFollowers: p.instagramFollowers != null ? String(p.instagramFollowers) : "",
     tiktokUrl: p.tiktokUrl ?? "",
     tiktokFollowers: p.tiktokFollowers != null ? String(p.tiktokFollowers) : "",
+    tiktokLikes: p.tiktokLikes != null ? String(p.tiktokLikes) : "",
+    tiktokAvgViews: p.tiktokAvgViews != null ? String(p.tiktokAvgViews) : "",
     facebookUrl: p.facebookUrl ?? "",
     facebookFollowers: p.facebookFollowers != null ? String(p.facebookFollowers) : "",
     youtubeUrl: p.youtubeUrl ?? "",

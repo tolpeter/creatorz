@@ -72,6 +72,8 @@ export type ProfileEditorInitial = {
   instagramFollowers: string;
   tiktokUrl: string;
   tiktokFollowers: string;
+  tiktokLikes: string;
+  tiktokAvgViews: string;
   facebookUrl: string;
   facebookFollowers: string;
   youtubeUrl: string;
@@ -214,6 +216,8 @@ export function ProfileEditor({
         instagramFollowers: v.instagramFollowers ? Number(v.instagramFollowers) : null,
         tiktokUrl: v.tiktokUrl,
         tiktokFollowers: v.tiktokFollowers ? Number(v.tiktokFollowers) : null,
+        tiktokLikes: v.tiktokLikes ? Number(v.tiktokLikes) : null,
+        tiktokAvgViews: v.tiktokAvgViews ? Number(v.tiktokAvgViews) : null,
         facebookUrl: v.facebookUrl,
         facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
         youtubeUrl: v.youtubeUrl,
@@ -495,6 +499,33 @@ export function ProfileEditor({
               onConnect={() => connectOne("tiktok")}
               connecting={connecting === "tiktok"}
             />
+
+            {/* TikTok extra statisztika — kézzel is megadható (a megtekintést a
+                szinkron nem mindig adja ki) */}
+            {v.tiktokUrl.trim() && (
+              <div className="grid gap-3 rounded-xl border border-black/10 bg-[#f6f7f2] p-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label className="text-sm">TikTok összes like (opcionális)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={v.tiktokLikes}
+                    onChange={(e) => set("tiktokLikes", e.target.value)}
+                    placeholder="pl. 1200000"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-sm">TikTok átlag megtekintés (opcionális)</Label>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={v.tiktokAvgViews}
+                    onChange={(e) => set("tiktokAvgViews", e.target.value)}
+                    placeholder="pl. 45000"
+                  />
+                </div>
+              </div>
+            )}
 
             {/* YouTube — automata */}
             <SocialAutoRow

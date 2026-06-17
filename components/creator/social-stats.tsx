@@ -141,7 +141,7 @@ export function SocialStats({
               <p className="text-xs text-white/50">
                 {tiktok.lastChecked
                   ? `Frissítve: ${formatHuDate(tiktok.lastChecked)}`
-                  : "Frissítés folyamatban"}
+                  : "Hitelesített adat"}
               </p>
             </div>
             <ArrowUpRight className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-accent" />
@@ -183,7 +183,7 @@ export function SocialStats({
               <p className="text-xs text-muted-foreground">
                 {r.lastChecked
                   ? `Frissítve: ${formatHuDate(r.lastChecked)}`
-                  : "Frissítés folyamatban"}
+                  : "Hitelesített adat"}
               </p>
             </div>
             <div className="text-right">
