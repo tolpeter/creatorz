@@ -62,13 +62,7 @@ export async function createAd(input: z.input<typeof adSchema>) {
   const rl = checkRateLimit(`ad:${brand.profile.id}`, 3, HOUR);
   if (!rl.allowed) return { error: "Túl sok hirdetés egy óra alatt. Próbáld később." };
 
-  // Részletes adatok kötelezőek hirdetésfeladáshoz
-  if (!brand.profile.taxNumber || !brand.profile.address) {
-    return {
-      error:
-        "Hirdetésfeladáshoz töltsd ki az adószámot és a székhelyet a Cég profil oldalon.",
-    };
-  }
+  // (Adószám/székhely nem kötelező a hirdetésfeladáshoz.)
 
   const parsed = adSchema.safeParse(input);
   if (!parsed.success) {

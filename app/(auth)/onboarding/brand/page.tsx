@@ -20,6 +20,7 @@ export default async function BrandOnboardingPage() {
         websiteUrl: p.websiteUrl ?? "",
         contactName: p.contactName ?? "",
         industry: p.industry ?? "",
+        address: p.address ?? "",
       }}
     />
   );

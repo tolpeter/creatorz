@@ -8,10 +8,12 @@ import { revalidatePath } from "next/cache";
 import { getCurrentBrand } from "@/lib/auth";
 
 const onboardingSchema = z.object({
-  companyName: z.string().min(2).max(200),
+  companyName: z.string().min(2, "Add meg a cég / vállalkozás nevét").max(200),
   websiteUrl: z.string().max(300).optional().or(z.literal("")),
-  contactName: z.string().max(100).optional().or(z.literal("")),
-  industry: z.string().max(100).optional().or(z.literal("")),
+  contactName: z.string().min(2, "Add meg a kapcsolattartó nevét").max(100),
+  industry: z.string().min(1, "Válassz iparágat").max(100),
+  // Székhely opcionális (nem kötelező regisztrációkor).
+  address: z.string().max(300).optional().or(z.literal("")),
 });
 
 export async function completeBrandOnboarding(input: z.input<typeof onboardingSchema>) {
@@ -29,8 +31,9 @@ export async function completeBrandOnboarding(input: z.input<typeof onboardingSc
     .set({
       companyName: d.companyName,
       websiteUrl: d.websiteUrl || null,
-      contactName: d.contactName || null,
-      industry: d.industry || null,
+      contactName: d.contactName,
+      industry: d.industry,
+      ...(d.address ? { address: d.address } : {}),
       updatedAt: new Date(),
     })
     .where(eq(brandProfiles.id, brand.profile.id));
