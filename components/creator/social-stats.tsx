@@ -1,4 +1,4 @@
-import { BadgeCheck, ArrowUpRight, Users, Heart, Eye, Film } from "lucide-react";
+import { BadgeCheck, ArrowUpRight, Users, Heart, Film } from "lucide-react";
 import { SocialTile, type Platform } from "@/components/creator/platform-icon";
 import { formatNumber, formatHuDate } from "@/lib/utils/format";
 
@@ -93,9 +93,6 @@ export function SocialStats({
         { icon: Users, label: "követő", value: tiktok.count },
         profile.tiktokLikes != null
           ? { icon: Heart, label: "összes like", value: profile.tiktokLikes }
-          : null,
-        profile.tiktokAvgViews != null
-          ? { icon: Eye, label: "átlag megtekintés", value: profile.tiktokAvgViews }
           : null,
         profile.tiktokVideoCount != null
           ? { icon: Film, label: "videó", value: profile.tiktokVideoCount }
