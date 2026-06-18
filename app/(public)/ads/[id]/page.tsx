@@ -28,6 +28,7 @@ import {
 } from "@/lib/constants";
 import { formatHuf, formatHuDate, formatNumber } from "@/lib/utils/format";
 import { renderMarkdownToHtml, stripMarkdown } from "@/lib/utils/markdown";
+import { supabaseOgImage } from "@/lib/utils/og-image";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -58,11 +59,13 @@ export async function generateMetadata({
     `${publicBrandName} brief a Creatorzon.`;
   const canonical = `/ads/${row.slug ?? id}`;
   // Link-előnézet (Facebook/OG): borítókép → (nem anonim) márka logó → Creatorz
-  // alapkép. Mindig adunk képet, hogy a megosztásnál legyen előnézet.
-  const ogImage =
-    row.coverUrl ||
-    (!row.anonymous && row.brandLogo ? row.brandLogo : null) ||
-    "/og-image.png";
+  // alapkép. A Supabase WebP-ket render-JPEG-re konvertáljuk 1200×630-ra, mert
+  // a Facebook a WebP og:image-et nem jeleníti meg.
+  const ogImage = row.coverUrl
+    ? supabaseOgImage(row.coverUrl, { width: 1200, height: 630, resize: "cover" })
+    : !row.anonymous && row.brandLogo
+      ? supabaseOgImage(row.brandLogo, { width: 1200, height: 630, resize: "contain" })
+      : "/og-image.png";
   return {
     title: row.title,
     description: desc,
@@ -72,7 +75,7 @@ export async function generateMetadata({
       title: `${row.title} — ${publicBrandName}`,
       description: desc,
       url: canonical,
-      images: [{ url: ogImage }],
+      images: [{ url: ogImage, width: 1200, height: 630 }],
     },
     twitter: {
       card: "summary_large_image",
