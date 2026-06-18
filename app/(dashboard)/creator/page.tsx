@@ -20,7 +20,9 @@ import {
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { adApplications, messages, portfolioItems, profileViews } from "@/lib/db/schema";
-import { getCurrentCreator } from "@/lib/auth";
+import { getCurrentCreator, getCurrentUser } from "@/lib/auth";
+import { resolveViewers } from "@/lib/viewers";
+import { ViewersPanel, type ViewerRow } from "@/components/shared/viewers-panel";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardAvatarUpload } from "@/components/creator/dashboard-avatar-upload";
@@ -62,6 +64,40 @@ export default async function CreatorOverviewPage() {
   const portfolioCount = portfolioRows[0]?.n ?? 0;
   const weeklyViews = viewRows[0]?.total ?? 0;
   const weeklyViewBrands = viewRows[0]?.brands ?? 0;
+
+  // "Kik nézték meg" — csak ha az admin bekapcsolta ennek a fióknak.
+  const me = await getCurrentUser();
+  const canSeeViewers = Boolean(me?.dbUser?.canSeeViewers);
+  let viewerRows: ViewerRow[] = [];
+  let anonymousViews = 0;
+  if (canSeeViewers) {
+    const grouped = await db
+      .select({
+        viewerUserId: profileViews.viewerUserId,
+        lastAt: sql<Date>`max(${profileViews.createdAt})`,
+        times: sql<number>`count(*)::int`,
+      })
+      .from(profileViews)
+      .where(eq(profileViews.creatorId, p.id))
+      .groupBy(profileViews.viewerUserId);
+    anonymousViews = grouped
+      .filter((g) => !g.viewerUserId)
+      .reduce((sum, g) => sum + g.times, 0);
+    const identified = grouped.filter(
+      (g): g is typeof g & { viewerUserId: string } => Boolean(g.viewerUserId),
+    );
+    const identities = await resolveViewers(identified.map((g) => g.viewerUserId));
+    viewerRows = identified
+      .map((g) => {
+        const identity = identities.get(g.viewerUserId);
+        return identity
+          ? { identity, lastAt: new Date(g.lastAt), times: g.times }
+          : null;
+      })
+      .filter((v): v is ViewerRow => v !== null)
+      .sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime())
+      .slice(0, 50);
+  }
   const applicationCount = applicationRows[0]?.n ?? 0;
   const unreadCount = unreadRows[0]?.n ?? 0;
 
@@ -262,6 +298,14 @@ export default async function CreatorOverviewPage() {
           </Link>
         </Button>
       </div>
+
+      {canSeeViewers && (
+        <ViewersPanel
+          viewers={viewerRows}
+          anonymousCount={anonymousViews}
+          emptyLabel="Még senki azonosítható nem nézte meg a profilodat."
+        />
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatTile

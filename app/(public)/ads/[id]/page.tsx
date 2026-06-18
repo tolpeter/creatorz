@@ -14,7 +14,7 @@ import {
   Star,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { ads, brandProfiles, adApplications, adInvitations } from "@/lib/db/schema";
+import { ads, brandProfiles, adApplications, adInvitations, adViews } from "@/lib/db/schema";
 import { getCurrentUser, getCurrentCreator } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,6 +85,7 @@ export default async function AdDetailPage({
       brandWebsite: brandProfiles.websiteUrl,
       brandRating: brandProfiles.averageRating,
       brandReviewCount: brandProfiles.reviewCount,
+      brandUserId: brandProfiles.userId,
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
@@ -94,17 +95,6 @@ export default async function AdDetailPage({
   const row = rows[0];
   if (!row || row.ad.status !== "active") notFound();
   const ad = row.ad;
-
-  // Megtekintés-számláló: MINDEN megtekintés számít (ismétlés is). Best-effort.
-  void db
-    .update(ads)
-    .set({ viewCount: sql`${ads.viewCount} + 1` })
-    .where(eq(ads.id, ad.id))
-    .then(
-      () => {},
-      () => {},
-    );
-  const viewCount = (ad.viewCount ?? 0) + 1;
 
   // Anonim hirdetésnél elrejtjük a márka publikus adatait — a logót, cégnevet,
   // weboldalt. A részleteket csak az érdeklődő creator látja az üzenetekben.
@@ -131,6 +121,27 @@ export default async function AdDetailPage({
   } catch {
     creator = null;
   }
+
+  // Megtekintés-rögzítés: MINDEN megtekintés számít (ismétlés is), kivéve a
+  // hirdetés tulajdonosát. A viewer-sor a "ki nézte" funkcióhoz kell.
+  const isAdOwner = current?.dbUser?.id === row.brandUserId;
+  if (!isAdOwner) {
+    const today = new Date().toISOString().slice(0, 10);
+    void db
+      .update(ads)
+      .set({ viewCount: sql`${ads.viewCount} + 1` })
+      .where(eq(ads.id, ad.id))
+      .then(() => {}, () => {});
+    void db
+      .insert(adViews)
+      .values({
+        adId: ad.id,
+        viewerUserId: current?.dbUser?.id ?? null,
+        viewedDate: today,
+      })
+      .then(() => {}, () => {});
+  }
+  const viewCount = (ad.viewCount ?? 0) + (isAdOwner ? 0 : 1);
 
   let alreadyApplied = false;
   let invited = false;

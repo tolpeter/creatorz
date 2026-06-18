@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq, desc } from "drizzle-orm";
-import { Pencil, ExternalLink } from "lucide-react";
+import { and, eq, desc, sql } from "drizzle-orm";
+import { Pencil, ExternalLink, Eye } from "lucide-react";
 import { db } from "@/lib/db";
-import { ads, adApplications, creatorProfiles } from "@/lib/db/schema";
-import { getCurrentBrand } from "@/lib/auth";
+import { ads, adApplications, adViews, creatorProfiles } from "@/lib/db/schema";
+import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
+import { resolveViewers } from "@/lib/viewers";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,8 @@ import {
   ApplicationStatusBadge,
 } from "@/components/shared/ad-status-badge";
 import { ApplicationActions } from "@/components/brand/application-actions";
-import { formatHuf, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
+import { ViewersPanel, type ViewerRow } from "@/components/shared/viewers-panel";
+import { formatHuf, formatNumber, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
 
 export default async function BrandAdDetailPage({
@@ -49,6 +51,40 @@ export default async function BrandAdDetailPage({
     .innerJoin(creatorProfiles, eq(creatorProfiles.id, adApplications.creatorId))
     .where(eq(adApplications.adId, id))
     .orderBy(desc(adApplications.createdAt));
+
+  // "Kik nézték meg" — csak ha az adminisztrátor bekapcsolta ennek a fióknak.
+  const me = await getCurrentUser();
+  const canSeeViewers = Boolean(me?.dbUser?.canSeeViewers);
+  let viewerRows: ViewerRow[] = [];
+  let anonymousViews = 0;
+  if (canSeeViewers) {
+    const grouped = await db
+      .select({
+        viewerUserId: adViews.viewerUserId,
+        lastAt: sql<Date>`max(${adViews.createdAt})`,
+        times: sql<number>`count(*)::int`,
+      })
+      .from(adViews)
+      .where(eq(adViews.adId, id))
+      .groupBy(adViews.viewerUserId);
+
+    anonymousViews = grouped
+      .filter((g) => !g.viewerUserId)
+      .reduce((sum, g) => sum + g.times, 0);
+    const identified = grouped.filter(
+      (g): g is typeof g & { viewerUserId: string } => Boolean(g.viewerUserId),
+    );
+    const identities = await resolveViewers(identified.map((g) => g.viewerUserId));
+    viewerRows = identified
+      .map((g) => {
+        const identity = identities.get(g.viewerUserId);
+        return identity
+          ? { identity, lastAt: new Date(g.lastAt), times: g.times }
+          : null;
+      })
+      .filter((v): v is ViewerRow => v !== null)
+      .sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
+  }
 
   return (
     <div className="space-y-6">
@@ -89,6 +125,10 @@ export default async function BrandAdDetailPage({
           <div className="grid gap-2 sm:grid-cols-2">
             <p>💰 {formatBudgetRange(ad.budgetMinHuf, ad.budgetMaxHuf)}</p>
             <p>📅 Határidő: {formatHuDate(ad.deadline)}</p>
+            <p className="flex items-center gap-1.5">
+              <Eye className="h-4 w-4 text-muted-foreground" />
+              {formatNumber(ad.viewCount ?? 0)} megtekintés
+            </p>
             {ad.location && <p>📍 {ad.location}</p>}
           </div>
           {ad.status === "rejected" && ad.rejectionReason && (
@@ -102,6 +142,14 @@ export default async function BrandAdDetailPage({
           )}
         </CardContent>
       </Card>
+
+      {canSeeViewers && (
+        <ViewersPanel
+          viewers={viewerRows}
+          anonymousCount={anonymousViews}
+          emptyLabel="Még senki azonosítható nem nézte meg ezt a hirdetést."
+        />
+      )}
 
       <div>
         <h2 className="mb-3 text-xl font-bold">Beérkezett pályázatok ({apps.length})</h2>

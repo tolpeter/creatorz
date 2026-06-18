@@ -3,7 +3,7 @@
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { Eye, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,17 +12,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { setUserSuspended, setUserRole, deleteUser } from "@/app/actions/admin";
+import {
+  setUserSuspended,
+  setUserRole,
+  setUserCanSeeViewers,
+  deleteUser,
+} from "@/app/actions/admin";
 
 export function UserRowActions({
   userId,
   role,
   suspended,
+  canSeeViewers = false,
   label,
 }: {
   userId: string;
   role: string;
   suspended: boolean;
+  canSeeViewers?: boolean;
   /** Megjelenítendő név/email a törlés-megerősítéshez. */
   label?: string;
 }) {
@@ -71,6 +78,21 @@ export function UserRowActions({
         onClick={() => run(() => setUserSuspended(userId, !suspended))}
       >
         {suspended ? "Visszaállítás" : "Felfüggesztés"}
+      </Button>
+      <Button
+        size="sm"
+        variant={canSeeViewers ? "default" : "outline"}
+        disabled={pending}
+        title="Láthatja, KIK nézték meg a profilját / hirdetését"
+        onClick={() =>
+          run(
+            () => setUserCanSeeViewers(userId, !canSeeViewers),
+            canSeeViewers ? "Megtekintők elrejtve" : "Megtekintők láthatóvá téve",
+          )
+        }
+      >
+        <Eye className="h-3.5 w-3.5" />
+        {canSeeViewers ? "Megtekintők: be" : "Megtekintők: ki"}
       </Button>
       <Button
         size="sm"

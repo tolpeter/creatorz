@@ -97,6 +97,16 @@ export async function setUserRole(userId: string, role: string) {
   return { success: true };
 }
 
+export async function setUserCanSeeViewers(userId: string, value: boolean) {
+  if (!(await requireAdmin())) return { error: "Csak admin" };
+  await db
+    .update(users)
+    .set({ canSeeViewers: value, updatedAt: new Date() })
+    .where(eq(users.id, userId));
+  revalidatePath("/admin/users");
+  return { success: true };
+}
+
 export async function setUserApproved(userId: string, approved: boolean) {
   if (!(await requireAdmin())) return { error: "Csak admin" };
   await db.update(users).set({ approved, updatedAt: new Date() }).where(eq(users.id, userId));

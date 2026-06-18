@@ -82,6 +82,19 @@ export const profileViews = pgTable("profile_views", {
   creatorIdx: index("profile_views_creator_idx").on(t.creatorId),
 }));
 
+// ============= AD VIEWS (ki nézte meg a hirdetést) =============
+// A hirdetés-megtekintők azonosításához (csak a "látja a megtekintőket"
+// funkcióhoz). Minden megtekintés egy sor; anonim látogatónál viewerUserId null.
+export const adViews = pgTable("ad_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adId: uuid("ad_id").notNull().references(() => ads.id, { onDelete: "cascade" }),
+  viewerUserId: uuid("viewer_user_id").references(() => users.id, { onDelete: "set null" }),
+  viewedDate: date("viewed_date").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  adIdx: index("ad_views_ad_idx").on(t.adId),
+}));
+
 // ============= USERS =============
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -90,6 +103,9 @@ export const users = pgTable("users", {
   role: userRoleEnum("role").notNull(),
   approved: boolean("approved").notNull().default(false),
   suspended: boolean("suspended").notNull().default(false),
+  // Admin által kapcsolható: ha igaz, a felhasználó nem csak a megtekintések
+  // SZÁMÁT látja, hanem azt is, KIK nézték meg a profilját / hirdetését.
+  canSeeViewers: boolean("can_see_viewers").notNull().default(false),
   // Email-verifikáció (saját rendszer — a Supabase auth-tól független):
   // ezen keresztül kényszerítjük ki, hogy a regisztráció + onboarding végén
   // a user megerősítse az emailcímét, mielőtt a dashboardot használhatná.
