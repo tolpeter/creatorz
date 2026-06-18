@@ -12,6 +12,8 @@ export const DEFAULT_SETTINGS = {
   auto_approve_brands: true,
   auto_approve_ads: false,
   analytics_enabled: true,
+  // Heti "új, hozzád illő hirdetések" email a tartalomgyártóknak.
+  job_alerts_enabled: true,
   // Public-browse kapuk: ha false, csak bejelentkezett user látja a listát.
   public_view_creators: false,
   public_view_ads: false,
@@ -46,6 +48,7 @@ export type SettingsMap = {
   auto_approve_brands: boolean;
   auto_approve_ads: boolean;
   analytics_enabled: boolean;
+  job_alerts_enabled: boolean;
   public_view_creators: boolean;
   public_view_ads: boolean;
   mobile_app_popup_enabled: boolean;
