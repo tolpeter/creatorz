@@ -459,7 +459,7 @@ export default async function AdDetailPage({
               {referenceLinks.map((link) => (
                 <a
                   key={link}
-                  href={link}
+                  href={/^https?:\/\//i.test(link) ? link : `https://${link}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 text-sm font-medium transition-colors hover:border-accent hover:bg-[#f6f7f2]"

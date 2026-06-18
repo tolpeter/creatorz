@@ -25,10 +25,9 @@ function inline(escaped: string): string {
   return escaped
     // **félkövér** (a dőlt előtt, hogy ne ütközzenek)
     .replace(/\*\*([^*\n]+)\*\*/g, "<strong>$1</strong>")
-    // *dőlt*
-    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>")
-    // _dőlt_
-    .replace(/(^|[^_])_([^_\n]+)_/g, "$1<em>$2</em>");
+    // *dőlt* — csak a csillaggal jelölt dőlt. (Az aláhúzás-szabályt szándékosan
+    // NEM támogatjuk: az olyan szövegeket rontaná el, mint a "user_id_2".)
+    .replace(/(^|[^*])\*([^*\n]+)\*/g, "$1<em>$2</em>");
 }
 
 export function renderMarkdownToHtml(input: string): string {

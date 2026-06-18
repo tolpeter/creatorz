@@ -142,7 +142,7 @@ export async function withdrawApplication(applicationId: string) {
   const creator = await getCurrentCreator();
   if (!creator) return { error: "Nincs bejelentkezve" };
 
-  await db
+  const updated = await db
     .update(adApplications)
     .set({ status: "withdrawn" })
     .where(
@@ -151,7 +151,16 @@ export async function withdrawApplication(applicationId: string) {
         eq(adApplications.creatorId, creator.profile.id),
         eq(adApplications.status, "pending")
       )
-    );
+    )
+    .returning({ adId: adApplications.adId });
+
+  // A hirdetés pályázat-számlálóját is csökkentjük (0 alá nem mehet).
+  if (updated[0]) {
+    await db
+      .update(ads)
+      .set({ applicationCount: sql`GREATEST(${ads.applicationCount} - 1, 0)` })
+      .where(eq(ads.id, updated[0].adId));
+  }
 
   revalidatePath("/creator/applications");
   return { success: true };
@@ -168,6 +177,7 @@ async function loadApplicationForBrand(applicationId: string, brandId: string) {
       creatorName: creatorProfiles.displayName,
       creatorEmail: users.email,
       adBrandId: ads.brandId,
+      status: adApplications.status,
     })
     .from(adApplications)
     .innerJoin(ads, eq(ads.id, adApplications.adId))
@@ -186,11 +196,20 @@ export async function acceptApplication(applicationId: string) {
 
   const row = await loadApplicationForBrand(applicationId, brand.profile.id);
   if (!row) return { error: "A pályázat nem található" };
+  if (row.status !== "pending") {
+    return { error: "Ez a pályázat már nem függőben van (vissza lett vonva vagy elbírálták)." };
+  }
 
-  await db
+  // Státusz-őrzött frissítés: csak akkor lép tovább, ha tényleg pending volt
+  // (két párhuzamos kattintás se hozhasson létre két együttműködést).
+  const accepted = await db
     .update(adApplications)
     .set({ status: "accepted", respondedAt: new Date() })
-    .where(eq(adApplications.id, applicationId));
+    .where(and(eq(adApplications.id, applicationId), eq(adApplications.status, "pending")))
+    .returning({ id: adApplications.id });
+  if (!accepted[0]) {
+    return { error: "Ezt a pályázatot időközben már elbírálták." };
+  }
 
   const reviewToken = randomBytes(24).toString("hex");
   await db
@@ -232,11 +251,18 @@ export async function rejectApplication(applicationId: string, reason?: string) 
 
   const row = await loadApplicationForBrand(applicationId, brand.profile.id);
   if (!row) return { error: "A pályázat nem található" };
+  if (row.status !== "pending") {
+    return { error: "Ez a pályázat már nem függőben van." };
+  }
 
-  await db
+  const rejected = await db
     .update(adApplications)
     .set({ status: "rejected", respondedAt: new Date(), rejectionReason: reason || null })
-    .where(eq(adApplications.id, applicationId));
+    .where(and(eq(adApplications.id, applicationId), eq(adApplications.status, "pending")))
+    .returning({ id: adApplications.id });
+  if (!rejected[0]) {
+    return { error: "Ezt a pályázatot időközben már elbírálták." };
+  }
 
   await db.insert(notifications).values({
     userId: row.creatorUserId,

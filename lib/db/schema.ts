@@ -78,7 +78,8 @@ export const profileViews = pgTable("profile_views", {
   viewedDate: date("viewed_date").notNull(),  // napi dedup (YYYY-MM-DD)
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => ({
-  uniqViewerDay: uniqueIndex("profile_views_unique_viewer_day_idx").on(t.creatorId, t.viewerUserId, t.viewedDate),
+  // Megj.: a korábbi napi-dedup unique index törölve (migrate-ad-slugs.mjs) —
+  // mostantól MINDEN megtekintés külön sor (5 megtekintés = 5).
   creatorIdx: index("profile_views_creator_idx").on(t.creatorId),
 }));
 
