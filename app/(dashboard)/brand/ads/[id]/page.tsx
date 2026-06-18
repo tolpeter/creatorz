@@ -74,7 +74,6 @@ export default async function BrandAdDetailPage({
           <div className="grid gap-2 sm:grid-cols-2">
             <p>💰 {formatBudgetRange(ad.budgetMinHuf, ad.budgetMaxHuf)}</p>
             <p>📅 Határidő: {formatHuDate(ad.deadline)}</p>
-            <p>🎬 {ad.itemCount} db tartalom</p>
             {ad.location && <p>📍 {ad.location}</p>}
           </div>
           {ad.status === "rejected" && ad.rejectionReason && (

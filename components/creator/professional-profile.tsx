@@ -195,7 +195,11 @@ export function ProfessionalProfile({
                       creatorName={profile.displayName}
                       ads={invitableAds}
                     />
-                    <SaveCreatorButton creatorId={profile.id} initialSaved={initialSaved} />
+                    <SaveCreatorButton
+                      creatorId={profile.id}
+                      initialSaved={initialSaved}
+                      className="border-white/20 bg-white/8 text-white hover:bg-white hover:text-black"
+                    />
                   </>
                 ) : (
                   <Link

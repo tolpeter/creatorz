@@ -446,7 +446,11 @@ export default async function CreatorDetailPage({
                       creatorName={profile.displayName}
                       ads={invitableAds}
                     />
-                    <SaveCreatorButton creatorId={profile.id} initialSaved={initialSaved} />
+                    <SaveCreatorButton
+                      creatorId={profile.id}
+                      initialSaved={initialSaved}
+                      className="h-10 rounded-xl border-white/20 bg-white/8 px-5 text-sm font-black text-white hover:bg-white hover:text-black sm:h-12 sm:px-7 sm:text-base"
+                    />
                   </>
                 ) : (
                   <Button asChild className="h-10 rounded-xl bg-accent px-5 text-sm font-black text-black hover:bg-accent/90 sm:h-12 sm:px-7 sm:text-base">

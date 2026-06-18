@@ -175,7 +175,7 @@ export default async function AdDetailPage({
   const detailItems = [
     {
       icon: showBudget ? Wallet : Handshake,
-      label: "Költségkeret",
+      label: "Bérezés",
       value: budgetLabel,
     },
     {
@@ -191,7 +191,7 @@ export default async function AdDetailPage({
     {
       icon: Film,
       label: "Tartalom",
-      value: `${ad.itemCount} db · ${contentTypeLabel}`,
+      value: contentTypeLabel,
     },
     {
       icon: ShieldCheck,
@@ -317,25 +317,15 @@ export default async function AdDetailPage({
               </p>
               <div className="mt-4 space-y-4">
                 <div>
-                  <p className="text-xs font-medium text-white/50">Büdzsé</p>
+                  <p className="text-xs font-medium text-white/50">Bérezés</p>
                   <p className="mt-1 text-2xl font-bold">{budgetLabel}</p>
                 </div>
                 <div className="h-px bg-white/10" />
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <p className="text-xs font-medium text-white/50">
-                      Határidő
-                    </p>
-                    <p className="mt-1 font-semibold">
-                      {formatHuDate(ad.deadline)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-white/50">
-                      Darabszám
-                    </p>
-                    <p className="mt-1 font-semibold">{ad.itemCount} db</p>
-                  </div>
+                <div className="text-sm">
+                  <p className="text-xs font-medium text-white/50">Határidő</p>
+                  <p className="mt-1 font-semibold">
+                    {formatHuDate(ad.deadline)}
+                  </p>
                 </div>
               </div>
             </div>
@@ -417,7 +407,7 @@ export default async function AdDetailPage({
                   Illik rád ez a brief?
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Nézd át a büdzsét, határidőt és felhasználási jogokat, majd
+                  Nézd át a bérezést, határidőt és felhasználási jogokat, majd
                   küldj rövid, konkrét ajánlatot.
                 </p>
               </div>

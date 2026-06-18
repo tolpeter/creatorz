@@ -120,7 +120,7 @@ export function AdsFilters() {
         <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="pl. Budapest" />
       </div>
       <div className="space-y-1.5">
-        <Label>Min. költségvetés (Ft)</Label>
+        <Label>Min. bérezés (Ft)</Label>
         <Input type="number" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
       </div>
       <div className="flex gap-2">

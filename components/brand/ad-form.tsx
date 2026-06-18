@@ -44,7 +44,6 @@ export function AdForm() {
   const [targetKinds, setTargetKinds] = useState<string[]>(["ugc"]);
   const [contentType, setContentType] = useState("video");
   const [collaborationType, setCollaborationType] = useState("project");
-  const [itemCount, setItemCount] = useState("1");
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
   const [budgetMin, setBudgetMin] = useState("");
   const [budgetMax, setBudgetMax] = useState("");
@@ -64,7 +63,6 @@ export function AdForm() {
       targetKinds: targetKinds as ("ugc" | "editor" | "photographer" | "videographer")[],
       contentType: contentType as "video" | "photo" | "both",
       collaborationType: collaborationType as "project" | "longterm" | "barter",
-      itemCount: Number(itemCount),
       coverUrl,
       budgetMinHuf: budgetMin ? Number(budgetMin) : "",
       budgetMaxHuf: budgetMax ? Number(budgetMax) : "",
@@ -129,22 +127,16 @@ export function AdForm() {
           <Label>Kategóriák (max 3) *</Label>
           <ChipMultiSelect options={CREATOR_CATEGORIES} value={categories} onChange={setCategories} max={3} />
         </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label>Tartalom típusa</Label>
-            <Select value={contentType} onValueChange={setContentType}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {CONTENT_TYPES.map((c) => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Darabszám</Label>
-            <Input type="number" min={1} max={20} value={itemCount} onChange={(e) => setItemCount(e.target.value)} />
-          </div>
+        <div className="space-y-1.5">
+          <Label>Tartalom típusa</Label>
+          <Select value={contentType} onValueChange={setContentType}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {CONTENT_TYPES.map((c) => (
+                <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1.5">
           <Label>Együttműködés típusa</Label>
@@ -160,7 +152,7 @@ export function AdForm() {
           </Select>
         </div>
         <div className="space-y-1.5">
-          <Label>Költségvetés (Ft) — opcionális</Label>
+          <Label>Bérezés (Ft) — opcionális</Label>
           <p className="text-xs text-muted-foreground">
             Alapból nem jelenik meg, a díjazás megbeszélés kérdése. Akkor töltsd
             ki, ha szeretnéd, hogy a tartalomgyártók lássák a keretet.
@@ -189,7 +181,7 @@ export function AdForm() {
               disabled={!budgetMin && !budgetMax}
             />
             <span className="text-sm leading-snug">
-              <span className="font-medium">A költségkeret legyen publikus</span>
+              <span className="font-medium">A bérezés legyen publikus</span>
               <span className="block text-xs text-muted-foreground">
                 Ha nincs bepipálva, a hirdetésen „Megegyezés szerint" jelenik meg,
                 és a díjazást személyesen egyeztetitek.

@@ -174,7 +174,7 @@ export function AdCard({ ad }: { ad: AdCardData }) {
                 ) : (
                   <Handshake className="h-3 w-3" />
                 )}
-                Költségkeret
+                Bérezés
               </p>
             </div>
             <span className="text-muted-foreground transition-colors group-hover:text-accent">

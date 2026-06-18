@@ -56,7 +56,7 @@ export default async function BrandAdsPage() {
             <thead className="border-b bg-muted/50 text-left">
               <tr>
                 <th className="p-3">Cím</th>
-                <th className="p-3">Költségvetés</th>
+                <th className="p-3">Bérezés</th>
                 <th className="p-3">Határidő</th>
                 <th className="p-3">Pályázat</th>
                 <th className="p-3">Státusz</th>

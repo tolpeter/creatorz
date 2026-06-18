@@ -10,9 +10,11 @@ import { toggleSavedCreator } from "@/app/actions/saved";
 export function SaveCreatorButton({
   creatorId,
   initialSaved,
+  className,
 }: {
   creatorId: string;
   initialSaved: boolean;
+  className?: string;
 }) {
   const [saved, setSaved] = useState(initialSaved);
   const [pending, startTransition] = useTransition();
@@ -30,7 +32,7 @@ export function SaveCreatorButton({
   }
 
   return (
-    <Button type="button" variant="outline" onClick={onClick} disabled={pending}>
+    <Button type="button" variant="outline" onClick={onClick} disabled={pending} className={className}>
       {pending ? (
         <Loader2 className="h-4 w-4 animate-spin" />
       ) : (

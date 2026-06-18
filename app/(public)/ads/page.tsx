@@ -255,7 +255,7 @@ export default async function AdsFeedPage({
                 <h2 className="text-base font-bold">Szűrők</h2>
                 <p className="mt-1 text-xs leading-5 text-muted-foreground">
                   Válaszd ki a neked releváns márkákat, formátumokat és
-                  büdzséket.
+                  bérezést.
                 </p>
               </div>
               <div className="flex items-center gap-1.5 text-muted-foreground">

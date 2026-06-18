@@ -119,8 +119,8 @@ const GROUPS: Group[] = [
         ),
       },
       {
-        q: "Nyilvános lesz a büdzsém?",
-        a: "Nem feltétlenül. A büdzsé megjelenítése opcionális: ha nem teszed publikussá, a hirdetésednél „Megegyezés szerint” felirat jelenik meg, és a részleteket az alkotóval négyszemközt egyeztetheted.",
+        q: "Nyilvános lesz a bérezés?",
+        a: "Nem feltétlenül. A bérezés megjelenítése opcionális: ha nem teszed publikussá, a hirdetésednél „Megegyezés szerint” felirat jelenik meg, és a részleteket az alkotóval négyszemközt egyeztetheted.",
       },
     ],
   },

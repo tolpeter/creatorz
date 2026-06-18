@@ -70,7 +70,7 @@ export function InviteToAdModal({
           Meghívás hirdetésre
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Meghívás hirdetésre — {creatorName}</DialogTitle>
           <DialogDescription>
@@ -95,7 +95,7 @@ export function InviteToAdModal({
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Melyik hirdetésre?</Label>
-              <div className="space-y-2">
+              <div className="max-h-52 space-y-2 overflow-y-auto">
                 {ads.map((ad) => {
                   const disabled = ad.alreadyApplied || ad.alreadyInvited;
                   const isSelected = selected === ad.id;
@@ -114,7 +114,9 @@ export function InviteToAdModal({
                             : "border-black/10 hover:border-accent/60",
                       )}
                     >
-                      <span className="min-w-0 truncate">{ad.title}</span>
+                      <span className="min-w-0 break-words [overflow-wrap:anywhere]">
+                        {ad.title}
+                      </span>
                       {ad.alreadyApplied ? (
                         <span className="shrink-0 text-xs">Már pályázott</span>
                       ) : ad.alreadyInvited ? (

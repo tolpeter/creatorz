@@ -103,7 +103,7 @@ const CHANGELOG: {
     date: "2026.06.",
     type: "improve",
     title: "Hirdetések és pályázatok",
-    desc: "Márka briefek opcionális (privát) büdzsével és együttműködés-típussal; a tartalomgyártók pár kattintással pályázhatnak.",
+    desc: "Márka briefek opcionális (privát) bérezéssel és együttműködés-típussal; a tartalomgyártók pár kattintással pályázhatnak.",
   },
   {
     date: "2026.06.",

@@ -12,7 +12,7 @@ import {
 const OPTIONS = [
   { value: "newest", label: "Legújabb" },
   { value: "deadline", label: "Határidő közeli" },
-  { value: "budget", label: "Legmagasabb büdzsé" },
+  { value: "budget", label: "Legmagasabb bérezés" },
 ];
 
 export function AdsSortSelect() {

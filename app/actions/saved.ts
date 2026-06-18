@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { savedCreators } from "@/lib/db/schema";
+import { savedCreators, creatorProfiles, notifications } from "@/lib/db/schema";
 import { and, eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentBrand } from "@/lib/auth";
@@ -52,11 +52,35 @@ export async function toggleSavedCreator(creatorId: string) {
       );
     saved = false;
   } else {
-    await db
+    const inserted = await db
       .insert(savedCreators)
       .values({ brandId: brand.profile.id, creatorId: id.data })
-      .onConflictDoNothing();
+      .onConflictDoNothing()
+      .returning({ creatorId: savedCreators.creatorId });
     saved = true;
+
+    // Értesítés a tartalomgyártónak — a márka NEVE nélkül (csak hogy elmentették).
+    // Csak akkor, ha tényleg új mentés történt (nem duplikátum).
+    if (inserted[0]) {
+      try {
+        const [c] = await db
+          .select({ userId: creatorProfiles.userId })
+          .from(creatorProfiles)
+          .where(eq(creatorProfiles.id, id.data))
+          .limit(1);
+        if (c) {
+          await db.insert(notifications).values({
+            userId: c.userId,
+            type: "saved",
+            title: "Felvettek a kedvencek közé ⭐",
+            body: "Egy márka elmentette a profilodat a kedvencei közé.",
+            link: "/creator",
+          });
+        }
+      } catch {
+        // best-effort: az értesítés hibája ne akadályozza a mentést
+      }
+    }
   }
 
   revalidatePath("/brand/saved");

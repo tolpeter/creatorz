@@ -137,7 +137,7 @@ export default async function CreatorMessagesPage() {
                             )}
                             {m.budgetHint != null && (
                               <p className="mt-1 text-xs opacity-80">
-                                Becsült büdzsé: {formatHuf(m.budgetHint)}
+                                Becsült bérezés: {formatHuf(m.budgetHint)}
                               </p>
                             )}
                           </div>

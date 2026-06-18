@@ -90,7 +90,7 @@ export function SendMessageModal({
             />
           </div>
           <div className="space-y-1.5">
-            <Label>Becsült büdzsé (Ft, opcionális)</Label>
+            <Label>Becsült bérezés (Ft, opcionális)</Label>
             <Input
               type="number"
               min={0}

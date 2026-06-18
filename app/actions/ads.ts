@@ -29,7 +29,7 @@ const adSchema = z
       .default(["ugc"]),
     contentType: z.enum(["video", "photo", "both"]),
     collaborationType: z.enum(["project", "longterm", "barter"]).default("project"),
-    itemCount: z.coerce.number().int().min(1).max(20),
+    itemCount: z.coerce.number().int().min(1).max(20).optional().default(1),
     budgetMinHuf: optionalBudget,
     budgetMaxHuf: optionalBudget,
     budgetPublic: z.boolean().default(false),
