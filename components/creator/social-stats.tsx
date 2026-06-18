@@ -144,17 +144,17 @@ export function SocialStats({
             <ArrowUpRight className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-accent" />
           </div>
           <div
-            className={`mt-3 grid gap-2 ${tiktokExtras.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}
+            className={`mt-3 grid gap-1.5 ${tiktokExtras.length >= 3 ? "grid-cols-3" : "grid-cols-2"}`}
           >
             {tiktokExtras.map((s) => {
               const Icon = s!.icon;
               return (
                 <div
                   key={s!.label}
-                  className="rounded-xl border border-white/10 bg-white/[0.05] px-2.5 py-2 text-center"
+                  className="rounded-xl border border-white/10 bg-white/[0.05] px-1.5 py-2 text-center"
                 >
                   <Icon className="mx-auto h-3.5 w-3.5 text-accent" />
-                  <p className="mt-1 text-base font-black leading-none">
+                  <p className="mt-1 whitespace-nowrap text-sm font-black leading-none tracking-tight tabular-nums sm:text-base">
                     {formatNumber(s!.value)}
                   </p>
                   <p className="mt-0.5 text-[10px] uppercase tracking-wide text-white/45">
