@@ -1,5 +1,6 @@
 import "server-only";
 import { renderBrandedEmail } from "./layout";
+import { supabaseOgImage } from "@/lib/utils/og-image";
 
 /**
  * Magas szintű email-template-ek a teljes alkalmazás számára. Minden tranzakciós
@@ -95,15 +96,47 @@ export function renderSupabaseConfirmEmail(): string {
 // ──────────────────────────────────────────────────────────────────────────
 export function renderNewApplicationEmail(input: {
   creatorName: string;
+  creatorUsername: string;
+  creatorAvatarUrl?: string | null;
   adTitle: string;
+  messagePreview?: string;
 }): { subject: string; html: string } {
+  const profileUrl = `${APP_URL}/creators/${input.creatorUsername}`;
+  const avatar = input.creatorAvatarUrl
+    ? supabaseOgImage(input.creatorAvatarUrl, { width: 120, height: 120, resize: "cover" })
+    : null;
+  const initial = escapeHtml(input.creatorName.charAt(0).toUpperCase() || "?");
+
+  // E-mail-biztos (táblás, inline) pályázó-kártya: profilkép + név + profil-link.
+  const avatarCell = avatar
+    ? `<img src="${avatar}" width="60" height="60" alt="${escapeHtml(input.creatorName)}" style="display:block;width:60px;height:60px;border-radius:30px;object-fit:cover;border:2px solid #84cc16;" />`
+    : `<div style="width:60px;height:60px;border-radius:30px;background:#84cc16;color:#0a0a0a;font-weight:800;font-size:24px;line-height:60px;text-align:center;">${initial}</div>`;
+
+  const applicantCard = `
+    <table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 18px;">
+      <tr>
+        <td style="vertical-align:middle;padding-right:14px;">${avatarCell}</td>
+        <td style="vertical-align:middle;">
+          <div style="font-weight:700;font-size:16px;color:#18181b;">${escapeHtml(input.creatorName)}</div>
+          <a href="${profileUrl}" style="color:#4d7c0f;font-size:14px;font-weight:600;text-decoration:underline;">Profil megtekintése →</a>
+        </td>
+      </tr>
+    </table>
+    ${
+      input.messagePreview
+        ? `<blockquote style="margin:0 0 6px;padding:12px 16px;border-left:3px solid #84cc16;background:#f6f7f2;border-radius:6px;color:#3f3f46;font-style:italic;">${escapeHtml(input.messagePreview)}</blockquote>`
+        : ""
+    }
+  `;
+
   return {
     subject: `Új pályázat — ${input.adTitle}`,
     html: renderBrandedEmail({
       preheader: `${input.creatorName} jelentkezett a hirdetésedre.`,
       heading: "Új pályázat érkezett",
       intro: `<strong>${escapeHtml(input.creatorName)}</strong> pályázott a(z) „<strong>${escapeHtml(input.adTitle)}</strong>" hirdetésedre.`,
-      cta: { label: "Pályázat megnyitása", href: `${APP_URL}/brand/ads` },
+      bodyHtml: applicantCard,
+      cta: { label: "Pályázat megnyitása", href: `${APP_URL}/brand/applications` },
     }),
   };
 }

@@ -126,7 +126,10 @@ export async function createApplication(input: z.input<typeof applySchema>) {
   {
     const email = renderNewApplicationEmail({
       creatorName: creator.profile.displayName,
+      creatorUsername: creator.profile.username,
+      creatorAvatarUrl: creator.profile.avatarUrl,
       adTitle: ad.title,
+      messagePreview: d.message.slice(0, 220),
     });
     await sendEmailSafe({ to: ad.brandUserEmail, ...email });
   }
