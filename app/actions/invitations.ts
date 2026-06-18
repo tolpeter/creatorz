@@ -35,33 +35,38 @@ export async function getInvitableAds(creatorId: string): Promise<InvitableAd[]>
   const brand = await getCurrentBrand();
   if (!brand) return [];
 
-  const activeAds = await db
-    .select({ id: ads.id, title: ads.title })
-    .from(ads)
-    .where(and(eq(ads.brandId, brand.profile.id), eq(ads.status, "active")))
-    .orderBy(desc(ads.createdAt));
-  if (activeAds.length === 0) return [];
+  // Best-effort: egy átmeneti DB-akadás ne dobjon hibát a creator-profilon.
+  try {
+    const activeAds = await db
+      .select({ id: ads.id, title: ads.title })
+      .from(ads)
+      .where(and(eq(ads.brandId, brand.profile.id), eq(ads.status, "active")))
+      .orderBy(desc(ads.createdAt));
+    if (activeAds.length === 0) return [];
 
-  const adIds = activeAds.map((a) => a.id);
-  const [invited, applied] = await Promise.all([
-    db
-      .select({ adId: adInvitations.adId })
-      .from(adInvitations)
-      .where(and(inArray(adInvitations.adId, adIds), eq(adInvitations.creatorId, creatorId))),
-    db
-      .select({ adId: adApplications.adId })
-      .from(adApplications)
-      .where(and(inArray(adApplications.adId, adIds), eq(adApplications.creatorId, creatorId))),
-  ]);
-  const invitedSet = new Set(invited.map((r) => r.adId));
-  const appliedSet = new Set(applied.map((r) => r.adId));
+    const adIds = activeAds.map((a) => a.id);
+    const [invited, applied] = await Promise.all([
+      db
+        .select({ adId: adInvitations.adId })
+        .from(adInvitations)
+        .where(and(inArray(adInvitations.adId, adIds), eq(adInvitations.creatorId, creatorId))),
+      db
+        .select({ adId: adApplications.adId })
+        .from(adApplications)
+        .where(and(inArray(adApplications.adId, adIds), eq(adApplications.creatorId, creatorId))),
+    ]);
+    const invitedSet = new Set(invited.map((r) => r.adId));
+    const appliedSet = new Set(applied.map((r) => r.adId));
 
-  return activeAds.map((a) => ({
-    id: a.id,
-    title: a.title,
-    alreadyInvited: invitedSet.has(a.id),
-    alreadyApplied: appliedSet.has(a.id),
-  }));
+    return activeAds.map((a) => ({
+      id: a.id,
+      title: a.title,
+      alreadyInvited: invitedSet.has(a.id),
+      alreadyApplied: appliedSet.has(a.id),
+    }));
+  } catch {
+    return [];
+  }
 }
 
 const inviteSchema = z.object({

@@ -31,31 +31,52 @@ export default async function DashboardLayout({
   // Email-verifikáció: ha még nincs megerősítve az emailcím, ne engedjük be
   // a dashboardra. A /verify-email és az /onboarding/* nem itt szerepel
   // (azok más layoutban vannak), tehát ezeket nem érinti.
+  // Fontos: a redirect() a try-on KÍVÜL legyen (belül elnyelnénk a jelét).
+  // Átmeneti DB-akadásnál NE dobjuk ki a usert — inkább beengedjük.
+  let needsEmailVerification = false;
   if (current.dbUser) {
-    const [row] = await db
-      .select({ emailVerified: users.emailVerified })
-      .from(users)
-      .where(eq(users.id, current.dbUser.id))
-      .limit(1);
-    if (row && !row.emailVerified) {
-      redirect("/verify-email");
+    try {
+      const [row] = await db
+        .select({ emailVerified: users.emailVerified })
+        .from(users)
+        .where(eq(users.id, current.dbUser.id))
+        .limit(1);
+      if (row && !row.emailVerified) needsEmailVerification = true;
+    } catch {
+      // átmeneti DB-hiba: ne blokkoljuk a belépést
     }
   }
+  if (needsEmailVerification) {
+    redirect("/verify-email");
+  }
 
-  const { items: notifications, unread } = await getNotifications();
+  // A fejléc adatai (értesítések + olvasatlan üzenetek) best-effort: egy
+  // átmeneti DB-akadás (statement timeout) ne döntse le az egész dashboardot.
+  let notifications: Awaited<ReturnType<typeof getNotifications>>["items"] = [];
+  let unread = 0;
+  try {
+    const res = await getNotifications();
+    notifications = res.items;
+    unread = res.unread;
+  } catch {
+    // best-effort: üres értesítéslista
+  }
 
-  // Olvasatlan közvetlen üzenetek (a fejléc levél-ikonjához).
   let unreadMessages = 0;
   const role = current.dbUser?.role ?? "creator";
   const inboxHref = INBOX_HREF[role] ?? "/dashboard";
   if (current.dbUser) {
-    const [mc] = await db
-      .select({ n: sql<number>`count(*)::int` })
-      .from(messages)
-      .where(
-        and(eq(messages.toUserId, current.dbUser.id), eq(messages.read, false)),
-      );
-    unreadMessages = mc?.n ?? 0;
+    try {
+      const [mc] = await db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(messages)
+        .where(
+          and(eq(messages.toUserId, current.dbUser.id), eq(messages.read, false)),
+        );
+      unreadMessages = mc?.n ?? 0;
+    } catch {
+      // best-effort: 0 olvasatlan
+    }
   }
 
   return (
