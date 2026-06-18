@@ -72,7 +72,12 @@ export default async function AdminBrandsPage({
                 <td className="p-3">{b.industry ?? "—"}</td>
                 <td className="p-3">
                   {b.websiteUrl ? (
-                    <a href={b.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-accent underline">
+                    <a
+                      href={/^https?:\/\//i.test(b.websiteUrl) ? b.websiteUrl : `https://${b.websiteUrl}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-accent underline"
+                    >
                       link
                     </a>
                   ) : (
