@@ -4,12 +4,14 @@ import { supabase } from "@/lib/supabase";
 
 type AuthState = {
   session: Session | null;
+  role: "creator" | "brand" | "admin" | null;
   loading: boolean;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthState>({
   session: null,
+  role: null,
   loading: true,
   signOut: async () => {},
 });
@@ -33,8 +35,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await supabase.auth.signOut();
   }
 
+  const role = (session?.user.user_metadata?.role as AuthState["role"]) ?? null;
+
   return (
-    <AuthContext.Provider value={{ session, loading, signOut }}>
+    <AuthContext.Provider value={{ session, role, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );

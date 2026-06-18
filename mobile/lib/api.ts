@@ -71,6 +71,13 @@ export function sendThreadMessage(partnerId: string, body: string) {
 export function registerPushToken(token: string, platform: string) {
   return apiPost<{ success: boolean }>("/api/mobile/push-token", { token, platform }, { auth: true });
 }
+export function startConversation(toUsername: string, body: string) {
+  return apiPost<{ success: boolean; partnerId: string }>(
+    "/api/mobile/messages/start",
+    { toUsername, body },
+    { auth: true },
+  );
+}
 
 export type CreatorListItem = {
   username: string;

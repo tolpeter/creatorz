@@ -12,6 +12,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchCreator, type CreatorDetail } from "@/lib/api";
+import { useAuth } from "@/context/auth";
 import { colors, radius } from "@/lib/theme";
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://creatorz.hu";
@@ -82,6 +83,8 @@ export default function CreatorDetailScreen() {
 
 function Detail({ data }: { data: CreatorDetail }) {
   const p = data.profile;
+  const { role } = useAuth();
+  const router = useRouter();
   const socials = [
     { icon: "logo-tiktok", label: "TikTok", url: p.tiktokUrl, count: p.tiktokFollowers },
     { icon: "logo-instagram", label: "Instagram", url: p.instagramUrl, count: p.instagramFollowers },
@@ -141,6 +144,29 @@ function Detail({ data }: { data: CreatorDetail }) {
         <Divider />
         <Stat label="Portfólió" value={String(data.portfolio.length)} />
       </View>
+
+      {/* Üzenet küldése — csak márkának */}
+      {role === "brand" ? (
+        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+          <Pressable
+            onPress={() =>
+              router.push(`/messages/new?username=${p.username}&name=${encodeURIComponent(p.displayName)}`)
+            }
+            style={{
+              backgroundColor: colors.accent,
+              borderRadius: radius.md,
+              paddingVertical: 14,
+              alignItems: "center",
+              flexDirection: "row",
+              justifyContent: "center",
+              gap: 8,
+            }}
+          >
+            <Ionicons name="chatbubble-ellipses" size={18} color="#000" />
+            <Text style={{ color: "#000", fontWeight: "800", fontSize: 16 }}>Üzenet küldése</Text>
+          </Pressable>
+        </View>
+      ) : null}
 
       {/* Bio */}
       {p.bio ? (
