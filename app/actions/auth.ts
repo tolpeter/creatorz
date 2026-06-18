@@ -15,11 +15,17 @@ import { sendPasswordResetEmail } from "@/lib/password-reset";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
+// Email-mező: kis-/nagybetűtől függetlenül fogadjuk el (trim + lowercase),
+// így a "Te@Pelda.hu" és a "te@pelda.hu" ugyanaz a fiók.
+const emailField = z
+  .email("Érvénytelen email cím")
+  .transform((s) => s.trim().toLowerCase());
+
 const signUpSchema = z.object({
   role: z.enum(["creator", "brand"]),
   // Csak creator role-nál értelmezett: UGC tartalomgyártó vagy kreatív szakember
   profileKind: z.enum(["ugc", "professional"]).optional().default("ugc"),
-  email: z.email("Érvénytelen email cím"),
+  email: emailField,
   password: z.string().min(8, "A jelszó legalább 8 karakter legyen"),
   gdpr: z.boolean().refine((v) => v === true, {
     message: "El kell fogadnod az adatkezelési tájékoztatót",
@@ -128,7 +134,7 @@ export async function signUpAction(input: SignUpInput) {
 }
 
 const signInSchema = z.object({
-  email: z.email("Érvénytelen email cím"),
+  email: emailField,
   password: z.string().min(1, "Add meg a jelszót"),
   rememberMe: z.boolean().optional(),
 });
@@ -248,7 +254,7 @@ export async function verifyMfaSignInAction(input: z.input<typeof mfaVerifySchem
 }
 
 const magicLinkSchema = z.object({
-  email: z.email("Érvénytelen email cím"),
+  email: emailField,
 });
 
 export async function sendMagicLinkAction(input: z.input<typeof magicLinkSchema>) {

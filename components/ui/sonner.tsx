@@ -52,7 +52,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
           description: "text-sm opacity-90",
           icon: "mt-0.5",
           closeButton:
-            "!left-auto !right-2 !top-2 !h-6 !w-6 !rounded-full !border !bg-white/80 !text-foreground/70 hover:!bg-white hover:!text-foreground",
+            "!left-auto !right-2 !top-2 !flex !h-6 !w-6 !items-center !justify-center !rounded-full !border !bg-white/80 !p-0 !text-foreground/70 hover:!bg-white hover:!text-foreground [&>svg]:!m-0",
         },
       }}
       {...props}
