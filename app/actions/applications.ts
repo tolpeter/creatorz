@@ -6,6 +6,7 @@ import { db } from "@/lib/db";
 import {
   ads,
   adApplications,
+  adInvitations,
   collaborations,
   creatorProfiles,
   brandProfiles,
@@ -85,6 +86,19 @@ export async function createApplication(input: z.input<typeof applySchema>) {
     .returning({ id: adApplications.id });
 
   if (!inserted[0]) return { error: "Erre a hirdetésre már pályáztál." };
+
+  // Ha a creatort meghívták erre a hirdetésre, a meghívást „teljesítettre"
+  // állítjuk — így a márka látja, hogy a meghívás pályázattá vált.
+  await db
+    .update(adInvitations)
+    .set({ status: "applied", respondedAt: new Date() })
+    .where(
+      and(
+        eq(adInvitations.adId, d.adId),
+        eq(adInvitations.creatorId, creator.profile.id),
+        eq(adInvitations.status, "pending"),
+      ),
+    );
 
   // Brand user a hirdetéshez (értesítéshez)
   const brandUser = await db

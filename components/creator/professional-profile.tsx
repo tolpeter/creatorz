@@ -13,6 +13,8 @@ import { SocialTile } from "@/components/creator/platform-icon";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { SendMessageModal } from "@/components/brand/send-message-modal";
+import { InviteToAdModal } from "@/components/brand/invite-to-ad-modal";
+import type { InvitableAd } from "@/app/actions/invitations";
 import { SaveCreatorButton } from "@/components/shared/save-creator-button";
 import { ReportButton } from "@/components/shared/report-button";
 import { PortfolioEmbed } from "@/components/shared/portfolio-embed";
@@ -72,6 +74,7 @@ export function ProfessionalProfile({
   initialSaved,
   activity,
   responseLabel,
+  invitableAds = [],
 }: {
   profile: ProfessionalProfileData;
   portfolio: ProfessionalPortfolioItem[];
@@ -81,6 +84,7 @@ export function ProfessionalProfile({
   initialSaved: boolean;
   activity: string | null;
   responseLabel: string | null;
+  invitableAds?: InvitableAd[];
 }) {
   return (
     <div className="space-y-8 pb-8">
@@ -185,6 +189,11 @@ export function ProfessionalProfile({
                     <SendMessageModal
                       toUsername={profile.username}
                       creatorName={profile.displayName}
+                    />
+                    <InviteToAdModal
+                      creatorId={profile.id}
+                      creatorName={profile.displayName}
+                      ads={invitableAds}
                     />
                     <SaveCreatorButton creatorId={profile.id} initialSaved={initialSaved} />
                   </>

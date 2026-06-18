@@ -47,6 +47,8 @@ import {
 } from "@/components/creator/tiktok-video-slider";
 import { CreatorCard, type CreatorCardData } from "@/components/creator/creator-card";
 import { SendMessageModal } from "@/components/brand/send-message-modal";
+import { InviteToAdModal } from "@/components/brand/invite-to-ad-modal";
+import { getInvitableAds, type InvitableAd } from "@/app/actions/invitations";
 import { SaveCreatorButton } from "@/components/shared/save-creator-button";
 import { ReportButton } from "@/components/shared/report-button";
 import { RatingDistribution } from "@/components/shared/rating-distribution";
@@ -153,13 +155,18 @@ export default async function CreatorDetailPage({
     brand = null;
   }
   let initialSaved = false;
+  let invitableAds: InvitableAd[] = [];
   if (brand) {
-    const saved = await db
-      .select({ creatorId: savedCreators.creatorId })
-      .from(savedCreators)
-      .where(and(eq(savedCreators.brandId, brand.profile.id), eq(savedCreators.creatorId, profile.id)))
-      .limit(1);
+    const [saved, ads] = await Promise.all([
+      db
+        .select({ creatorId: savedCreators.creatorId })
+        .from(savedCreators)
+        .where(and(eq(savedCreators.brandId, brand.profile.id), eq(savedCreators.creatorId, profile.id)))
+        .limit(1),
+      getInvitableAds(profile.id),
+    ]);
     initialSaved = saved.length > 0;
+    invitableAds = ads;
   }
 
   // Profil-megtekintés rögzítése — BÁRMELY bejelentkezett felhasználótól
@@ -313,6 +320,7 @@ export default async function CreatorDetailPage({
         initialSaved={initialSaved}
         activity={activity}
         responseLabel={responseStats.label}
+        invitableAds={invitableAds}
       />
     );
   }
@@ -432,6 +440,11 @@ export default async function CreatorDetailPage({
                     <SendMessageModal
                       toUsername={profile.username}
                       creatorName={profile.displayName}
+                    />
+                    <InviteToAdModal
+                      creatorId={profile.id}
+                      creatorName={profile.displayName}
+                      ads={invitableAds}
                     />
                     <SaveCreatorButton creatorId={profile.id} initialSaved={initialSaved} />
                   </>

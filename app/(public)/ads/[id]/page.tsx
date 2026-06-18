@@ -15,7 +15,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { ads, brandProfiles, adApplications } from "@/lib/db/schema";
+import { ads, brandProfiles, adApplications, adInvitations } from "@/lib/db/schema";
 import { getCurrentUser, getCurrentCreator } from "@/lib/auth";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -117,18 +117,33 @@ export default async function AdDetailPage({
   }
 
   let alreadyApplied = false;
+  let invited = false;
   if (creator) {
-    const a = await db
-      .select({ id: adApplications.id })
-      .from(adApplications)
-      .where(
-        and(
-          eq(adApplications.adId, id),
-          eq(adApplications.creatorId, creator.profile.id),
-        ),
-      )
-      .limit(1);
+    const [a, inv] = await Promise.all([
+      db
+        .select({ id: adApplications.id })
+        .from(adApplications)
+        .where(
+          and(
+            eq(adApplications.adId, id),
+            eq(adApplications.creatorId, creator.profile.id),
+          ),
+        )
+        .limit(1),
+      db
+        .select({ id: adInvitations.id })
+        .from(adInvitations)
+        .where(
+          and(
+            eq(adInvitations.adId, id),
+            eq(adInvitations.creatorId, creator.profile.id),
+            eq(adInvitations.status, "pending"),
+          ),
+        )
+        .limit(1),
+    ]);
     alreadyApplied = a.length > 0;
+    invited = inv.length > 0;
   }
 
   const categories = ad.categories ?? [];
@@ -425,6 +440,16 @@ export default async function AdDetailPage({
                   </span>
                 </div>
               </div>
+
+              {invited && !alreadyApplied && (
+                <div className="flex items-start gap-2.5 rounded-lg border border-accent/50 bg-accent/10 p-3.5">
+                  <Star className="mt-0.5 h-4 w-4 shrink-0 fill-accent text-accent" />
+                  <p className="text-sm font-medium text-[#3f6212]">
+                    <strong>{publicBrandName}</strong> kifejezetten téged hívott
+                    meg erre a hirdetésre. Pályázz, hogy ne maradj le róla!
+                  </p>
+                </div>
+              )}
 
               <div className="rounded-lg bg-[#0b0d0a] p-4 text-white">
                 {creator ? (

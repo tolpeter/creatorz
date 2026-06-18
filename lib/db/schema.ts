@@ -318,6 +318,26 @@ export const adApplications = pgTable("ad_applications", {
   uniqueIdx: uniqueIndex("applications_unique_idx").on(table.adId, table.creatorId),
 }));
 
+// ============= AD INVITATIONS (BRAND → CREATOR meghívás hirdetésre) =====
+// A márka egy konkrét, aktív hirdetésére hívhat meg egy tartalomgyártót.
+// A creator értesítést + emailt kap, és a hirdetés oldalán kiemelt banner
+// jelzi a meghívást. Egy (hirdetés, creator) párra csak egy meghívás lehet.
+export const adInvitations = pgTable("ad_invitations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  adId: uuid("ad_id").notNull().references(() => ads.id, { onDelete: "cascade" }),
+  brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
+  creatorId: uuid("creator_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  message: text("message"),
+  // pending = elküldve; applied = a creator pályázott rá; dismissed = elutasította
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  respondedAt: timestamp("responded_at"),
+}, (table) => ({
+  uniqueIdx: uniqueIndex("ad_invitations_unique_idx").on(table.adId, table.creatorId),
+  creatorIdx: index("ad_invitations_creator_idx").on(table.creatorId),
+  brandIdx: index("ad_invitations_brand_idx").on(table.brandId),
+}));
+
 // ============= COLLABORATIONS (ELFOGADOTT PÁLYÁZATOKBÓL) =============
 export const collaborations = pgTable("collaborations", {
   id: uuid("id").primaryKey().defaultRandom(),
