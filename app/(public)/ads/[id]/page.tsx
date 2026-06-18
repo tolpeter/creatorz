@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import {
   ArrowLeft,
   Building2,
-  CalendarDays,
   CheckCircle2,
   ExternalLink,
+  Eye,
   Film,
   Handshake,
   MapPin,
   ShieldCheck,
   Star,
-  Wallet,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, brandProfiles, adApplications, adInvitations } from "@/lib/db/schema";
@@ -27,7 +26,10 @@ import {
   USAGE_RIGHTS,
   COLLABORATION_TYPES,
 } from "@/lib/constants";
-import { formatHuf, formatHuDate } from "@/lib/utils/format";
+import { formatHuf, formatHuDate, formatNumber } from "@/lib/utils/format";
+import { renderMarkdownToHtml, stripMarkdown } from "@/lib/utils/markdown";
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function generateMetadata({
   params,
@@ -38,6 +40,7 @@ export async function generateMetadata({
   const [row] = await db
     .select({
       title: ads.title,
+      slug: ads.slug,
       description: ads.description,
       coverUrl: ads.coverUrl,
       anonymous: ads.anonymous,
@@ -45,20 +48,23 @@ export async function generateMetadata({
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
-    .where(eq(ads.id, id))
+    .where(UUID_RE.test(id) ? eq(ads.id, id) : eq(ads.slug, id))
     .limit(1);
   if (!row) return { title: "Hirdetés" };
   const publicBrandName = row.anonymous ? "Bizalmas márka" : row.brandName;
-  const desc = (row.description ?? "").slice(0, 160) || `${publicBrandName} brief a Creatorzon.`;
+  const desc =
+    stripMarkdown(row.description ?? "").slice(0, 160) ||
+    `${publicBrandName} brief a Creatorzon.`;
+  const canonical = `/ads/${row.slug ?? id}`;
   return {
     title: row.title,
     description: desc,
-    alternates: { canonical: `/ads/${id}` },
+    alternates: { canonical },
     openGraph: {
       type: "article",
       title: `${row.title} — ${publicBrandName}`,
       description: desc,
-      url: `/ads/${id}`,
+      url: canonical,
       images: row.coverUrl ? [{ url: row.coverUrl }] : undefined,
     },
   };
@@ -82,18 +88,28 @@ export default async function AdDetailPage({
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
-    .where(eq(ads.id, id))
+    .where(UUID_RE.test(id) ? eq(ads.id, id) : eq(ads.slug, id))
     .limit(1);
 
   const row = rows[0];
   if (!row || row.ad.status !== "active") notFound();
   const ad = row.ad;
+
+  // Megtekintés-számláló: MINDEN megtekintés számít (ismétlés is). Best-effort.
+  void db
+    .update(ads)
+    .set({ viewCount: sql`${ads.viewCount} + 1` })
+    .where(eq(ads.id, ad.id))
+    .then(
+      () => {},
+      () => {},
+    );
+  const viewCount = (ad.viewCount ?? 0) + 1;
+
   // Anonim hirdetésnél elrejtjük a márka publikus adatait — a logót, cégnevet,
   // weboldalt. A részleteket csak az érdeklődő creator látja az üzenetekben.
   const publicBrandName = ad.anonymous ? "Bizalmas márka" : row.brandName;
   const publicBrandLogo = ad.anonymous ? null : row.brandLogo;
-  // Hiányzó protokoll pótlása — különben a "skinbar.hu" relatív linkként
-  // /ads/skinbar.hu-ra mutatna.
   const rawWebsite = ad.anonymous ? null : row.brandWebsite;
   const publicBrandWebsite = rawWebsite
     ? /^https?:\/\//i.test(rawWebsite)
@@ -125,7 +141,7 @@ export default async function AdDetailPage({
         .from(adApplications)
         .where(
           and(
-            eq(adApplications.adId, id),
+            eq(adApplications.adId, ad.id),
             eq(adApplications.creatorId, creator.profile.id),
           ),
         )
@@ -135,7 +151,7 @@ export default async function AdDetailPage({
         .from(adInvitations)
         .where(
           and(
-            eq(adInvitations.adId, id),
+            eq(adInvitations.adId, ad.id),
             eq(adInvitations.creatorId, creator.profile.id),
             eq(adInvitations.status, "pending"),
           ),
@@ -156,15 +172,12 @@ export default async function AdDetailPage({
       ({ ugc: "UGC tartalomgyártó", editor: "Videóvágó", photographer: "Fotós", videographer: "Operatőr" })[k] ?? k,
   );
   const contentTypeLabel =
-    CONTENT_TYPES.find((x) => x.value === ad.contentType)?.label ??
-    ad.contentType;
+    CONTENT_TYPES.find((x) => x.value === ad.contentType)?.label ?? ad.contentType;
   const usageRightsLabel =
-    USAGE_RIGHTS.find((x) => x.value === ad.usageRights)?.label ??
-    ad.usageRights;
+    USAGE_RIGHTS.find((x) => x.value === ad.usageRights)?.label ?? ad.usageRights;
   const collabLabel =
     COLLABORATION_TYPES.find((x) => x.value === ad.collaborationType)?.label ??
     ad.collaborationType;
-  // A költségkeret csak akkor látszik, ha a márka publikussá tette.
   const showBudget =
     ad.budgetPublic && (ad.budgetMinHuf != null || ad.budgetMaxHuf != null);
   const budgetLabel = showBudget
@@ -172,42 +185,17 @@ export default async function AdDetailPage({
       ? `${formatHuf(ad.budgetMinHuf)} - ${formatHuf(ad.budgetMaxHuf)}`
       : formatHuf((ad.budgetMaxHuf ?? ad.budgetMinHuf) as number)
     : "Megegyezés szerint";
+
+  // A "Döntési pontok" blokk — a bérezést/határidőt az összefoglaló mutatja,
+  // így itt a többi lényeges adat szerepel.
   const detailItems = [
-    {
-      icon: showBudget ? Wallet : Handshake,
-      label: "Bérezés",
-      value: budgetLabel,
-    },
-    {
-      icon: Handshake,
-      label: "Együttműködés",
-      value: collabLabel,
-    },
-    {
-      icon: CalendarDays,
-      label: "Határidő",
-      value: formatHuDate(ad.deadline),
-    },
-    {
-      icon: Film,
-      label: "Tartalom",
-      value: contentTypeLabel,
-    },
-    {
-      icon: ShieldCheck,
-      label: "Felhasználás",
-      value: usageRightsLabel,
-    },
-    ...(ad.location
-      ? [
-          {
-            icon: MapPin,
-            label: "Lokáció",
-            value: ad.location,
-          },
-        ]
-      : []),
+    { icon: Handshake, label: "Együttműködés", value: collabLabel },
+    { icon: Film, label: "Tartalom", value: contentTypeLabel },
+    { icon: ShieldCheck, label: "Felhasználás", value: usageRightsLabel },
+    ...(ad.location ? [{ icon: MapPin, label: "Lokáció", value: ad.location }] : []),
   ];
+
+  const descriptionHtml = renderMarkdownToHtml(ad.description);
 
   return (
     <div className="mx-auto max-w-6xl space-y-5">
@@ -219,22 +207,24 @@ export default async function AdDetailPage({
       </Button>
 
       <article className="overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm">
-        <header className="relative isolate overflow-hidden bg-[#0b0d0a] px-5 py-7 text-white sm:px-7 lg:px-8 lg:py-8">
+        <div className="relative isolate bg-[#0b0d0a] text-white">
           {ad.coverUrl && (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={ad.coverUrl}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-cover opacity-40"
               />
               <div
                 aria-hidden
-                className="absolute inset-0 bg-[linear-gradient(90deg,#0b0d0a_0%,rgba(11,13,10,0.92)_34%,rgba(11,13,10,0.55)_72%,rgba(11,13,10,0.3)_100%)]"
+                className="absolute inset-0 bg-[linear-gradient(90deg,#0b0d0a_0%,rgba(11,13,10,0.92)_38%,rgba(11,13,10,0.7)_100%)]"
               />
             </>
           )}
-          <div className="relative z-10 grid gap-7 lg:grid-cols-[minmax(0,1fr)_330px]">
+
+          <div className="relative z-10 grid gap-6 p-5 sm:p-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:p-8">
+            {/* BAL: márka + cím + (egyetlen) leírás */}
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-3">
                 {publicBrandLogo ? (
@@ -255,7 +245,9 @@ export default async function AdDetailPage({
                   </p>
                   <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-accent">
                     <CheckCircle2 className="h-3.5 w-3.5" />
-                    {ad.anonymous ? "Bizalmas brief — kapcsolatfelvétel után láthatóvá válik" : "Aktív márka brief"}
+                    {ad.anonymous
+                      ? "Bizalmas brief — kapcsolatfelvétel után láthatóvá válik"
+                      : "Aktív márka brief"}
                   </p>
                   {publicBrandReviewCount > 0 && (
                     <p className="mt-0.5 flex items-center gap-1 text-xs font-medium text-white/80">
@@ -276,7 +268,7 @@ export default async function AdDetailPage({
                 )}
               </div>
 
-              <div className="mt-6 flex flex-wrap gap-2">
+              <div className="mt-5 flex flex-wrap gap-2">
                 {targetKindLabels.map((label) => (
                   <Badge
                     key={`kind-${label}`}
@@ -303,179 +295,152 @@ export default async function AdDetailPage({
                 </Badge>
               </div>
 
-              <h1 className="mt-5 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+              <h1 className="mt-5 max-w-3xl text-3xl font-bold leading-tight sm:text-4xl lg:text-[2.6rem]">
                 {ad.title}
               </h1>
-              <p className="mt-4 max-w-3xl whitespace-pre-wrap text-sm leading-6 text-white/72 sm:text-base">
-                {ad.description}
-              </p>
+
+              <div
+                className="mt-4 max-w-3xl text-sm leading-7 text-white/80 sm:text-base [&_em]:italic [&_h3]:mt-5 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:text-white [&_h4]:mt-4 [&_h4]:text-lg [&_h4]:font-semibold [&_h4]:text-white [&_li]:mt-1 [&_p]:mt-3 [&_strong]:font-bold [&_strong]:text-white [&_ul]:mt-2 [&_ul]:list-disc [&_ul]:pl-5"
+                dangerouslySetInnerHTML={{ __html: descriptionHtml }}
+              />
             </div>
 
-            <div className="rounded-lg border border-white/10 bg-white/[0.08] p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/45">
-                Kampány összefoglaló
-              </p>
-              <div className="mt-4 space-y-4">
-                <div>
-                  <p className="text-xs font-medium text-white/50">Bérezés</p>
+            {/* JOBB: összefoglaló + Döntési pontok + Pályázási panel */}
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-white p-5 text-foreground shadow-lg">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Kampány összefoglaló
+                </p>
+                <div className="mt-3">
+                  <p className="text-xs font-medium text-muted-foreground">Bérezés</p>
                   <p className="mt-1 text-2xl font-bold">{budgetLabel}</p>
                 </div>
-                <div className="h-px bg-white/10" />
-                <div className="text-sm">
-                  <p className="text-xs font-medium text-white/50">Határidő</p>
-                  <p className="mt-1 font-semibold">
-                    {formatHuDate(ad.deadline)}
+                <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Határidő</p>
+                    <p className="mt-1 font-semibold">{formatHuDate(ad.deadline)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground">Megtekintés</p>
+                    <p className="mt-1 flex items-center gap-1 font-semibold">
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      {formatNumber(viewCount)}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Döntési pontok */}
+                <div className="mt-5 border-t pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                    Döntési pontok
                   </p>
+                  <div className="mt-3 space-y-2">
+                    {detailItems.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <div
+                          key={item.label}
+                          className="flex items-center gap-3 rounded-lg bg-[#f6f7f2] px-3 py-2.5"
+                        >
+                          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white text-black shadow-sm">
+                            <Icon className="h-4 w-4 text-muted-foreground" />
+                          </span>
+                          <span className="min-w-0">
+                            <span className="block text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+                              {item.label}
+                            </span>
+                            <span className="mt-0.5 block text-sm font-bold">
+                              {item.value}
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Pályázási panel */}
+              <div className="rounded-2xl bg-white p-5 text-foreground shadow-lg">
+                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  <Building2 className="h-3.5 w-3.5 text-[#4d7c0f]" />
+                  Pályázási panel
+                </p>
+                <h2 className="mt-2 text-lg font-bold">Illik rád ez a brief?</h2>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">
+                  Nézd át a bérezést, határidőt és felhasználási jogokat, majd küldj
+                  rövid, konkrét ajánlatot.
+                </p>
+
+                {invited && !alreadyApplied && (
+                  <div className="mt-4 flex items-start gap-2.5 rounded-lg border border-accent/50 bg-accent/10 p-3.5">
+                    <Star className="mt-0.5 h-4 w-4 shrink-0 fill-accent text-accent" />
+                    <p className="text-sm font-medium text-[#3f6212]">
+                      <strong>{publicBrandName}</strong> kifejezetten téged hívott meg
+                      erre a hirdetésre. Pályázz, hogy ne maradj le róla!
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  {creator ? (
+                    alreadyApplied ? (
+                      <Badge className="bg-accent text-black hover:bg-accent">
+                        Erre a hirdetésre már pályáztál
+                      </Badge>
+                    ) : (
+                      <div className="[&_button]:w-full [&_button]:bg-[#0b0d0a] [&_button]:text-white [&_button]:hover:bg-accent [&_button]:hover:text-black">
+                        <ApplyModal adId={ad.id} adTitle={ad.title} />
+                      </div>
+                    )
+                  ) : current?.dbUser?.role === "brand" ? (
+                    <p className="text-sm text-muted-foreground">
+                      Márkaként nem tudsz pályázni saját vagy más hirdetésére.
+                    </p>
+                  ) : (
+                    <Button
+                      asChild
+                      size="lg"
+                      className="w-full bg-[#0b0d0a] font-semibold text-white hover:bg-accent hover:text-black"
+                    >
+                      <Link href="/login">Jelentkezem</Link>
+                    </Button>
+                  )}
+                </div>
+
+                <div className="mt-3 text-center">
+                  <ReportButton
+                    targetType="ad"
+                    targetId={ad.id}
+                    className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-red-600"
+                  />
                 </div>
               </div>
             </div>
           </div>
-        </header>
-
-        <div className="grid gap-0 lg:grid-cols-[minmax(0,1fr)_340px]">
-          <main className="space-y-8 px-5 py-6 sm:px-7 lg:px-8 lg:py-8">
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Brief részletei
-              </p>
-              <h2 className="mt-2 text-2xl font-bold">Mit kell elkészíteni?</h2>
-              <p className="mt-3 whitespace-pre-wrap text-base leading-7 text-muted-foreground">
-                {ad.description}
-              </p>
-            </section>
-
-            <section>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Döntési pontok
-              </p>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                {detailItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <div
-                      key={item.label}
-                      className="flex items-start gap-3 rounded-lg bg-[#f6f7f2] p-4"
-                    >
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-white text-black shadow-sm">
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                      </span>
-                      <span>
-                        <span className="block text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                          {item.label}
-                        </span>
-                        <span className="mt-1 block text-sm font-bold">
-                          {item.value}
-                        </span>
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-
-            {referenceLinks.length > 0 && (
-              <section>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Referenciák
-                </p>
-                <div className="mt-3 space-y-2">
-                  {referenceLinks.map((link) => (
-                    <a
-                      key={link}
-                      href={link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 text-sm font-medium transition-colors hover:border-accent hover:bg-[#f6f7f2]"
-                    >
-                      <span className="min-w-0 truncate">{link}</span>
-                      <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
-                    </a>
-                  ))}
-                </div>
-              </section>
-            )}
-          </main>
-
-          <aside className="border-t border-black/10 bg-[#f6f7f2] px-5 py-6 sm:px-7 lg:border-l lg:border-t-0 lg:px-6 lg:py-8">
-            <div className="sticky top-24 space-y-5">
-              <div>
-                <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  <Building2 className="h-3.5 w-3.5 text-accent" />
-                  Pályázási panel
-                </p>
-                <h2 className="mt-2 text-xl font-bold">
-                  Illik rád ez a brief?
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  Nézd át a bérezést, határidőt és felhasználási jogokat, majd
-                  küldj rövid, konkrét ajánlatot.
-                </p>
-              </div>
-
-              <div className="space-y-3 rounded-lg bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">Márka</span>
-                  <span className="truncate font-semibold">
-                    {publicBrandName}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">Formátum</span>
-                  <span className="font-semibold">{contentTypeLabel}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3 text-sm">
-                  <span className="text-muted-foreground">Felhasználás</span>
-                  <span className="max-w-[160px] truncate text-right font-semibold">
-                    {usageRightsLabel}
-                  </span>
-                </div>
-              </div>
-
-              {invited && !alreadyApplied && (
-                <div className="flex items-start gap-2.5 rounded-lg border border-accent/50 bg-accent/10 p-3.5">
-                  <Star className="mt-0.5 h-4 w-4 shrink-0 fill-accent text-accent" />
-                  <p className="text-sm font-medium text-[#3f6212]">
-                    <strong>{publicBrandName}</strong> kifejezetten téged hívott
-                    meg erre a hirdetésre. Pályázz, hogy ne maradj le róla!
-                  </p>
-                </div>
-              )}
-
-              <div className="rounded-lg bg-[#0b0d0a] p-4 text-white">
-                {creator ? (
-                  alreadyApplied ? (
-                    <Badge className="bg-accent text-black hover:bg-accent">
-                      Erre a hirdetésre már pályáztál
-                    </Badge>
-                  ) : (
-                    <div className="[&_button]:w-full [&_button]:bg-accent [&_button]:text-black [&_button]:hover:bg-white">
-                      <ApplyModal adId={ad.id} adTitle={ad.title} />
-                    </div>
-                  )
-                ) : current?.dbUser?.role === "brand" ? (
-                  <p className="text-sm text-white/70">
-                    Márkaként nem tudsz pályázni saját vagy más hirdetésére.
-                  </p>
-                ) : (
-                  <Button
-                    asChild
-                    size="lg"
-                    className="w-full bg-accent font-semibold text-black hover:bg-white"
-                  >
-                    <Link href="/login">Jelentkezem</Link>
-                  </Button>
-                )}
-              </div>
-            </div>
-            <div className="mt-3 text-center">
-              <ReportButton
-                targetType="ad"
-                targetId={ad.id}
-                className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground transition-colors hover:text-red-600"
-              />
-            </div>
-          </aside>
         </div>
+
+        {referenceLinks.length > 0 && (
+          <section className="border-t border-black/10 px-5 py-6 sm:px-7 lg:px-8">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Referenciák
+            </p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {referenceLinks.map((link) => (
+                <a
+                  key={link}
+                  href={link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 text-sm font-medium transition-colors hover:border-accent hover:bg-[#f6f7f2]"
+                >
+                  <span className="min-w-0 truncate">{link}</span>
+                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+                </a>
+              ))}
+            </div>
+          </section>
+        )}
       </article>
     </div>
   );

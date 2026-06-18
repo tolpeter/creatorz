@@ -169,21 +169,21 @@ export default async function CreatorDetailPage({
     invitableAds = ads;
   }
 
-  // Profil-megtekintés rögzítése — BÁRMELY bejelentkezett felhasználótól
-  // (márka VAGY másik tartalomgyártó), kivéve magát a profil tulajdonosát.
-  // Napi dedup viewer-enként.
+  // Profil-megtekintés rögzítése — MINDEN látogatótól (bejelentkezett vagy
+  // anonim), és MINDEN megtekintés számít (nincs napi dedup: 5 megtekintés = 5).
+  // Kivétel: a profil tulajdonosa saját magát nem növeli.
   try {
     const viewer = await getCurrentUser();
-    if (viewer?.dbUser && viewer.dbUser.id !== profile.userId) {
+    const isOwner = viewer?.dbUser?.id === profile.userId;
+    if (!isOwner) {
       void db
         .insert(profileViews)
         .values({
           creatorId: profile.id,
-          viewerUserId: viewer.dbUser.id,
+          viewerUserId: viewer?.dbUser?.id ?? null,
           brandId: brand?.profile.id ?? null,
           viewedDate: new Date().toISOString().slice(0, 10),
         })
-        .onConflictDoNothing()
         .then(
           () => {},
           () => {},

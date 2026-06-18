@@ -260,6 +260,8 @@ export const ads = pgTable("ads", {
   id: uuid("id").primaryKey().defaultRandom(),
   brandId: uuid("brand_id").notNull().references(() => brandProfiles.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 80 }).notNull(),
+  // SEO-barát URL-slug (a címből generálva, egyedi). Régi sorok backfillel kapnak.
+  slug: varchar("slug", { length: 120 }),
   description: text("description").notNull(),
   categories: jsonb("categories").$type<string[]>().notNull().default([]),
   // Kit keres a márka: "ugc" | "editor" | "photographer" | "videographer" (több is)
@@ -297,6 +299,7 @@ export const ads = pgTable("ads", {
   categoriesIdx: index("ads_categories_idx").on(table.categories),
   deadlineIdx: index("ads_deadline_idx").on(table.deadline),
   collabTypeIdx: index("ads_collab_type_idx").on(table.collaborationType),
+  slugIdx: uniqueIndex("ads_slug_idx").on(table.slug),
 }));
 
 // ============= AD APPLICATIONS (CREATOR PÁLYÁZATOK) =============

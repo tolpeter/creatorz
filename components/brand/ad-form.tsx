@@ -7,7 +7,6 @@ import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -17,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ChipMultiSelect } from "@/components/shared/chip-multi-select";
+import { RichTextEditor } from "@/components/shared/rich-text-editor";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ImageUploader } from "@/components/creator/image-uploader";
 import {
@@ -109,7 +109,13 @@ export function AdForm() {
         </div>
         <div className="space-y-1.5">
           <Label>Részletes leírás *</Label>
-          <Textarea value={description} maxLength={2000} rows={5} onChange={(e) => setDescription(e.target.value)} placeholder="Mit vársz a creatortól? (min. 50 karakter)" />
+          <RichTextEditor
+            value={description}
+            onChange={setDescription}
+            maxLength={2000}
+            rows={6}
+            placeholder="Mit vársz a creatortól? (min. 50 karakter) — a gombokkal félkövér, dőlt, címsor és lista is formázható."
+          />
           <p className="text-right text-xs text-muted-foreground">{description.length}/2000</p>
         </div>
         <div className="space-y-2">

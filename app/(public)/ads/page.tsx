@@ -116,6 +116,7 @@ export default async function AdsFeedPage({
   const rows = await db
     .select({
       id: ads.id,
+      slug: ads.slug,
       title: ads.title,
       description: ads.description,
       categories: ads.categories,
@@ -140,6 +141,7 @@ export default async function AdsFeedPage({
 
   const items: AdCardData[] = rows.map((r) => ({
     id: r.id,
+    slug: r.slug,
     title: r.title,
     description: r.description,
     // Anonim hirdetésnél a publikus felületen elrejtjük a márka adatait

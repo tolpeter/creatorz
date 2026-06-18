@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { slugify } from "@/lib/utils/slugify";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -55,6 +56,19 @@ const adSchema = z
     path: ["deadline"],
   });
 
+/** Egyedi, SEO-barát slug a címből (ütközésnél -2, -3, …). */
+async function uniqueAdSlug(title: string): Promise<string> {
+  const base = slugify(title) || "hirdetes";
+  let slug = base;
+  let i = 2;
+  while (
+    (await db.select({ id: ads.id }).from(ads).where(eq(ads.slug, slug)).limit(1)).length > 0
+  ) {
+    slug = `${base}-${i++}`;
+  }
+  return slug;
+}
+
 export async function createAd(input: z.input<typeof adSchema>) {
   const brand = await getCurrentBrand();
   if (!brand) return { error: "Csak bejelentkezett márka adhat fel hirdetést" };
@@ -83,6 +97,7 @@ export async function createAd(input: z.input<typeof adSchema>) {
     .values({
       brandId: brand.profile.id,
       title: d.title,
+      slug: await uniqueAdSlug(d.title),
       description: d.description,
       categories: d.categories,
       targetKinds: d.targetKinds,

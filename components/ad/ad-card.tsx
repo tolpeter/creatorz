@@ -21,6 +21,7 @@ import { formatHuf, formatHuDate } from "@/lib/utils/format";
 
 export type AdCardData = {
   id: string;
+  slug?: string | null;
   title: string;
   description: string | null;
   brandName: string;
@@ -75,7 +76,7 @@ export function AdCard({ ad }: { ad: AdCardData }) {
 
   return (
     <Link
-      href={`/ads/${ad.id}`}
+      href={`/ads/${ad.slug ?? ad.id}`}
       className={
         "group relative flex flex-col gap-4 overflow-hidden rounded-2xl border bg-white p-3 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/40 hover:shadow-xl sm:flex-row sm:items-stretch sm:p-4 " +
         (ad.isFeatured
