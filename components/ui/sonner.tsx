@@ -11,6 +11,14 @@ const Toaster = ({ ...props }: ToasterProps) => {
     <Sonner
       theme={theme as ToasterProps["theme"]}
       className="toaster group"
+      // Szebb, jól látható értesítések, amelyek NEM lógnak rá a felső menüsorra
+      // (a sticky fejléc kb. 56px magas, ezért 80px-rel lejjebb kezdődnek),
+      // és kézzel is bezárhatók (X gomb).
+      position="top-center"
+      offset={80}
+      mobileOffset={{ top: 72, left: 12, right: 12 }}
+      richColors
+      closeButton
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />
@@ -38,7 +46,13 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast:
+            "cn-toast group rounded-2xl border px-4 py-3.5 gap-3 shadow-[0_12px_40px_rgba(0,0,0,0.16)] backdrop-blur",
+          title: "text-sm font-semibold",
+          description: "text-sm opacity-90",
+          icon: "mt-0.5",
+          closeButton:
+            "!left-auto !right-2 !top-2 !h-6 !w-6 !rounded-full !border !bg-white/80 !text-foreground/70 hover:!bg-white hover:!text-foreground",
         },
       }}
       {...props}

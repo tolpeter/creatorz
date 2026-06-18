@@ -90,7 +90,7 @@ export default function RootLayout({
         <Analytics />
         <TooltipProvider>{children}</TooltipProvider>
         <CookieBanner />
-        <Toaster richColors position="top-right" />
+        <Toaster />
       </body>
     </html>
   );
