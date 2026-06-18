@@ -214,11 +214,13 @@ export default async function AdDetailPage({
               <img
                 src={ad.coverUrl}
                 alt=""
-                className="absolute inset-0 h-full w-full object-cover opacity-40"
+                className="absolute inset-0 h-full w-full object-cover"
               />
+              {/* Egyenletes sötét fátyol — a háttérkép a szöveg mögött is látszik,
+                  de a fehér szöveg jól olvasható marad. */}
               <div
                 aria-hidden
-                className="absolute inset-0 bg-[linear-gradient(90deg,#0b0d0a_0%,rgba(11,13,10,0.92)_38%,rgba(11,13,10,0.7)_100%)]"
+                className="absolute inset-0 bg-[linear-gradient(rgba(11,13,10,0.74),rgba(11,13,10,0.84))]"
               />
             </>
           )}
@@ -261,9 +263,10 @@ export default async function AdDetailPage({
                     href={publicBrandWebsite}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold text-white transition-colors hover:bg-white hover:text-black"
+                    className="ml-auto inline-flex items-center gap-2 rounded-xl bg-accent px-5 py-2.5 text-sm font-bold text-black shadow-lg transition-colors hover:bg-white"
                   >
-                    Weboldal <ExternalLink className="h-3 w-3" />
+                    <ExternalLink className="h-4 w-4" />
+                    Weboldal megtekintése
                   </a>
                 )}
               </div>

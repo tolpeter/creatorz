@@ -25,7 +25,7 @@ import {
   USAGE_RIGHTS,
   COLLABORATION_TYPES,
 } from "@/lib/constants";
-import { createAd } from "@/app/actions/ads";
+import { createAd, updateAd } from "@/app/actions/ads";
 
 // "Kit keresel?" opciók — UGC creator + kreatív szakember típusok
 const TARGET_KIND_OPTIONS = [
@@ -35,28 +35,55 @@ const TARGET_KIND_OPTIONS = [
   { value: "videographer", label: "Operatőr" },
 ] as const;
 
-export function AdForm() {
+export type AdFormInitial = {
+  title: string;
+  description: string;
+  categories: string[];
+  targetKinds: string[];
+  contentType: string;
+  collaborationType: string;
+  coverUrl: string | null;
+  budgetMin: string;
+  budgetMax: string;
+  budgetPublic: boolean;
+  anonymous: boolean;
+  deadline: string;
+  location: string;
+  usageRights: string;
+  links: string[];
+};
+
+export function AdForm({
+  adId,
+  initial,
+}: {
+  adId?: string;
+  initial?: AdFormInitial;
+}) {
   const router = useRouter();
+  const isEdit = Boolean(adId);
   const [loading, setLoading] = useState(false);
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [categories, setCategories] = useState<string[]>([]);
-  const [targetKinds, setTargetKinds] = useState<string[]>(["ugc"]);
-  const [contentType, setContentType] = useState("video");
-  const [collaborationType, setCollaborationType] = useState("project");
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
-  const [budgetMin, setBudgetMin] = useState("");
-  const [budgetMax, setBudgetMax] = useState("");
-  const [budgetPublic, setBudgetPublic] = useState(false);
-  const [anonymous, setAnonymous] = useState(false);
-  const [deadline, setDeadline] = useState("");
-  const [location, setLocation] = useState("");
-  const [usageRights, setUsageRights] = useState("organic");
-  const [links, setLinks] = useState<string[]>([]);
+  const [title, setTitle] = useState(initial?.title ?? "");
+  const [description, setDescription] = useState(initial?.description ?? "");
+  const [categories, setCategories] = useState<string[]>(initial?.categories ?? []);
+  const [targetKinds, setTargetKinds] = useState<string[]>(initial?.targetKinds ?? ["ugc"]);
+  const [contentType, setContentType] = useState(initial?.contentType ?? "video");
+  const [collaborationType, setCollaborationType] = useState(
+    initial?.collaborationType ?? "project",
+  );
+  const [coverUrl, setCoverUrl] = useState<string | null>(initial?.coverUrl ?? null);
+  const [budgetMin, setBudgetMin] = useState(initial?.budgetMin ?? "");
+  const [budgetMax, setBudgetMax] = useState(initial?.budgetMax ?? "");
+  const [budgetPublic, setBudgetPublic] = useState(initial?.budgetPublic ?? false);
+  const [anonymous, setAnonymous] = useState(initial?.anonymous ?? false);
+  const [deadline, setDeadline] = useState(initial?.deadline ?? "");
+  const [location, setLocation] = useState(initial?.location ?? "");
+  const [usageRights, setUsageRights] = useState(initial?.usageRights ?? "organic");
+  const [links, setLinks] = useState<string[]>(initial?.links ?? []);
 
   async function submit() {
     setLoading(true);
-    const res = await createAd({
+    const payload = {
       title,
       description,
       categories,
@@ -72,13 +99,14 @@ export function AdForm() {
       location,
       usageRights: usageRights as "organic" | "paid_ads" | "perpetual",
       referenceLinks: links.filter((l) => l.trim()),
-    });
+    };
+    const res = isEdit ? await updateAd(adId!, payload) : await createAd(payload);
     setLoading(false);
     if (res.error) {
       toast.error(res.error);
       return;
     }
-    toast.success("Hirdetés beküldve moderálásra!");
+    toast.success(isEdit ? "Hirdetés módosítva!" : "Hirdetés beküldve moderálásra!");
     router.push(`/brand/ads/${res.id}`);
     router.refresh();
   }
@@ -86,7 +114,7 @@ export function AdForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Új hirdetés</CardTitle>
+        <CardTitle>{isEdit ? "Hirdetés szerkesztése" : "Új hirdetés"}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
@@ -250,7 +278,7 @@ export function AdForm() {
         <div className="flex justify-end">
           <Button onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            Hirdetés beküldése
+            {isEdit ? "Mentés" : "Hirdetés beküldése"}
           </Button>
         </div>
       </CardContent>

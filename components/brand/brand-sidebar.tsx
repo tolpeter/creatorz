@@ -12,6 +12,7 @@ import {
   Settings,
   Handshake,
   Star,
+  Inbox,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -40,6 +41,12 @@ const navItems = [
     key: "saved",
   },
   { href: "/brand/ads", label: "Hirdetéseim", icon: Megaphone, key: "ads" },
+  {
+    href: "/brand/applications",
+    label: "Jelentkezők",
+    icon: Inbox,
+    key: "applications",
+  },
   {
     href: "/brand/collaborations",
     label: "Együttműködések",

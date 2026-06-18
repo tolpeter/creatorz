@@ -87,7 +87,7 @@ export function RichTextEditor({
         rows={rows}
         maxLength={maxLength}
         placeholder={placeholder}
-        className="rounded-t-none border-0 focus-visible:ring-0"
+        className="min-h-72 rounded-t-none border-0 focus-visible:ring-0"
       />
     </div>
   );

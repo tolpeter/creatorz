@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { and, eq, desc } from "drizzle-orm";
+import { Pencil, ExternalLink } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, adApplications, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
@@ -60,6 +61,20 @@ export default async function BrandAdDetailPage({
           <div className="flex items-start justify-between gap-3">
             <CardTitle className="text-2xl">{ad.title}</CardTitle>
             <AdStatusBadge status={ad.status} />
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Button asChild size="sm">
+              <Link href={`/brand/ads/${ad.id}/edit`}>
+                <Pencil className="h-4 w-4" /> Szerkesztés
+              </Link>
+            </Button>
+            {ad.status === "active" && (
+              <Button asChild size="sm" variant="outline">
+                <Link href={`/ads/${ad.slug ?? ad.id}`} target="_blank">
+                  <ExternalLink className="h-4 w-4" /> Hirdetésem megtekintése
+                </Link>
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">

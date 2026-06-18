@@ -19,42 +19,47 @@ const optionalBudget = z
   .union([z.coerce.number().int().min(1000), z.literal(""), z.null(), z.undefined()])
   .transform((v) => (v === "" || v === null || v === undefined ? null : v));
 
-const adSchema = z
-  .object({
-    title: z.string().min(5).max(80),
-    description: z.string().min(50).max(2000),
-    categories: z.array(z.string()).min(1).max(3),
-    targetKinds: z
-      .array(z.enum(["ugc", "editor", "photographer", "videographer"]))
-      .min(1)
-      .default(["ugc"]),
-    contentType: z.enum(["video", "photo", "both"]),
-    collaborationType: z.enum(["project", "longterm", "barter"]).default("project"),
-    itemCount: z.coerce.number().int().min(1).max(20).optional().default(1),
-    budgetMinHuf: optionalBudget,
-    budgetMaxHuf: optionalBudget,
-    budgetPublic: z.boolean().default(false),
-    anonymous: z.boolean().default(false),
-    coverUrl: z.string().max(600).optional().nullable(),
-    deadline: z.coerce.date(),
-    location: z.string().max(200).optional().or(z.literal("")),
-    usageRights: z.enum(["organic", "paid_ads", "perpetual"]),
-    referenceLinks: z.array(z.string()).max(5).default([]),
-  })
-  .refine(
-    (d) =>
-      d.budgetMinHuf == null ||
-      d.budgetMaxHuf == null ||
-      d.budgetMaxHuf >= d.budgetMinHuf,
-    {
-      message: "A maximum költségvetés nem lehet kisebb a minimumnál",
-      path: ["budgetMaxHuf"],
-    },
-  )
+const adObject = z.object({
+  title: z.string().min(5).max(80),
+  description: z.string().min(50).max(2000),
+  categories: z.array(z.string()).min(1).max(3),
+  targetKinds: z
+    .array(z.enum(["ugc", "editor", "photographer", "videographer"]))
+    .min(1)
+    .default(["ugc"]),
+  contentType: z.enum(["video", "photo", "both"]),
+  collaborationType: z.enum(["project", "longterm", "barter"]).default("project"),
+  itemCount: z.coerce.number().int().min(1).max(20).optional().default(1),
+  budgetMinHuf: optionalBudget,
+  budgetMaxHuf: optionalBudget,
+  budgetPublic: z.boolean().default(false),
+  anonymous: z.boolean().default(false),
+  coverUrl: z.string().max(600).optional().nullable(),
+  deadline: z.coerce.date(),
+  location: z.string().max(200).optional().or(z.literal("")),
+  usageRights: z.enum(["organic", "paid_ads", "perpetual"]),
+  referenceLinks: z.array(z.string()).max(5).default([]),
+});
+
+const checkBudget = (d: z.infer<typeof adObject>) =>
+  d.budgetMinHuf == null ||
+  d.budgetMaxHuf == null ||
+  d.budgetMaxHuf >= d.budgetMinHuf;
+const budgetMsg = {
+  message: "A maximum bérezés nem lehet kisebb a minimumnál",
+  path: ["budgetMaxHuf"],
+};
+
+// Új hirdetés: a határidő legyen a jövőben.
+const adSchema = adObject
+  .refine(checkBudget, budgetMsg)
   .refine((d) => d.deadline.getTime() > Date.now(), {
     message: "A határidő a jövőben legyen",
     path: ["deadline"],
   });
+
+// Szerkesztés: ugyanaz, de a már lejárt határidő ne blokkolja a mentést.
+const adUpdateSchema = adObject.refine(checkBudget, budgetMsg);
 
 /** Egyedi, SEO-barát slug a címből (ütközésnél -2, -3, …). */
 async function uniqueAdSlug(title: string): Promise<string> {
@@ -134,6 +139,54 @@ export async function createAd(input: z.input<typeof adSchema>) {
   }
 
   revalidatePath("/brand/ads");
+  return { success: true, id: adId };
+}
+
+export async function updateAd(adId: string, input: z.input<typeof adUpdateSchema>) {
+  const brand = await getCurrentBrand();
+  if (!brand) return { error: "Nincs bejelentkezve" };
+
+  const parsed = adUpdateSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const d = parsed.data;
+
+  const [existing] = await db
+    .select({ id: ads.id, brandId: ads.brandId })
+    .from(ads)
+    .where(eq(ads.id, adId))
+    .limit(1);
+  if (!existing || existing.brandId !== brand.profile.id) {
+    return { error: "A hirdetés nem található" };
+  }
+
+  // A slugot és a státuszt szándékosan NEM írjuk felül (az URL megmarad).
+  await db
+    .update(ads)
+    .set({
+      title: d.title,
+      description: d.description,
+      categories: d.categories,
+      targetKinds: d.targetKinds,
+      contentType: d.contentType,
+      collaborationType: d.collaborationType,
+      itemCount: d.itemCount,
+      coverUrl: d.coverUrl || null,
+      budgetMinHuf: d.budgetMinHuf,
+      budgetMaxHuf: d.budgetMaxHuf,
+      budgetPublic: d.budgetPublic,
+      anonymous: d.anonymous,
+      deadline: d.deadline,
+      location: d.location || null,
+      usageRights: d.usageRights,
+      referenceLinks: d.referenceLinks,
+    })
+    .where(eq(ads.id, adId));
+
+  revalidatePath(`/brand/ads/${adId}`);
+  revalidatePath("/brand/ads");
+  revalidatePath("/ads");
   return { success: true, id: adId };
 }
 
