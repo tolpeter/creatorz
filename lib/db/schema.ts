@@ -482,6 +482,18 @@ export const notifications = pgTable("notifications", {
   readIdx: index("notifications_read_idx").on(table.read),
 }));
 
+// ============= PUSH TOKENS (mobil app Expo push értesítésekhez) =============
+export const pushTokens = pgTable("push_tokens", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  token: text("token").notNull().unique(),
+  platform: varchar("platform", { length: 20 }), // ios | android
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  userIdx: index("push_tokens_user_idx").on(t.userId),
+  tokenIdx: uniqueIndex("push_tokens_token_idx").on(t.token),
+}));
+
 // ============= CONTACT MESSAGES (kapcsolat űrlap → admin inbox) =============
 export const contactMessages = pgTable("contact_messages", {
   id: uuid("id").primaryKey().defaultRandom(),

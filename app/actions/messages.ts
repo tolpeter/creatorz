@@ -14,6 +14,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
 import { renderNewMessageEmail } from "@/lib/email/templates";
+import { sendExpoPush } from "@/lib/push";
 import { formatHuf } from "@/lib/utils/format";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -67,6 +68,12 @@ export async function sendMessage(input: z.input<typeof initSchema>) {
     title: `Új üzenet: ${brand.profile.companyName}`,
     body: d.subject || d.body.slice(0, 120),
     link: "/creator/messages",
+  });
+
+  await sendExpoPush([recipient.creatorUserId], {
+    title: brand.profile.companyName,
+    body: (d.subject ? `${d.subject} — ` : "") + d.body.slice(0, 140),
+    data: { type: "message", partnerId: brand.appUserId },
   });
 
   {
@@ -181,6 +188,12 @@ export async function replyToUser(input: z.input<typeof replySchema>) {
     link,
   });
 
+  await sendExpoPush([d.toUserId], {
+    title: meName,
+    body: preview,
+    data: { type: "message", partnerId: current.dbUser.id },
+  });
+
   {
     const email = renderNewMessageEmail({
       recipientName: recipient.creatorName ?? recipient.brandName ?? "Felhasználó",
@@ -240,6 +253,12 @@ export async function adminMessageCreator(input: z.input<typeof adminMsgSchema>)
     title: "Új üzenet: Creatorz csapat",
     body: d.body.slice(0, 120),
     link: "/creator/messages",
+  });
+
+  await sendExpoPush([recipient.creatorUserId], {
+    title: "Creatorz csapat",
+    body: d.body.slice(0, 140),
+    data: { type: "message", partnerId: current.dbUser.id },
   });
 
   const email = renderNewMessageEmail({

@@ -19,6 +19,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { checkRateLimit, DAY } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { sendExpoPush } from "@/lib/push";
 import {
   renderNewApplicationEmail,
   renderApplicationAcceptedEmail,
@@ -120,6 +121,11 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       title: `Új pályázat: ${creator.profile.displayName}`,
       body: `"${ad.title}" hirdetésedre érkezett egy pályázat.`,
       link: "/brand/ads",
+    });
+    await sendExpoPush([brandUser[0].userId], {
+      title: "Új pályázat",
+      body: `${creator.profile.displayName} pályázott: „${ad.title}"`,
+      data: { type: "application" },
     });
   }
 
@@ -230,6 +236,12 @@ export async function acceptApplication(applicationId: string) {
     title: "Elfogadták a pályázatodat! 🎉",
     body: `${brand.profile.companyName} elfogadta a pályázatodat: „${row.adTitle}".`,
     link: "/creator/applications",
+  });
+
+  await sendExpoPush([row.creatorUserId], {
+    title: "Elfogadták a pályázatodat! 🎉",
+    body: `${brand.profile.companyName}: „${row.adTitle}"`,
+    data: { type: "application_accepted" },
   });
 
   {

@@ -1,10 +1,26 @@
-import { Redirect, Tabs } from "expo-router";
+import { useEffect } from "react";
+import { Redirect, Tabs, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import * as Notifications from "expo-notifications";
 import { useAuth } from "@/context/auth";
+import { registerForPush } from "@/lib/push-register";
 import { colors } from "@/lib/theme";
 
 export default function TabsLayout() {
   const { session, loading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!session) return;
+    registerForPush();
+    // Értesítésre koppintásnál az Üzenetek fülre visz.
+    const sub = Notifications.addNotificationResponseReceivedListener((res) => {
+      const data = res.notification.request.content.data as { type?: string };
+      if (data?.type === "message") router.push("/(tabs)/messages");
+    });
+    return () => sub.remove();
+  }, [session, router]);
+
   if (!loading && !session) return <Redirect href="/(auth)/login" />;
 
   return (

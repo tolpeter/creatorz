@@ -6,21 +6,70 @@ const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://creatorz.hu";
  * Web API hívás. Ha `auth: true`, a bejelentkezett user JWT-jét is elküldi
  * (a védett végpontokhoz). Nyilvános végpontoknál nem kell.
  */
-export async function apiGet<T>(
-  path: string,
-  opts?: { auth?: boolean },
-): Promise<T> {
+async function authHeaders(auth?: boolean) {
   const headers: Record<string, string> = { Accept: "application/json" };
-  if (opts?.auth) {
+  if (auth) {
     const { data } = await supabase.auth.getSession();
     const token = data.session?.access_token;
     if (token) headers.Authorization = `Bearer ${token}`;
   }
+  return headers;
+}
+
+export async function apiGet<T>(path: string, opts?: { auth?: boolean }): Promise<T> {
+  const headers = await authHeaders(opts?.auth);
   const res = await fetch(`${API_URL}${path}`, { headers });
-  if (!res.ok) {
-    throw new Error(`API ${res.status}`);
-  }
+  if (!res.ok) throw new Error(`API ${res.status}`);
   return (await res.json()) as T;
+}
+
+export async function apiPost<T>(
+  path: string,
+  body: unknown,
+  opts?: { auth?: boolean },
+): Promise<T> {
+  const headers = await authHeaders(opts?.auth);
+  headers["Content-Type"] = "application/json";
+  const res = await fetch(`${API_URL}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as T;
+}
+
+export type Conversation = {
+  partnerId: string;
+  name: string;
+  avatarUrl: string | null;
+  lastBody: string;
+  lastAt: string;
+  unread: number;
+};
+
+export type ThreadMessage = {
+  id: string;
+  fromUserId: string;
+  body: string;
+  createdAt: string;
+  mine: boolean;
+};
+
+export function fetchConversations() {
+  return apiGet<{ conversations: Conversation[] }>("/api/mobile/messages", { auth: true });
+}
+export function fetchThread(partnerId: string) {
+  return apiGet<{ partner: { id: string; name: string; avatarUrl: string | null }; messages: ThreadMessage[] }>(
+    `/api/mobile/messages/${partnerId}`,
+    { auth: true },
+  );
+}
+export function sendThreadMessage(partnerId: string, body: string) {
+  return apiPost<{ success: boolean }>(`/api/mobile/messages/${partnerId}`, { body }, { auth: true });
+}
+export function registerPushToken(token: string, platform: string) {
+  return apiPost<{ success: boolean }>("/api/mobile/push-token", { token, platform }, { auth: true });
 }
 
 export type CreatorListItem = {
