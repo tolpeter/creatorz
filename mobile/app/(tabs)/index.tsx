@@ -10,6 +10,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { fetchCreators, type CreatorListItem } from "@/lib/api";
 import { colors, radius } from "@/lib/theme";
 
@@ -118,8 +119,10 @@ export default function CreatorsScreen() {
 }
 
 function CreatorCard({ c }: { c: CreatorListItem }) {
+  const router = useRouter();
   return (
     <Pressable
+      onPress={() => router.push(`/creators/${c.username}`)}
       style={{
         flexDirection: "row",
         alignItems: "center",

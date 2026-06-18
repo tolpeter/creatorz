@@ -50,3 +50,59 @@ export function fetchCreators(search = "", offset = 0) {
   if (offset) qs.set("offset", String(offset));
   return apiGet<CreatorsResponse>(`/api/mobile/creators?${qs.toString()}`);
 }
+
+export type CreatorDetail = {
+  profile: {
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    bannerUrl: string | null;
+    bio: string | null;
+    city: string | null;
+    county: string | null;
+    age: number | null;
+    gender: string | null;
+    categories: string[];
+    languages: string[];
+    profileKind: "ugc" | "professional";
+    professionalRoles: string[];
+    specialties: string[];
+    websiteUrl: string | null;
+    verified: boolean;
+    isFeatured: boolean;
+    introVideoUrl: string | null;
+    instagramUrl: string | null;
+    instagramFollowers: number | null;
+    tiktokUrl: string | null;
+    tiktokFollowers: number | null;
+    tiktokLikes: number | null;
+    tiktokVideoCount: number | null;
+    facebookUrl: string | null;
+    facebookFollowers: number | null;
+    youtubeUrl: string | null;
+    youtubeSubscribers: number | null;
+    averageRating: string | null;
+    reviewCount: number;
+    activity: string | null;
+  };
+  portfolio: {
+    id: string;
+    type: "video" | "photo";
+    url: string;
+    thumbnailUrl: string | null;
+    externalUrl: string | null;
+    title: string | null;
+  }[];
+  reviews: {
+    id: string;
+    overallRating: number;
+    text: string;
+    createdAt: string;
+    brandName: string;
+    responseText: string | null;
+  }[];
+};
+
+export function fetchCreator(username: string) {
+  return apiGet<CreatorDetail>(`/api/mobile/creators/${encodeURIComponent(username)}`);
+}
