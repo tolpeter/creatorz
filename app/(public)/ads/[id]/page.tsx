@@ -45,6 +45,7 @@ export async function generateMetadata({
       coverUrl: ads.coverUrl,
       anonymous: ads.anonymous,
       brandName: brandProfiles.companyName,
+      brandLogo: brandProfiles.logoUrl,
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
@@ -56,6 +57,12 @@ export async function generateMetadata({
     stripMarkdown(row.description ?? "").slice(0, 160) ||
     `${publicBrandName} brief a Creatorzon.`;
   const canonical = `/ads/${row.slug ?? id}`;
+  // Link-előnézet (Facebook/OG): borítókép → (nem anonim) márka logó → Creatorz
+  // alapkép. Mindig adunk képet, hogy a megosztásnál legyen előnézet.
+  const ogImage =
+    row.coverUrl ||
+    (!row.anonymous && row.brandLogo ? row.brandLogo : null) ||
+    "/og-image.png";
   return {
     title: row.title,
     description: desc,
@@ -65,7 +72,13 @@ export async function generateMetadata({
       title: `${row.title} — ${publicBrandName}`,
       description: desc,
       url: canonical,
-      images: row.coverUrl ? [{ url: row.coverUrl }] : undefined,
+      images: [{ url: ogImage }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${row.title} — ${publicBrandName}`,
+      description: desc,
+      images: [ogImage],
     },
   };
 }
