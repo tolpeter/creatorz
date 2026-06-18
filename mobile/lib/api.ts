@@ -1,6 +1,6 @@
 import { supabase } from "./supabase";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://creatorz.hu";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://www.creatorz.hu";
 
 /**
  * Web API hívás. Ha `auth: true`, a bejelentkezett user JWT-jét is elküldi

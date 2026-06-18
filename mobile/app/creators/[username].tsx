@@ -15,7 +15,7 @@ import { fetchCreator, type CreatorDetail } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { colors, radius } from "@/lib/theme";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://creatorz.hu";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://www.creatorz.hu";
 
 function fmt(n: number | null | undefined) {
   return n == null ? "—" : n.toLocaleString("hu-HU");

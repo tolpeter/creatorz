@@ -13,7 +13,7 @@ import { Link, useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { colors, radius } from "@/lib/theme";
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://creatorz.hu";
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://www.creatorz.hu";
 
 export default function RegisterScreen() {
   const router = useRouter();
