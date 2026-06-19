@@ -161,12 +161,15 @@ export function fetchMyApplications() {
   return apiGet<{ items: MyApplication[] }>("/api/mobile/my-applications", { auth: true });
 }
 
-export type MeProfile = Record<string, string | null> | null;
+export type MeProfile = Record<string, unknown> | null;
 export function fetchMe() {
   return apiGet<{ role: string; profile: MeProfile }>("/api/mobile/me", { auth: true });
 }
-export function saveProfile(fields: Record<string, string>) {
+export function saveProfile(fields: Record<string, unknown>) {
   return apiPost<{ success: boolean; error?: string }>("/api/mobile/me", fields, { auth: true });
+}
+export function uploadImage(bucket: "avatars" | "logos", base64: string, ext: string) {
+  return apiPost<{ url?: string; error?: string }>("/api/mobile/upload", { bucket, base64, ext }, { auth: true });
 }
 
 export type CreatorListItem = {
