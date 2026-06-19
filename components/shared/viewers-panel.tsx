@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Eye, Sparkles } from "lucide-react";
+import { Eye } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { CollapsibleSection } from "@/components/shared/collapsible-section";
 import { formatHuDate } from "@/lib/utils/format";
 import type { ViewerIdentity } from "@/lib/viewers";
 
@@ -25,21 +26,17 @@ export function ViewersPanel({
   emptyLabel?: string;
 }) {
   return (
-    <div className="rounded-lg border border-accent/30 bg-[#f6f7f2] p-4">
-      <p className="flex items-center gap-2 text-sm font-bold">
-        <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/20 text-[#3f6212]">
-          <Eye className="h-4 w-4" />
-        </span>
-        Kik nézték meg
-        <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#3f6212]">
-          <Sparkles className="h-3 w-3" /> Kiemelt
-        </span>
-      </p>
-
+    <CollapsibleSection
+      title="Kik nézték meg"
+      count={viewers.length}
+      icon={<Eye className="h-4 w-4" />}
+      badge="Kiemelt"
+      accent
+    >
       {viewers.length === 0 ? (
-        <p className="mt-3 text-sm text-muted-foreground">{emptyLabel}</p>
+        <p className="text-sm text-muted-foreground">{emptyLabel}</p>
       ) : (
-        <div className="mt-3 space-y-2">
+        <div className="space-y-2">
           {viewers.map((v) => {
             const inner = (
               <div className="flex items-center gap-3 rounded-xl bg-white px-3 py-2 shadow-sm transition-colors hover:bg-accent/5">
@@ -85,6 +82,6 @@ export function ViewersPanel({
           + {anonymousCount} be nem jelentkezett látogató (nem azonosítható).
         </p>
       )}
-    </div>
+    </CollapsibleSection>
   );
 }

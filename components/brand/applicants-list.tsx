@@ -2,9 +2,10 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { SlidersHorizontal, Heart, Megaphone } from "lucide-react";
+import { SlidersHorizontal, Heart, Megaphone, Inbox } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
+import { CollapsibleSection } from "@/components/shared/collapsible-section";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { NumberInput } from "@/components/ui/number-input";
@@ -35,7 +36,13 @@ const num = (v: string) => {
   return Number.isFinite(n) && n > 0 ? n : 0;
 };
 
-export function ApplicantsList({ apps }: { apps: Applicant[] }) {
+export function ApplicantsList({
+  apps,
+  collapsible = false,
+}: {
+  apps: Applicant[];
+  collapsible?: boolean;
+}) {
   const [open, setOpen] = useState(false);
   const [minTt, setMinTt] = useState("");
   const [minTtLikes, setMinTtLikes] = useState("");
@@ -58,13 +65,13 @@ export function ApplicantsList({ apps }: { apps: Applicant[] }) {
 
   const activeFilters = [minTt, minTtLikes, minIg, minFb].filter((v) => num(v) > 0).length;
 
-  return (
-    <div>
+  const inner = (
+    <>
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-xl font-bold">
-          Beérkezett pályázatok ({filtered.length}
-          {filtered.length !== apps.length ? ` / ${apps.length}` : ""})
-        </h2>
+        <p className="text-sm text-muted-foreground">
+          {filtered.length}
+          {filtered.length !== apps.length ? ` / ${apps.length}` : ""} megjelenítve
+        </p>
         <Button variant="outline" size="sm" onClick={() => setOpen((v) => !v)}>
           <SlidersHorizontal className="h-4 w-4" />
           Szűrés{activeFilters > 0 ? ` (${activeFilters})` : ""}
@@ -174,7 +181,27 @@ export function ApplicantsList({ apps }: { apps: Applicant[] }) {
           ))}
         </div>
       )}
-    </div>
+    </>
+  );
+
+  if (!collapsible) {
+    return (
+      <div>
+        <h2 className="mb-3 text-xl font-bold">Beérkezett pályázatok ({apps.length})</h2>
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <CollapsibleSection
+      title="Beérkezett pályázatok"
+      count={apps.length}
+      icon={<Inbox className="h-4 w-4" />}
+      defaultOpen={apps.length > 0 && apps.length <= 4}
+    >
+      {inner}
+    </CollapsibleSection>
   );
 }
 

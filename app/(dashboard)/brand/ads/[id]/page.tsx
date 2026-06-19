@@ -156,7 +156,7 @@ export default async function BrandAdDetailPage({
         />
       )}
 
-      <ApplicantsList apps={apps} />
+      <ApplicantsList apps={apps} collapsible />
 
       <RecommendedCreators adId={ad.id} creators={recommended} />
     </div>

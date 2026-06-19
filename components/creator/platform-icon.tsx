@@ -1,4 +1,6 @@
-import type { SVGProps } from "react";
+"use client";
+
+import { useId, type SVGProps } from "react";
 
 export type Platform = "instagram" | "tiktok" | "facebook" | "youtube";
 
@@ -61,10 +63,13 @@ function YouTubeTile(props: SVGProps<SVGSVGElement>) {
 }
 
 function InstagramTile(props: SVGProps<SVGSVGElement>) {
+  // Egyedi gradiens-id, hogy ne ütközzön, ha több Instagram-csempe is van az
+  // oldalon (pl. a profil mobil + desktop SocialStats blokkjában egyszerre).
+  const gid = `ig-${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
   return (
     <svg viewBox="0 0 48 48" aria-label="Instagram" {...props}>
       <defs>
-        <radialGradient id="ig-tile-g" cx="28%" cy="105%" r="135%">
+        <radialGradient id={gid} cx="28%" cy="105%" r="135%">
           <stop offset="0%" stopColor="#FFD776" />
           <stop offset="22%" stopColor="#F9A237" />
           <stop offset="42%" stopColor="#FD5949" />
@@ -72,7 +77,7 @@ function InstagramTile(props: SVGProps<SVGSVGElement>) {
           <stop offset="90%" stopColor="#285AEB" />
         </radialGradient>
       </defs>
-      <rect width="48" height="48" rx="12" fill="url(#ig-tile-g)" />
+      <rect width="48" height="48" rx="12" fill={`url(#${gid})`} />
       <rect
         x="13"
         y="13"

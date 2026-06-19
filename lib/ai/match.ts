@@ -67,6 +67,7 @@ export async function getRecommendedCreators(
   adId: string,
   limit = 6,
 ): Promise<RecommendedCreator[]> {
+ try {
   const [ad] = await db.select().from(ads).where(eq(ads.id, adId)).limit(1);
   if (!ad) return [];
 
@@ -177,4 +178,10 @@ export async function getRecommendedCreators(
     reviewCount: c.reviewCount,
     matchScore: pct,
   }));
+ } catch (err) {
+    // Pl. ha a migráció (embedding oszlop) még nem futott le, vagy nincs OpenAI
+    // kulcs — ilyenkor csak elrejtjük a blokkot, nem hibázik a hirdetés-oldal.
+    console.error("[ai] getRecommendedCreators failed:", (err as Error).message);
+    return [];
+ }
 }
