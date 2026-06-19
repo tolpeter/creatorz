@@ -11,9 +11,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { fetchCreators, type CreatorListItem } from "@/lib/api";
-import { FilterChips } from "@/components/filter-chips";
-import { CATEGORIES } from "@/lib/constants";
+import { fetchCreators, creatorFilterCount, type CreatorListItem, type CreatorFilters } from "@/lib/api";
+import { CreatorFilterModal } from "@/components/creator-filter-modal";
 import { colors, radius } from "@/lib/theme";
 
 function formatNumber(n: number | null) {
@@ -24,17 +23,18 @@ function formatNumber(n: number | null) {
 export default function CreatorsScreen() {
   const [items, setItems] = useState<CreatorListItem[]>([]);
   const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("");
+  const [filters, setFilters] = useState<CreatorFilters>({});
+  const [filterOpen, setFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (q: string, cat: string, reset: boolean) => {
+  const load = useCallback(async (q: string, f: CreatorFilters, reset: boolean) => {
     try {
       setError(null);
-      const res = await fetchCreators(q, reset ? 0 : offset, { category: cat });
+      const res = await fetchCreators(q, reset ? 0 : offset, f);
       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
       setHasMore(res.hasMore);
       setOffset(res.nextOffset);
@@ -46,15 +46,17 @@ export default function CreatorsScreen() {
     }
   }, [offset]);
 
-  // Kereső debounce + kategória-szűrő (kezdő betöltés is innen)
+  // Kereső debounce + szűrők (kezdő betöltés is innen)
   useEffect(() => {
     const t = setTimeout(() => {
       setLoading(true);
-      load(search, category, true);
+      load(search, filters, true);
     }, search ? 350 : 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, category]);
+  }, [search, filters]);
+
+  const fCount = creatorFilterCount(filters);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceMuted }}>
@@ -77,10 +79,23 @@ export default function CreatorsScreen() {
             onChangeText={setSearch}
             style={{ flex: 1, color: "#fff", paddingVertical: 12 }}
           />
+          <Pressable onPress={() => setFilterOpen(true)} hitSlop={8} style={{ flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 8, paddingLeft: 6 }}>
+            <Ionicons name="options-outline" size={20} color={fCount > 0 ? colors.accent : "rgba(255,255,255,0.7)"} />
+            {fCount > 0 ? (
+              <View style={{ backgroundColor: colors.accent, borderRadius: 999, minWidth: 18, height: 18, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
+                <Text style={{ color: "#000", fontWeight: "800", fontSize: 11 }}>{fCount}</Text>
+              </View>
+            ) : null}
+          </Pressable>
         </View>
       </View>
 
-      <FilterChips options={CATEGORIES} value={category} onChange={setCategory} />
+      <CreatorFilterModal
+        visible={filterOpen}
+        initial={filters}
+        onClose={() => setFilterOpen(false)}
+        onApply={setFilters}
+      />
 
       {loading && items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -96,14 +111,14 @@ export default function CreatorsScreen() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                load(search, category, true);
+                load(search, filters, true);
               }}
               tintColor={colors.accentDark}
             />
           }
           onEndReachedThreshold={0.4}
           onEndReached={() => {
-            if (hasMore && !loading) load(search, category, false);
+            if (hasMore && !loading) load(search, filters, false);
           }}
           ListEmptyComponent={
             <Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>

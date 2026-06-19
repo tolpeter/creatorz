@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, lte, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users } from "@/lib/db/schema";
 import { activityLabel } from "@/lib/creator-stats";
@@ -14,11 +14,20 @@ const PAGE = 20;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
-  const search = (url.searchParams.get("search") ?? "").trim();
-  const offset = Math.max(0, Number(url.searchParams.get("offset") ?? 0) || 0);
-  const category = url.searchParams.get("category")?.trim() || "";
-  const minTt = Number(url.searchParams.get("minTt") ?? 0) || 0;
-  const verifiedOnly = url.searchParams.get("verified") === "1";
+  const sp = url.searchParams;
+  const search = (sp.get("search") ?? "").trim();
+  const offset = Math.max(0, Number(sp.get("offset") ?? 0) || 0);
+  const categories = (sp.get("categories") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const languages = (sp.get("languages") ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  const county = sp.get("county")?.trim() || "";
+  const city = sp.get("city")?.trim() || "";
+  const gender = sp.get("gender")?.trim() || "";
+  const minAge = Number(sp.get("minAge") ?? 0) || 0;
+  const maxAge = Number(sp.get("maxAge") ?? 0) || 0;
+  const minIg = Number(sp.get("minIg") ?? 0) || 0;
+  const minTt = Number(sp.get("minTt") ?? 0) || 0;
+  const minRating = Number(sp.get("minRating") ?? 0) || 0;
+  const verifiedOnly = sp.get("verified") === "1";
 
   const conditions = [eq(users.suspended, false)];
   if (search) {
@@ -31,10 +40,24 @@ export async function GET(req: Request) {
       )!,
     );
   }
-  if (category) {
-    conditions.push(sql`${creatorProfiles.categories} @> ${JSON.stringify([category])}::jsonb`);
+  // Kategóriák — ÉS feltétel (mindegyik kiválasztottnak meg kell felelnie).
+  if (categories.length) {
+    conditions.push(sql`${creatorProfiles.categories} @> ${JSON.stringify(categories)}::jsonb`);
   }
+  // Nyelvek — VAGY feltétel (bármelyik egyezés).
+  if (languages.length) {
+    conditions.push(
+      or(...languages.map((l) => sql`${creatorProfiles.languages} @> ${JSON.stringify([l])}::jsonb`))!,
+    );
+  }
+  if (county) conditions.push(eq(creatorProfiles.county, county));
+  if (city) conditions.push(ilike(creatorProfiles.city, `%${city}%`));
+  if (gender) conditions.push(eq(creatorProfiles.gender, gender));
+  if (minAge > 0) conditions.push(gte(creatorProfiles.age, minAge));
+  if (maxAge > 0) conditions.push(lte(creatorProfiles.age, maxAge));
+  if (minIg > 0) conditions.push(gte(creatorProfiles.instagramFollowers, minIg));
   if (minTt > 0) conditions.push(gte(creatorProfiles.tiktokFollowers, minTt));
+  if (minRating > 0) conditions.push(gte(creatorProfiles.averageRating, String(minRating)));
   if (verifiedOnly) conditions.push(eq(creatorProfiles.verified, true));
 
   const rows = await db

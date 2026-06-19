@@ -190,13 +190,48 @@ export type CreatorsResponse = {
   nextOffset: number;
 };
 
-export type CreatorFilters = { category?: string; minTt?: string; verified?: boolean };
+export type CreatorFilters = {
+  categories?: string[];
+  languages?: string[];
+  county?: string;
+  city?: string;
+  gender?: string;
+  minAge?: string;
+  maxAge?: string;
+  minIg?: string;
+  minTt?: string;
+  minRating?: string;
+  verified?: boolean;
+};
+export function creatorFilterCount(f: CreatorFilters): number {
+  let n = 0;
+  if (f.categories?.length) n++;
+  if (f.languages?.length) n++;
+  if (f.county) n++;
+  if (f.city) n++;
+  if (f.gender) n++;
+  if (f.minAge) n++;
+  if (f.maxAge) n++;
+  if (f.minIg) n++;
+  if (f.minTt) n++;
+  if (f.minRating) n++;
+  if (f.verified) n++;
+  return n;
+}
 export function fetchCreators(search = "", offset = 0, filters: CreatorFilters = {}) {
   const qs = new URLSearchParams();
   if (search) qs.set("search", search);
   if (offset) qs.set("offset", String(offset));
-  if (filters.category) qs.set("category", filters.category);
+  if (filters.categories?.length) qs.set("categories", filters.categories.join(","));
+  if (filters.languages?.length) qs.set("languages", filters.languages.join(","));
+  if (filters.county) qs.set("county", filters.county);
+  if (filters.city) qs.set("city", filters.city);
+  if (filters.gender) qs.set("gender", filters.gender);
+  if (filters.minAge) qs.set("minAge", filters.minAge);
+  if (filters.maxAge) qs.set("maxAge", filters.maxAge);
+  if (filters.minIg) qs.set("minIg", filters.minIg);
   if (filters.minTt) qs.set("minTt", filters.minTt);
+  if (filters.minRating) qs.set("minRating", filters.minRating);
   if (filters.verified) qs.set("verified", "1");
   return apiGet<CreatorsResponse>(`/api/mobile/creators?${qs.toString()}`);
 }
