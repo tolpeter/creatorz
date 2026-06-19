@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -91,12 +92,10 @@ export function SendMessageModal({
           </div>
           <div className="space-y-1.5">
             <Label>Becsült bérezés (Ft, opcionális)</Label>
-            <Input
-              type="number"
-              min={0}
+            <NumberInput
               value={budget}
-              onChange={(e) => setBudget(e.target.value)}
-              placeholder="pl. 50000"
+              onChange={setBudget}
+              placeholder="pl. 50 000"
             />
           </div>
         </div>

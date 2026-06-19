@@ -17,6 +17,7 @@ import { SocialTile } from "@/components/creator/platform-icon";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -702,12 +703,10 @@ function SocialAutoRow({
         </div>
         <div className="min-w-0">
           <Label className="text-sm">{unit}szám *</Label>
-          <Input
-            type="number"
-            min={0}
+          <NumberInput
             value={count}
-            onChange={(e) => onCount(e.target.value)}
-            placeholder="pl. 24500"
+            onChange={onCount}
+            placeholder="pl. 24 500"
             aria-invalid={needsCount}
             className={`mt-1.5 ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}
           />
@@ -776,11 +775,9 @@ function SocialManualRow({
             className="mt-1.5"
           />
         </div>
-        <Input
-          type="number"
-          min={0}
+        <NumberInput
           value={count}
-          onChange={(e) => onCount(e.target.value)}
+          onChange={onCount}
           placeholder={`${unit}szám *`}
           aria-invalid={needsCount}
           className={`sm:w-[150px] ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}

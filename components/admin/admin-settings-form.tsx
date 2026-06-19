@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -101,10 +102,9 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
             <div key={n.key} className="flex items-end gap-2">
               <div className="flex-1 space-y-1.5">
                 <Label>{n.label}</Label>
-                <Input
-                  type="number"
+                <NumberInput
                   value={String(s[n.key])}
-                  onChange={(e) => setS((prev) => ({ ...prev, [n.key]: Number(e.target.value) }))}
+                  onChange={(raw) => setS((prev) => ({ ...prev, [n.key]: Number(raw || 0) }))}
                 />
               </div>
               <Button variant="outline" onClick={() => saveNum(n.key)}>

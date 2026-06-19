@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Filter, X, Search as SearchIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
@@ -189,10 +190,9 @@ export function BrowseFilters() {
           <label className="text-xs font-semibold text-muted-foreground">
             Min. Instagram követő
           </label>
-          <Input
-            type="number"
+          <NumberInput
             value={minIg}
-            onChange={(e) => setMinIg(e.target.value)}
+            onChange={setMinIg}
             placeholder="pl. 10 000"
             className="h-7 text-xs"
           />
@@ -201,10 +201,9 @@ export function BrowseFilters() {
           <label className="text-xs font-semibold text-muted-foreground">
             Min. TikTok követő
           </label>
-          <Input
-            type="number"
+          <NumberInput
             value={minTt}
-            onChange={(e) => setMinTt(e.target.value)}
+            onChange={setMinTt}
             placeholder="pl. 20 000"
             className="h-7 text-xs"
           />

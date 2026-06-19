@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Filter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -121,7 +122,7 @@ export function AdsFilters() {
       </div>
       <div className="space-y-1.5">
         <Label>Min. bérezés (Ft)</Label>
-        <Input type="number" value={minBudget} onChange={(e) => setMinBudget(e.target.value)} />
+        <NumberInput value={minBudget} onChange={setMinBudget} />
       </div>
       <div className="flex gap-2">
         <Button onClick={apply} className="flex-1">

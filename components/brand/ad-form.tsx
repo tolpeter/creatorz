@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NumberInput } from "@/components/ui/number-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -192,19 +193,15 @@ export function AdForm({
             ki, ha szeretnéd, hogy a tartalomgyártók lássák a keretet.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              type="number"
-              min={1000}
+            <NumberInput
               value={budgetMin}
-              onChange={(e) => setBudgetMin(e.target.value)}
-              placeholder="Min. (pl. 30000)"
+              onChange={setBudgetMin}
+              placeholder="Min. (pl. 30 000)"
             />
-            <Input
-              type="number"
-              min={1000}
+            <NumberInput
               value={budgetMax}
-              onChange={(e) => setBudgetMax(e.target.value)}
-              placeholder="Max. (pl. 80000)"
+              onChange={setBudgetMax}
+              placeholder="Max. (pl. 80 000)"
             />
           </div>
           <label className="mt-2 flex items-start gap-2 rounded-lg bg-muted/60 p-3">

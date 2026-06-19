@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { SlidersHorizontal, Heart } from "lucide-react";
+import { SlidersHorizontal, Heart, Megaphone } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { NumberInput } from "@/components/ui/number-input";
 import { ApplicationStatusBadge } from "@/components/shared/ad-status-badge";
 import { ApplicationActions } from "@/components/brand/application-actions";
 import { SocialTile } from "@/components/creator/platform-icon";
@@ -25,6 +25,9 @@ export type Applicant = {
   tiktokLikes: number | null;
   instagramFollowers: number | null;
   facebookFollowers: number | null;
+  // Csak a kampányokon átívelő (Jelentkezők) listához — melyik hirdetésre.
+  adId?: string;
+  adTitle?: string | null;
 };
 
 const num = (v: string) => {
@@ -126,6 +129,16 @@ export function ApplicantsList({ apps }: { apps: Applicant[] }) {
                   <ApplicationStatusBadge status={a.status} />
                 </div>
 
+                {a.adTitle && a.adId ? (
+                  <Link
+                    href={`/brand/ads/${a.adId}`}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-[#f0f4e5] px-3 py-1 text-xs font-semibold text-[#3f6212] hover:bg-[#e6efd4]"
+                  >
+                    <Megaphone className="h-3.5 w-3.5" />
+                    {a.adTitle}
+                  </Link>
+                ) : null}
+
                 {/* Social statisztika */}
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   {a.tiktokFollowers != null && (
@@ -177,15 +190,7 @@ function Field({
   return (
     <div className="space-y-1.5">
       <Label className="text-xs">{label}</Label>
-      <Input
-        type="number"
-        min={0}
-        inputMode="numeric"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="0"
-        className="h-9"
-      />
+      <NumberInput value={value} onChange={onChange} placeholder="0" className="h-9" />
     </div>
   );
 }
