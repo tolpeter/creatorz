@@ -1,4 +1,4 @@
-import { extractFollowerCountAI } from "@/lib/ai/extract-followers";
+import { extractFollowerCountAI, extractTikTokStatsAI } from "@/lib/ai/extract-followers";
 
 export type TikTokStats = {
   followers: number | null;
@@ -45,7 +45,15 @@ export async function scrapeTikTokStats(profileUrl: string): Promise<TikTokStats
       out.avgViews = Math.round(plays.reduce((a, b) => a + b, 0) / plays.length);
     }
 
-    // Követő AI-fallback, ha a regex nem fogott.
+    // AI-fallback a hiányzó statokra (a TikTok HTML gyakran nem adja vissza
+    // nyersen a like/videószámot — az LLM az og:description-ből kiolvassa).
+    if (out.followers == null || out.likes == null || out.videoCount == null) {
+      const ai = await extractTikTokStatsAI(html);
+      out.followers ??= ai.followers;
+      out.likes ??= ai.likes;
+      out.videoCount ??= ai.videoCount;
+    }
+    // Végső követő-fallback, ha még mindig nincs meg.
     if (out.followers == null) {
       out.followers = await extractFollowerCountAI("TikTok", html);
     }

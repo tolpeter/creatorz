@@ -64,6 +64,74 @@ ${trimmed}`,
 }
 
 /**
+ * OpenAI alapú TikTok-statisztika kinyerés (követő + összes like + videószám)
+ * egy profil HTML-jéből. A regex-fallback kiegészítője: a TikTok HTML gyakran
+ * nem tartalmazza nyersen a heartCount/videoCount mezőket, viszont az
+ * og:description-ben (és az oldalszövegben) sokszor szerepel a "Likes" / "Following"
+ * / "Followers" hármas — ezt az LLM megbízhatóan kiolvassa.
+ */
+export async function extractTikTokStatsAI(
+  html: string,
+): Promise<{ followers: number | null; likes: number | null; videoCount: number | null }> {
+  const empty = { followers: null, likes: null, videoCount: null };
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return empty;
+
+  const og = extractOgDescription(html) ?? "";
+  const slice = relevantSlice(html, 10_000);
+  const context = (og ? `og:description: ${og}\n\n` : "") + slice;
+
+  try {
+    const client = new OpenAI({ apiKey });
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 80,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You extract TikTok profile stats from HTML/metadata. Reply ONLY with a JSON object, no prose.",
+        },
+        {
+          role: "user",
+          content: `Extract the TikTok profile's TOTAL stats as JSON with integer (or null) keys: followers, likes, videoCount.
+
+Rules:
+- followers = total follower count (NOT "following").
+- likes = total likes / hearts across the whole profile. TikTok's og:description is often "X Followers, Y Following, Z Likes" — Z is "likes".
+- videoCount = number of videos posted, only if clearly visible; otherwise null.
+- Expand English abbreviations: "12.4K" -> 12400, "2.5M" -> 2500000, "1.2B" -> 1200000000.
+- Expand Hungarian abbreviations: "606 ezer"/"606 E" -> 606000, "1,2 millió"/"1,2 M" -> 1200000 (Hungarian uses comma as decimal).
+- Use null (not 0) for any value that is not clearly present. Do NOT guess.
+- Reply JSON only, e.g. {"followers":12400,"likes":98000,"videoCount":42}
+
+DATA:
+${context}`,
+        },
+      ],
+    });
+
+    const text = completion.choices[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const clean = (v: unknown): number | null => {
+      const n =
+        typeof v === "number" ? v : parseInt(String(v ?? "").replace(/[^\d]/g, ""), 10);
+      return Number.isFinite(n) && n > 0 && n <= 10_000_000_000 ? n : null;
+    };
+    return {
+      followers: clean(parsed.followers),
+      likes: clean(parsed.likes),
+      videoCount: clean(parsed.videoCount),
+    };
+  } catch (err) {
+    console.error("[ai] extractTikTokStatsAI failed:", (err as Error).message);
+    return empty;
+  }
+}
+
+/**
  * Kivág egy ~maxLen méretű ablakot a HTML-ből a követőszámhoz kapcsolódó
  * kulcsszó köré centrálva. Ha nincs kulcsszó, az első maxLen-t adja vissza.
  */
