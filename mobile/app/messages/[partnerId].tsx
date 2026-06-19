@@ -15,6 +15,19 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fetchThread, sendThreadMessage, type ThreadMessage } from "@/lib/api";
 import { colors, radius } from "@/lib/theme";
 
+function dayKey(iso: string) {
+  return new Date(iso).toISOString().slice(0, 10);
+}
+function dayLabel(iso: string) {
+  const d = new Date(iso);
+  const today = new Date();
+  const yest = new Date(Date.now() - 86400000);
+  const k = d.toISOString().slice(0, 10);
+  if (k === today.toISOString().slice(0, 10)) return "Ma";
+  if (k === yest.toISOString().slice(0, 10)) return "Tegnap";
+  return d.toLocaleDateString("hu-HU", { year: "numeric", month: "2-digit", day: "2-digit" });
+}
+
 export default function ThreadScreen() {
   const { partnerId } = useLocalSearchParams<{ partnerId: string }>();
   const router = useRouter();
@@ -105,24 +118,39 @@ export default function ThreadScreen() {
           ref={listRef}
           data={messages}
           keyExtractor={(m) => m.id}
-          contentContainerStyle={{ padding: 12, gap: 8 }}
+          contentContainerStyle={{ padding: 12, paddingBottom: 16 }}
           onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: false })}
-          renderItem={({ item }) => (
-            <View
-              style={{
-                alignSelf: item.mine ? "flex-end" : "flex-start",
-                maxWidth: "82%",
-                backgroundColor: item.mine ? colors.accent : colors.surface,
-                borderRadius: radius.lg,
-                paddingHorizontal: 14,
-                paddingVertical: 10,
-              }}
-            >
-              <Text style={{ color: item.mine ? "#0a0a0a" : colors.text, fontSize: 15, lineHeight: 20 }}>
-                {item.body}
-              </Text>
-            </View>
-          )}
+          renderItem={({ item, index }) => {
+            const prev = messages[index - 1];
+            const sameRun = prev && prev.mine === item.mine;
+            const newDay = !prev || dayKey(prev.createdAt) !== dayKey(item.createdAt);
+            return (
+              <>
+                {newDay ? (
+                  <Text style={{ alignSelf: "center", color: colors.muted, fontSize: 12, fontWeight: "600", marginVertical: 10 }}>
+                    {dayLabel(item.createdAt)}
+                  </Text>
+                ) : null}
+                <View
+                  style={{
+                    alignSelf: item.mine ? "flex-end" : "flex-start",
+                    maxWidth: "78%",
+                    marginTop: sameRun && !newDay ? 2 : 8,
+                    backgroundColor: item.mine ? colors.accent : "#e9e9eb",
+                    paddingHorizontal: 14,
+                    paddingVertical: 9,
+                    borderRadius: 20,
+                    borderBottomRightRadius: item.mine ? 6 : 20,
+                    borderBottomLeftRadius: item.mine ? 20 : 6,
+                  }}
+                >
+                  <Text style={{ color: item.mine ? "#0a0a0a" : "#0a0a0a", fontSize: 15.5, lineHeight: 21 }}>
+                    {item.body}
+                  </Text>
+                </View>
+              </>
+            );
+          }}
         />
       )}
 
