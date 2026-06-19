@@ -205,6 +205,12 @@ export const creatorProfiles = pgTable("creator_profiles", {
   reviewCount: integer("review_count").notNull().default(0),
   averageRating: numeric("average_rating", { precision: 3, scale: 2 }),
 
+  // AI matching: a profil szöveges lenyomatának embedding-vektora (OpenAI
+  // text-embedding-3-small, 1536 dim). A hirdetés↔creator szemantikus
+  // párosításhoz. Mentéskor frissül, hiányzót lazy módon pótolunk.
+  embedding: jsonb("embedding").$type<number[]>(),
+  embeddingUpdatedAt: timestamp("embedding_updated_at"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({

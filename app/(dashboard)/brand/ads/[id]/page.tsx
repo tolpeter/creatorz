@@ -11,6 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
 import { ApplicantsList } from "@/components/brand/applicants-list";
+import { RecommendedCreators } from "@/components/brand/recommended-creators";
+import { getRecommendedCreators } from "@/lib/ai/match";
 import { ViewersPanel, type ViewerRow } from "@/components/shared/viewers-panel";
 import { formatNumber, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
@@ -86,6 +88,9 @@ export default async function BrandAdDetailPage({
       .sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
   }
 
+  // AI-ajánlott tartalomgyártók — csak aktív hirdetésnél (best-effort).
+  const recommended = ad.status === "active" ? await getRecommendedCreators(ad.id, 6) : [];
+
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm">
@@ -152,6 +157,8 @@ export default async function BrandAdDetailPage({
       )}
 
       <ApplicantsList apps={apps} />
+
+      <RecommendedCreators adId={ad.id} creators={recommended} />
     </div>
   );
 }

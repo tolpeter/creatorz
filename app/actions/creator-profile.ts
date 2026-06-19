@@ -11,6 +11,7 @@ import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
 import { scrapeTikTokStats } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
+import { refreshCreatorEmbedding } from "@/lib/ai/match";
 import { normalizeSocialUrl } from "@/lib/utils/social";
 
 async function requireCreator() {
@@ -94,6 +95,9 @@ export async function updateCreatorBasics(input: z.input<typeof basicsSchema>) {
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));
+
+  // AI matching: a bio/kategória változott → embedding frissítése (best-effort).
+  await refreshCreatorEmbedding(creator.profile.id);
 
   revalidatePath("/creator/profile");
   return { success: true, username };
@@ -541,6 +545,9 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
   if (d.tiktokUrl) {
     await backfillTikTokExtras(creator.profile.id, d.tiktokUrl);
   }
+
+  // AI matching: a profil embeddingjének frissítése (best-effort).
+  await refreshCreatorEmbedding(creator.profile.id);
 
   revalidatePath("/creator");
   revalidatePath("/creator/profile");
