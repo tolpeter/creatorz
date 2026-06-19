@@ -79,6 +79,51 @@ export function startConversation(toUsername: string, body: string) {
   );
 }
 
+export type AdListItem = {
+  id: string;
+  slug: string | null;
+  title: string;
+  brandName: string;
+  coverUrl: string | null;
+  categoryLabels: string[];
+  contentTypeLabel: string;
+  collabLabel: string;
+  budgetLabel: string;
+  deadline: string;
+  applicationCount: number;
+  isFeatured: boolean;
+};
+export type AdDetail = {
+  id: string;
+  title: string;
+  description: string;
+  brandName: string;
+  coverUrl: string | null;
+  categoryLabels: string[];
+  targetKindLabels: string[];
+  contentTypeLabel: string;
+  collabLabel: string;
+  usageRightsLabel: string;
+  budgetLabel: string;
+  deadline: string;
+  location: string | null;
+  referenceLinks: string[];
+  alreadyApplied: boolean;
+  invited: boolean;
+};
+
+export function fetchAds(offset = 0) {
+  return apiGet<{ items: AdListItem[]; hasMore: boolean; nextOffset: number }>(
+    `/api/mobile/ads?offset=${offset}`,
+  );
+}
+export function fetchAd(id: string) {
+  return apiGet<AdDetail>(`/api/mobile/ads/${id}`, { auth: true });
+}
+export function applyToAd(id: string, message: string) {
+  return apiPost<{ success: boolean }>(`/api/mobile/ads/${id}/apply`, { message }, { auth: true });
+}
+
 export type CreatorListItem = {
   username: string;
   displayName: string;
