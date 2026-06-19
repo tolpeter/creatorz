@@ -40,7 +40,7 @@ export default function LoginScreen() {
       Animated.parallel([
         Animated.timing(logoOpacity, { toValue: 1, duration: 550, useNativeDriver: true }),
         Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }),
-        Animated.timing(ringSpin, { toValue: 1, duration: 750, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+        Animated.timing(ringSpin, { toValue: 1, duration: 900, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
       Animated.parallel([
         Animated.timing(formOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
@@ -82,10 +82,12 @@ export default function LoginScreen() {
       { scale: blob2.interpolate({ inputRange: [0, 1], outputRange: [1.1, 0.85] }) },
     ],
   };
-  // A play-kör: belépéskor beperdül (-150°→0°), majd folyamatosan lüktet.
+  // A play-kör: belépéskor kicsiből egy teljes 360°-ot perdülve nő a helyére
+  // (kicsit túllendülve), majd folyamatosan lüktet.
   const ringAnim = {
     transform: [
-      { rotate: ringSpin.interpolate({ inputRange: [0, 1], outputRange: ["-150deg", "0deg"] }) },
+      { rotate: ringSpin.interpolate({ inputRange: [0, 1], outputRange: ["-360deg", "0deg"] }) },
+      { scale: ringSpin.interpolate({ inputRange: [0, 0.6, 1], outputRange: [0.2, 1.18, 1] }) },
       { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.09] }) },
     ],
   };
