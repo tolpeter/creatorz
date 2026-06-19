@@ -154,6 +154,28 @@ export async function updateCreatorEquipment(input: z.input<typeof equipmentSche
 }
 
 // ---------- Social fiókok ----------
+/**
+ * Best-effort: a TikTok bővített statisztikák (összes like, videószám, átlag
+ * megtekintés) kitöltése a megadott profil-URL alapján, ha a felhasználó nem
+ * adta meg őket kézzel. A követőszámot NEM írja felül (azt a user adja meg).
+ * Hibatűrő: ha a scrape nem sikerül, csendben kihagyja.
+ */
+async function backfillTikTokExtras(creatorId: string, tiktokUrl: string | null) {
+  if (!tiktokUrl) return;
+  try {
+    const stats = await scrapeTikTokStats(tiktokUrl);
+    const extra: Record<string, unknown> = {};
+    if (stats.likes != null) extra.tiktokLikes = stats.likes;
+    if (stats.avgViews != null) extra.tiktokAvgViews = stats.avgViews;
+    if (stats.videoCount != null) extra.tiktokVideoCount = stats.videoCount;
+    if (Object.keys(extra).length === 0) return;
+    extra.updatedAt = new Date();
+    await db.update(creatorProfiles).set(extra).where(eq(creatorProfiles.id, creatorId));
+  } catch {
+    /* best-effort — a 4 naponta futó cron úgyis pótolja */
+  }
+}
+
 const socialSchema = z.object({
   instagramUrl: z.string().max(300).optional().or(z.literal("")),
   instagramFollowers: z.coerce.number().int().min(0).optional().nullable(),
@@ -209,6 +231,12 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));
+
+  // Ha van TikTok link, de a like-ot nem adták meg kézzel, behúzzuk a bővített
+  // statokat (like / videószám / átlag megtekintés) automatikusan.
+  if (d.tiktokUrl && d.tiktokLikes == null) {
+    await backfillTikTokExtras(creator.profile.id, d.tiktokUrl);
+  }
 
   revalidatePath("/creator/profile");
   return { success: true };
@@ -507,6 +535,12 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));
+
+  // TikTok bővített statok (like / videószám) automatikus behúzása, hogy ne
+  // csak a kézzel megadott követőszám látszódjon a profilon.
+  if (d.tiktokUrl) {
+    await backfillTikTokExtras(creator.profile.id, d.tiktokUrl);
+  }
 
   revalidatePath("/creator");
   revalidatePath("/creator/profile");
