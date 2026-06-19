@@ -6,17 +6,13 @@ import { db } from "@/lib/db";
 import { ads, adApplications, adViews, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { resolveViewers } from "@/lib/viewers";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AdStatusBadge,
-  ApplicationStatusBadge,
-} from "@/components/shared/ad-status-badge";
-import { ApplicationActions } from "@/components/brand/application-actions";
+import { AdStatusBadge } from "@/components/shared/ad-status-badge";
+import { ApplicantsList } from "@/components/brand/applicants-list";
 import { ViewersPanel, type ViewerRow } from "@/components/shared/viewers-panel";
-import { formatHuf, formatNumber, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
+import { formatNumber, formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
 
 export default async function BrandAdDetailPage({
@@ -46,6 +42,10 @@ export default async function BrandAdDetailPage({
       username: creatorProfiles.username,
       displayName: creatorProfiles.displayName,
       avatarUrl: creatorProfiles.avatarUrl,
+      tiktokFollowers: creatorProfiles.tiktokFollowers,
+      tiktokLikes: creatorProfiles.tiktokLikes,
+      instagramFollowers: creatorProfiles.instagramFollowers,
+      facebookFollowers: creatorProfiles.facebookFollowers,
     })
     .from(adApplications)
     .innerJoin(creatorProfiles, eq(creatorProfiles.id, adApplications.creatorId))
@@ -151,47 +151,7 @@ export default async function BrandAdDetailPage({
         />
       )}
 
-      <div>
-        <h2 className="mb-3 text-xl font-bold">Beérkezett pályázatok ({apps.length})</h2>
-        {apps.length === 0 ? (
-          <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            Még nincs pályázat erre a hirdetésre.
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {apps.map((a) => (
-              <Card key={a.id}>
-                <CardContent className="space-y-3 pt-6">
-                  <div className="flex items-center justify-between gap-3">
-                    <Link
-                      href={`/creators/${a.username}`}
-                      target="_blank"
-                      className="flex items-center gap-3 hover:underline"
-                    >
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={a.avatarUrl ?? undefined} />
-                        <AvatarFallback>{a.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{a.displayName}</p>
-                        <p className="text-xs text-muted-foreground">{formatHuDate(a.createdAt)}</p>
-                      </div>
-                    </Link>
-                    <ApplicationStatusBadge status={a.status} />
-                  </div>
-                  <p className="whitespace-pre-wrap text-sm">{a.message}</p>
-                  {a.proposedPriceHuf != null && (
-                    <p className="text-sm font-semibold">
-                      Ár-ajánlat: {formatHuf(a.proposedPriceHuf)}
-                    </p>
-                  )}
-                  {a.status === "pending" && <ApplicationActions applicationId={a.id} />}
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
+      <ApplicantsList apps={apps} />
     </div>
   );
 }

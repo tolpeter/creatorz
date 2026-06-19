@@ -9,6 +9,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { activityLabel } from "@/lib/creator-stats";
+import { supabaseOgImage } from "@/lib/utils/og-image";
 
 export const dynamic = "force-dynamic";
 
@@ -90,8 +91,9 @@ export async function GET(
     portfolio: items.map((i) => ({
       id: i.id,
       type: i.type,
-      url: i.url,
-      thumbnailUrl: i.thumbnailUrl,
+      // Fotóknál render-JPEG/PNG (a böngésző/RN által nem támogatott tiff stb. miatt).
+      url: i.type === "photo" ? supabaseOgImage(i.url, { width: 1200 }) : i.url,
+      thumbnailUrl: i.thumbnailUrl ? supabaseOgImage(i.thumbnailUrl, { width: 800 }) : null,
       externalUrl: i.externalUrl,
       title: i.title,
     })),

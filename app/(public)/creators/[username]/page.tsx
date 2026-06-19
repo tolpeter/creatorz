@@ -33,6 +33,7 @@ import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { CREATOR_CATEGORIES, LANGUAGES } from "@/lib/constants";
 import { getTikTokEmbed } from "@/lib/utils/oembed";
+import { supabaseOgImage } from "@/lib/utils/og-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
 import { Badge } from "@/components/ui/badge";
@@ -139,8 +140,12 @@ export default async function CreatorDetailPage({
   const gallery: GalleryItem[] = items.map((item) => ({
     id: item.id,
     type: item.type,
-    url: item.url,
-    thumbnailUrl: item.thumbnailUrl,
+    // Fotóknál render-végponton át jelenítjük meg, hogy a böngésző által nem
+    // támogatott formátumok (pl. .tiff) is megjelenjenek (JPEG/PNG-vé alakítva).
+    url: item.type === "photo" ? supabaseOgImage(item.url, { width: 1200 }) : item.url,
+    thumbnailUrl: item.thumbnailUrl
+      ? supabaseOgImage(item.thumbnailUrl, { width: 800 })
+      : null,
     title: item.title,
     description: item.description,
     categories: item.categories ?? [],
