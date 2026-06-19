@@ -13,13 +13,25 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "hu.creatorz.app"
+      "bundleIdentifier": "hu.creatorz.app",
+      "associatedDomains": ["applinks:www.creatorz.hu", "applinks:creatorz.hu"]
     },
     "android": {
       "package": "hu.creatorz.app",
       "adaptiveIcon": {
         "backgroundColor": "#0A0A0A"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            { "scheme": "https", "host": "www.creatorz.hu", "pathPrefix": "/creators" },
+            { "scheme": "https", "host": "www.creatorz.hu", "pathPrefix": "/ads" }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "web": {
       "bundler": "metro"

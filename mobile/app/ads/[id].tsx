@@ -7,6 +7,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  Share,
   Text,
   TextInput,
   View,
@@ -17,6 +18,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { applyToAd, fetchAd, type AdDetail } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { colors, radius } from "@/lib/theme";
+
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "https://www.creatorz.hu";
 
 function huDate(iso: string) {
   return new Date(iso).toLocaleDateString("hu-HU", { year: "numeric", month: "2-digit", day: "2-digit" });
@@ -73,9 +76,17 @@ export default function AdDetailScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color="#fff" />
         </Pressable>
-        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
+        <Text style={{ flex: 1, color: "#fff", fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
           Hirdetés
         </Text>
+        {data ? (
+          <Pressable
+            onPress={() => Share.share({ message: `${data.title} — ${API_URL}/ads/${id}` })}
+            hitSlop={10}
+          >
+            <Ionicons name="share-outline" size={22} color="#fff" />
+          </Pressable>
+        ) : null}
       </View>
 
       {loading ? (

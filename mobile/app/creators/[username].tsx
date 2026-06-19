@@ -5,6 +5,7 @@ import {
   Linking,
   Pressable,
   ScrollView,
+  Share,
   Text,
   View,
 } from "react-native";
@@ -61,9 +62,19 @@ export default function CreatorDetailScreen() {
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={26} color="#fff" />
         </Pressable>
-        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
+        <Text style={{ flex: 1, color: "#fff", fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
           {data?.profile.displayName ?? "Profil"}
         </Text>
+        <Pressable
+          onPress={() =>
+            Share.share({
+              message: `${data?.profile.displayName ?? "Tartalomgyártó"} a Creatorzon: ${API_URL}/creators/${username}`,
+            })
+          }
+          hitSlop={10}
+        >
+          <Ionicons name="share-outline" size={22} color="#fff" />
+        </Pressable>
       </View>
 
       {loading ? (

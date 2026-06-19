@@ -45,7 +45,7 @@ export default function RegisterScreen() {
         setError("A fiók létrejött, de a belépés nem sikerült. Próbálj belépni.");
         return;
       }
-      router.replace("/(tabs)");
+      router.replace("/onboarding");
     } catch {
       setError("Hálózati hiba. Próbáld újra.");
     } finally {
