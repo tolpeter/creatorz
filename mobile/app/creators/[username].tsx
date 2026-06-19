@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { fetchCreator, type CreatorDetail } from "@/lib/api";
+import { fetchCreator, toggleSaveCreator, type CreatorDetail } from "@/lib/api";
 import { useAuth } from "@/context/auth";
 import { colors, radius } from "@/lib/theme";
 
@@ -85,6 +85,17 @@ function Detail({ data }: { data: CreatorDetail }) {
   const p = data.profile;
   const { role } = useAuth();
   const router = useRouter();
+  const [saved, setSaved] = useState(Boolean(data.saved));
+
+  async function onToggleSave() {
+    setSaved((v) => !v); // optimista
+    try {
+      const res = await toggleSaveCreator(p.username);
+      setSaved(res.saved);
+    } catch {
+      setSaved((v) => !v); // visszaállítás hibánál
+    }
+  }
   const socials = [
     { icon: "logo-tiktok", label: "TikTok", url: p.tiktokUrl, count: p.tiktokFollowers },
     { icon: "logo-instagram", label: "Instagram", url: p.instagramUrl, count: p.instagramFollowers },
@@ -145,26 +156,34 @@ function Detail({ data }: { data: CreatorDetail }) {
         <Stat label="Portfólió" value={String(data.portfolio.length)} />
       </View>
 
-      {/* Üzenet küldése — csak márkának */}
+      {/* Márka műveletek */}
       {role === "brand" ? (
-        <View style={{ paddingHorizontal: 16, marginTop: 16 }}>
+        <View style={{ paddingHorizontal: 16, marginTop: 16, gap: 10 }}>
           <Pressable
             onPress={() =>
               router.push(`/messages/new?username=${p.username}&name=${encodeURIComponent(p.displayName)}`)
             }
-            style={{
-              backgroundColor: colors.accent,
-              borderRadius: radius.md,
-              paddingVertical: 14,
-              alignItems: "center",
-              flexDirection: "row",
-              justifyContent: "center",
-              gap: 8,
-            }}
+            style={{ backgroundColor: colors.accent, borderRadius: radius.md, paddingVertical: 14, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
           >
             <Ionicons name="chatbubble-ellipses" size={18} color="#000" />
             <Text style={{ color: "#000", fontWeight: "800", fontSize: 16 }}>Üzenet küldése</Text>
           </Pressable>
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable
+              onPress={onToggleSave}
+              style={{ flex: 1, backgroundColor: colors.surface, borderWidth: 1, borderColor: saved ? colors.accent : colors.border, borderRadius: radius.md, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+            >
+              <Ionicons name={saved ? "heart" : "heart-outline"} size={18} color={saved ? colors.accentDark : colors.muted} />
+              <Text style={{ fontWeight: "700", color: saved ? colors.accentDark : colors.text }}>{saved ? "Mentve" : "Mentés"}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => router.push(`/invite/${p.username}?name=${encodeURIComponent(p.displayName)}`)}
+              style={{ flex: 1, backgroundColor: colors.bg, borderRadius: radius.md, paddingVertical: 13, alignItems: "center", flexDirection: "row", justifyContent: "center", gap: 8 }}
+            >
+              <Ionicons name="megaphone" size={18} color={colors.accent} />
+              <Text style={{ fontWeight: "700", color: "#fff" }}>Meghívás</Text>
+            </Pressable>
+          </View>
         </View>
       ) : null}
 

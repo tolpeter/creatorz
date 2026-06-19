@@ -10,6 +10,8 @@ import {
 } from "@/lib/db/schema";
 import { activityLabel } from "@/lib/creator-stats";
 import { supabaseOgImage } from "@/lib/utils/og-image";
+import { getMobileUser } from "@/lib/mobile-auth";
+import { savedCreators } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +20,7 @@ export const dynamic = "force-dynamic";
  * GET /api/mobile/creators/:username
  */
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ username: string }> },
 ) {
   const { username } = await params;
@@ -29,6 +31,25 @@ export async function GET(
     .where(eq(creatorProfiles.username, username))
     .limit(1);
   if (!p) return Response.json({ error: "not found" }, { status: 404 });
+
+  // Mentett-e a bejelentkezett márka kedvenceiben?
+  let saved = false;
+  const viewer = await getMobileUser(req);
+  if (viewer?.role === "brand") {
+    const [brand] = await db
+      .select({ id: brandProfiles.id })
+      .from(brandProfiles)
+      .where(eq(brandProfiles.userId, viewer.id))
+      .limit(1);
+    if (brand) {
+      const s = await db
+        .select({ creatorId: savedCreators.creatorId })
+        .from(savedCreators)
+        .where(and(eq(savedCreators.brandId, brand.id), eq(savedCreators.creatorId, p.id)))
+        .limit(1);
+      saved = s.length > 0;
+    }
+  }
 
   const [activeRow, items, reviewRows] = await Promise.all([
     db.select({ lastLoginAt: users.lastLoginAt }).from(users).where(eq(users.id, p.userId)).limit(1),
@@ -55,6 +76,7 @@ export async function GET(
   ]);
 
   return Response.json({
+    saved,
     profile: {
       username: p.username,
       displayName: p.displayName,

@@ -5,7 +5,7 @@ import { useAuth } from "@/context/auth";
 import { colors, radius } from "@/lib/theme";
 
 export default function ProfileScreen() {
-  const { session, signOut } = useAuth();
+  const { session, role, signOut } = useAuth();
   const router = useRouter();
 
   async function onSignOut() {
@@ -35,6 +35,12 @@ export default function ProfileScreen() {
 
       <View style={{ marginTop: 32, gap: 1, borderRadius: radius.lg, overflow: "hidden" }}>
         <Row icon="create-outline" label="Profil szerkesztése" onPress={() => router.push("/profile/edit")} />
+        {role === "creator" ? (
+          <Row icon="document-text-outline" label="Pályázataim" onPress={() => router.push("/my-applications")} />
+        ) : null}
+        {role === "brand" ? (
+          <Row icon="heart-outline" label="Mentett tartalomgyártók" onPress={() => router.push("/saved")} />
+        ) : null}
         <Row icon="help-circle-outline" label="Súgó (hamarosan)" />
       </View>
 

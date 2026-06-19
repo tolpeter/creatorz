@@ -148,6 +148,19 @@ export function fetchUnread() {
   return apiGet<{ messages: number; notifications: number }>("/api/mobile/unread", { auth: true });
 }
 
+export type MyApplication = {
+  id: string;
+  status: string;
+  createdAt: string;
+  adId: string;
+  adSlug: string | null;
+  adTitle: string;
+  adStatus: string;
+};
+export function fetchMyApplications() {
+  return apiGet<{ items: MyApplication[] }>("/api/mobile/my-applications", { auth: true });
+}
+
 export type MeProfile = Record<string, string | null> | null;
 export function fetchMe() {
   return apiGet<{ role: string; profile: MeProfile }>("/api/mobile/me", { auth: true });
@@ -238,8 +251,35 @@ export type CreatorDetail = {
     brandName: string;
     responseText: string | null;
   }[];
+  saved?: boolean;
 };
 
 export function fetchCreator(username: string) {
-  return apiGet<CreatorDetail>(`/api/mobile/creators/${encodeURIComponent(username)}`);
+  return apiGet<CreatorDetail>(`/api/mobile/creators/${encodeURIComponent(username)}`, { auth: true });
+}
+export function toggleSaveCreator(username: string) {
+  return apiPost<{ saved: boolean }>(`/api/mobile/creators/${encodeURIComponent(username)}/save`, {}, { auth: true });
+}
+export function inviteCreator(username: string, adId: string, message: string) {
+  return apiPost<{ success: boolean; error?: string }>(
+    `/api/mobile/creators/${encodeURIComponent(username)}/invite`,
+    { adId, message },
+    { auth: true },
+  );
+}
+export function fetchBrandAds() {
+  return apiGet<{ items: { id: string; title: string }[] }>("/api/mobile/brand/ads", { auth: true });
+}
+export type SavedCreator = {
+  username: string;
+  displayName: string;
+  avatarUrl: string | null;
+  city: string | null;
+  tiktokFollowers: number | null;
+  verified: boolean;
+  averageRating: string | null;
+  reviewCount: number;
+};
+export function fetchSaved() {
+  return apiGet<{ items: SavedCreator[] }>("/api/mobile/saved", { auth: true });
 }
