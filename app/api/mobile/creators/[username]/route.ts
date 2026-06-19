@@ -1,4 +1,4 @@
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   brandProfiles,
@@ -8,10 +8,29 @@ import {
   reviews,
   users,
 } from "@/lib/db/schema";
-import { activityLabel } from "@/lib/creator-stats";
+import { activityLabel, getResponseStats } from "@/lib/creator-stats";
+import { CREATOR_CATEGORIES, LANGUAGES } from "@/lib/constants";
 import { supabaseOgImage } from "@/lib/utils/og-image";
 import { getMobileUser } from "@/lib/mobile-auth";
 import { savedCreators } from "@/lib/db/schema";
+
+type Equipment = { phone?: string; camera?: string; microphone?: string; editing?: string };
+function catLabel(v: string) {
+  return CREATOR_CATEGORIES.find((c) => c.value === v)?.label ?? v;
+}
+function langLabel(v: string) {
+  return LANGUAGES.find((l) => l.value === v)?.label ?? v;
+}
+function normalizeEquipment(value: unknown) {
+  if (!value || typeof value !== "object") return [];
+  const e = value as Equipment;
+  return [
+    { label: "Telefon", value: e.phone },
+    { label: "Kamera", value: e.camera },
+    { label: "Mikrofon", value: e.microphone },
+    { label: "Vágás", value: e.editing },
+  ].filter((i): i is { label: string; value: string } => Boolean(i.value));
+}
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +70,8 @@ export async function GET(
     }
   }
 
-  const [activeRow, items, reviewRows] = await Promise.all([
+  const firstCategory = p.categories?.[0];
+  const [activeRow, items, reviewRows, responseStats, similarRows] = await Promise.all([
     db.select({ lastLoginAt: users.lastLoginAt }).from(users).where(eq(users.id, p.userId)).limit(1),
     db
       .select()
@@ -73,6 +93,29 @@ export async function GET(
       .where(and(eq(reviews.creatorId, p.id), eq(reviews.hidden, false)))
       .orderBy(desc(reviews.createdAt))
       .limit(20),
+    getResponseStats(p.userId).catch(() => ({ label: null as string | null })),
+    firstCategory
+      ? db
+          .select({
+            username: creatorProfiles.username,
+            displayName: creatorProfiles.displayName,
+            avatarUrl: creatorProfiles.avatarUrl,
+            city: creatorProfiles.city,
+            categories: creatorProfiles.categories,
+            tiktokFollowers: creatorProfiles.tiktokFollowers,
+            verified: creatorProfiles.verified,
+            averageRating: creatorProfiles.averageRating,
+            reviewCount: creatorProfiles.reviewCount,
+          })
+          .from(creatorProfiles)
+          .where(
+            and(
+              ne(creatorProfiles.id, p.id),
+              sql`${creatorProfiles.categories} @> ${JSON.stringify([firstCategory])}::jsonb`,
+            ),
+          )
+          .limit(4)
+      : Promise.resolve([]),
   ]);
 
   return Response.json({
@@ -88,7 +131,9 @@ export async function GET(
       age: p.age,
       gender: p.gender,
       categories: p.categories ?? [],
+      categoryLabels: (p.categories ?? []).map(catLabel),
       languages: p.languages ?? [],
+      languageLabels: (p.languages ?? []).map(langLabel),
       profileKind: p.profileKind,
       professionalRoles: p.professionalRoles ?? [],
       specialties: p.specialties ?? [],
@@ -109,6 +154,8 @@ export async function GET(
       averageRating: p.averageRating,
       reviewCount: p.reviewCount,
       activity: activityLabel(activeRow[0]?.lastLoginAt ?? null),
+      responseLabel: responseStats?.label ?? null,
+      equipment: normalizeEquipment(p.equipment),
     },
     portfolio: items.map((i) => ({
       id: i.id,
@@ -120,5 +167,16 @@ export async function GET(
       title: i.title,
     })),
     reviews: reviewRows,
+    similar: similarRows.map((s) => ({
+      username: s.username,
+      displayName: s.displayName,
+      avatarUrl: s.avatarUrl,
+      city: s.city,
+      categoryLabels: (s.categories ?? []).map(catLabel),
+      tiktokFollowers: s.tiktokFollowers,
+      verified: s.verified,
+      averageRating: s.averageRating,
+      reviewCount: s.reviewCount,
+    })),
   });
 }

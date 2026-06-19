@@ -112,12 +112,24 @@ export type AdDetail = {
   invited: boolean;
 };
 
-export type AdFilters = { category?: string; contentType?: string };
+export type AdFilters = {
+  categories?: string[];
+  contentType?: string;
+  collaborationType?: string;
+};
+export function adFilterCount(f: AdFilters): number {
+  let n = 0;
+  if (f.categories?.length) n++;
+  if (f.contentType) n++;
+  if (f.collaborationType) n++;
+  return n;
+}
 export function fetchAds(offset = 0, filters: AdFilters = {}) {
   const qs = new URLSearchParams();
   if (offset) qs.set("offset", String(offset));
-  if (filters.category) qs.set("category", filters.category);
+  if (filters.categories?.length) qs.set("categories", filters.categories.join(","));
   if (filters.contentType) qs.set("contentType", filters.contentType);
+  if (filters.collaborationType) qs.set("collaborationType", filters.collaborationType);
   return apiGet<{ items: AdListItem[]; hasMore: boolean; nextOffset: number }>(
     `/api/mobile/ads?${qs.toString()}`,
   );
@@ -266,7 +278,9 @@ export type CreatorDetail = {
     age: number | null;
     gender: string | null;
     categories: string[];
+    categoryLabels: string[];
     languages: string[];
+    languageLabels: string[];
     profileKind: "ugc" | "professional";
     professionalRoles: string[];
     specialties: string[];
@@ -287,6 +301,8 @@ export type CreatorDetail = {
     averageRating: string | null;
     reviewCount: number;
     activity: string | null;
+    responseLabel: string | null;
+    equipment: { label: string; value: string }[];
   };
   portfolio: {
     id: string;
@@ -303,6 +319,17 @@ export type CreatorDetail = {
     createdAt: string;
     brandName: string;
     responseText: string | null;
+  }[];
+  similar: {
+    username: string;
+    displayName: string;
+    avatarUrl: string | null;
+    city: string | null;
+    categoryLabels: string[];
+    tiktokFollowers: number | null;
+    verified: boolean;
+    averageRating: string | null;
+    reviewCount: number;
   }[];
   saved?: boolean;
 };

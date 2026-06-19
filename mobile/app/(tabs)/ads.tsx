@@ -10,9 +10,8 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { fetchAds, type AdListItem } from "@/lib/api";
-import { FilterChips } from "@/components/filter-chips";
-import { CATEGORIES } from "@/lib/constants";
+import { fetchAds, adFilterCount, type AdListItem, type AdFilters } from "@/lib/api";
+import { AdFilterModal } from "@/components/ad-filter-modal";
 import { colors, radius } from "@/lib/theme";
 
 function huDate(iso: string) {
@@ -22,15 +21,16 @@ function huDate(iso: string) {
 export default function AdsScreen() {
   const router = useRouter();
   const [items, setItems] = useState<AdListItem[]>([]);
-  const [category, setCategory] = useState("");
+  const [filters, setFilters] = useState<AdFilters>({});
+  const [filterOpen, setFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
-  const load = useCallback(async (cat: string, reset: boolean) => {
+  const load = useCallback(async (f: AdFilters, reset: boolean) => {
     try {
-      const res = await fetchAds(reset ? 0 : offset, { category: cat });
+      const res = await fetchAds(reset ? 0 : offset, f);
       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
       setHasMore(res.hasMore);
       setOffset(res.nextOffset);
@@ -44,13 +44,35 @@ export default function AdsScreen() {
 
   useEffect(() => {
     setLoading(true);
-    load(category, true);
+    load(filters, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+  }, [filters]);
+
+  const fCount = adFilterCount(filters);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceMuted }}>
-      <FilterChips options={CATEGORIES} value={category} onChange={setCategory} />
+      <View style={{ padding: 12, backgroundColor: colors.bg, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>Hirdetések</Text>
+        <Pressable
+          onPress={() => setFilterOpen(true)}
+          hitSlop={8}
+          style={{ flexDirection: "row", alignItems: "center", gap: 6, backgroundColor: fCount > 0 ? colors.accent : "rgba(255,255,255,0.1)", borderRadius: radius.pill, paddingHorizontal: 14, paddingVertical: 8 }}
+        >
+          <Ionicons name="options-outline" size={18} color={fCount > 0 ? "#000" : "#fff"} />
+          <Text style={{ fontWeight: "800", fontSize: 14, color: fCount > 0 ? "#000" : "#fff" }}>
+            Szűrők{fCount > 0 ? ` (${fCount})` : ""}
+          </Text>
+        </Pressable>
+      </View>
+
+      <AdFilterModal
+        visible={filterOpen}
+        initial={filters}
+        onClose={() => setFilterOpen(false)}
+        onApply={setFilters}
+      />
+
       {loading && items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={colors.accentDark} size="large" />
@@ -65,14 +87,14 @@ export default function AdsScreen() {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              load(category, true);
+              load(filters, true);
             }}
             tintColor={colors.accentDark}
           />
         }
         onEndReachedThreshold={0.4}
         onEndReached={() => {
-          if (hasMore && !loading) load(category, false);
+          if (hasMore && !loading) load(filters, false);
         }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", color: colors.muted, marginTop: 50 }}>

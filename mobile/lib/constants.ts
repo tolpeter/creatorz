@@ -24,6 +24,12 @@ export const CONTENT_TYPES = [
   { value: "both", label: "Videó + Fotó" },
 ];
 
+export const COLLABORATION_TYPES = [
+  { value: "project", label: "Projekt alapú" },
+  { value: "longterm", label: "Hosszútávú" },
+  { value: "barter", label: "Barter" },
+];
+
 export const LANGUAGES = [
   { value: "hu", label: "Magyar" }, { value: "en", label: "Angol" },
   { value: "de", label: "Német" }, { value: "ro", label: "Román" },

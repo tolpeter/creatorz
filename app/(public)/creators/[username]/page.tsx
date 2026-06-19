@@ -590,20 +590,6 @@ export default async function CreatorDetailPage({
               </div>
             )}
           </ProfileSection>
-
-          {similar.length > 0 ? (
-            <ProfileSection
-              eyebrow="Felfedezés"
-              title="Hasonló tartalomgyártók"
-              description="Ugyanebből a kategóriából ajánlott creator profilok."
-            >
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                {similar.map((creator) => (
-                  <CreatorCard key={creator.username} creator={creator} />
-                ))}
-              </div>
-            </ProfileSection>
-          ) : null}
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">
@@ -673,6 +659,21 @@ export default async function CreatorDetailPage({
           </div>
         </aside>
       </div>
+
+      {/* Hasonló tartalomgyártók — a lap legalján, teljes szélességben. */}
+      {similar.length > 0 ? (
+        <ProfileSection
+          eyebrow="Felfedezés"
+          title="Hasonló tartalomgyártók"
+          description="Ugyanebből a kategóriából ajánlott creator profilok."
+        >
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {similar.map((creator) => (
+              <CreatorCard key={creator.username} creator={creator} />
+            ))}
+          </div>
+        </ProfileSection>
+      ) : null}
     </div>
   );
 }

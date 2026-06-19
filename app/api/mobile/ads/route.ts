@@ -16,15 +16,28 @@ function catLabel(v: string) {
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
   const offset = Math.max(0, Number(sp.get("offset") ?? 0) || 0);
-  const category = sp.get("category")?.trim() || "";
+  // Több kategória (vesszővel) + visszafelé kompatibilis egyedi `category`.
+  const categories = (sp.get("categories") || sp.get("category") || "")
+    .split(",")
+    .map((c) => c.trim())
+    .filter(Boolean);
   const contentType = sp.get("contentType")?.trim() || "";
+  const collaborationType = sp.get("collaborationType")?.trim() || "";
 
   const conditions = [eq(ads.status, "active")];
-  if (category) {
-    conditions.push(sql`${ads.categories} @> ${JSON.stringify([category])}::jsonb`);
+  if (categories.length) {
+    // Bármely megadott kategóriára illeszkedjen (OR).
+    conditions.push(
+      sql`${ads.categories} ?| ${sql.raw(
+        `array[${categories.map((c) => `'${c.replace(/'/g, "''")}'`).join(",")}]`,
+      )}`,
+    );
   }
   if (contentType === "video" || contentType === "photo" || contentType === "both") {
     conditions.push(eq(ads.contentType, contentType));
+  }
+  if (collaborationType === "project" || collaborationType === "longterm" || collaborationType === "barter") {
+    conditions.push(eq(ads.collaborationType, collaborationType));
   }
 
   const rows = await db

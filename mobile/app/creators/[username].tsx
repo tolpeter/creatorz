@@ -114,6 +114,21 @@ function Detail({ data }: { data: CreatorDetail }) {
     { icon: "logo-facebook", label: "Facebook", url: p.facebookUrl, count: p.facebookFollowers },
   ].filter((s) => s.url) as { icon: keyof typeof Ionicons.glyphMap; label: string; url: string; count: number | null }[];
 
+  const videoCount = data.portfolio.filter((i) => i.type === "video").length;
+  // Összes elérés: minden platform követőinek összege (csak ahol van url + szám).
+  const totalReach = [
+    { url: p.instagramUrl, count: p.instagramFollowers },
+    { url: p.tiktokUrl, count: p.tiktokFollowers },
+    { url: p.facebookUrl, count: p.facebookFollowers },
+    { url: p.youtubeUrl, count: p.youtubeSubscribers },
+  ].reduce((sum, s) => (s.url && s.count ? sum + s.count : sum), 0);
+  const primaryFollowers = p.tiktokFollowers && p.tiktokFollowers > 0 ? p.tiktokFollowers : totalReach;
+  const trust = [
+    p.responseLabel ? { icon: "flash" as const, label: p.responseLabel } : null,
+    p.activity ? { icon: "time-outline" as const, label: p.activity } : null,
+    p.verified ? { icon: "checkmark-circle" as const, label: "Creator által hitelesített profil" } : null,
+  ].filter(Boolean) as { icon: keyof typeof Ionicons.glyphMap; label: string }[];
+
   return (
     <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
       {/* Hero */}
@@ -147,9 +162,9 @@ function Detail({ data }: { data: CreatorDetail }) {
         </View>
 
         {/* Kategóriák */}
-        {p.categories.length > 0 ? (
+        {p.categoryLabels.length > 0 ? (
           <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 14 }}>
-            {p.categories.map((c) => (
+            {p.categoryLabels.map((c) => (
               <View key={c} style={{ backgroundColor: "rgba(255,255,255,0.1)", borderRadius: radius.pill, paddingHorizontal: 10, paddingVertical: 4 }}>
                 <Text style={{ color: "#fff", fontSize: 12, fontWeight: "600" }}>{c}</Text>
               </View>
@@ -158,13 +173,15 @@ function Detail({ data }: { data: CreatorDetail }) {
         ) : null}
       </View>
 
-      {/* Stat sáv */}
-      <View style={{ flexDirection: "row", backgroundColor: colors.surface, marginHorizontal: 12, marginTop: -12, borderRadius: radius.lg, padding: 14, gap: 8, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 }}>
-        <Stat label="TikTok követő" value={fmt(p.tiktokFollowers)} />
+      {/* Stat sáv (mint a weben: Követők / Videók / Portfólió / Értékelés) */}
+      <View style={{ flexDirection: "row", backgroundColor: colors.surface, marginHorizontal: 12, marginTop: -12, borderRadius: radius.lg, padding: 14, gap: 4, shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 12, elevation: 2 }}>
+        <Stat label="Követők" value={primaryFollowers ? fmt(primaryFollowers) : "—"} />
         <Divider />
-        <Stat label="Értékelés" value={p.averageRating ? `${p.averageRating}` : "—"} sub={`${p.reviewCount} db`} />
+        <Stat label="Videók" value={String(videoCount)} />
         <Divider />
         <Stat label="Portfólió" value={String(data.portfolio.length)} />
+        <Divider />
+        <Stat label="Értékelés" value={p.averageRating ? `${p.averageRating}` : "—"} sub={`${p.reviewCount} db`} />
       </View>
 
       {/* Márka műveletek */}
@@ -208,6 +225,17 @@ function Detail({ data }: { data: CreatorDetail }) {
       {/* Social linkek */}
       {socials.length > 0 ? (
         <Section title="Közösségi jelenlét">
+          {totalReach > 0 ? (
+            <View style={{ backgroundColor: colors.bg, borderRadius: radius.lg, padding: 16, marginBottom: 10 }}>
+              <Text style={{ color: colors.accent, fontSize: 11, fontWeight: "800", letterSpacing: 0.5 }}>
+                ÖSSZES ELÉRÉS
+              </Text>
+              <Text style={{ color: "#fff", fontWeight: "900", fontSize: 30, marginTop: 2 }}>{fmt(totalReach)}</Text>
+              <Text style={{ color: "rgba(255,255,255,0.55)", fontSize: 12, marginTop: 2 }}>
+                {socials.length} platformon összesen
+              </Text>
+            </View>
+          ) : null}
           <View style={{ gap: 8 }}>
             {socials.map((s) => (
               <Pressable
@@ -278,6 +306,47 @@ function Detail({ data }: { data: CreatorDetail }) {
         </Section>
       ) : null}
 
+      {/* Bizalmi jelzések */}
+      {trust.length > 0 ? (
+        <Section title="Bizalmi jelzések">
+          <View style={{ gap: 8 }}>
+            {trust.map((t, i) => (
+              <View key={i} style={{ flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: 12 }}>
+                <Ionicons name={t.icon} size={18} color={colors.accentDark} />
+                <Text style={{ fontWeight: "600", flex: 1 }}>{t.label}</Text>
+              </View>
+            ))}
+          </View>
+        </Section>
+      ) : null}
+
+      {/* Nyelvek */}
+      {p.languageLabels.length > 0 ? (
+        <Section title="Nyelvek">
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+            {p.languageLabels.map((l) => (
+              <View key={l} style={{ borderRadius: radius.pill, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.surface, paddingHorizontal: 13, paddingVertical: 6 }}>
+                <Text style={{ fontSize: 13, fontWeight: "600" }}>{l}</Text>
+              </View>
+            ))}
+          </View>
+        </Section>
+      ) : null}
+
+      {/* Eszközök */}
+      {p.equipment.length > 0 ? (
+        <Section title="Eszközök">
+          <View style={{ gap: 8 }}>
+            {p.equipment.map((e) => (
+              <View key={e.label} style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", backgroundColor: colors.surfaceMuted, borderRadius: radius.md, padding: 12 }}>
+                <Text style={{ fontSize: 12, fontWeight: "800", color: colors.muted, textTransform: "uppercase" }}>{e.label}</Text>
+                <Text style={{ fontWeight: "600", flexShrink: 1, textAlign: "right" }}>{e.value}</Text>
+              </View>
+            ))}
+          </View>
+        </Section>
+      ) : null}
+
       {/* Megnyitás a weben */}
       <View style={{ paddingHorizontal: 16, marginTop: 18 }}>
         <Pressable
@@ -288,6 +357,45 @@ function Detail({ data }: { data: CreatorDetail }) {
           <Text style={{ color: "#fff", fontWeight: "700" }}>Megnyitás a weben</Text>
         </Pressable>
       </View>
+
+      {/* Hasonló tartalomgyártók — legalul */}
+      {data.similar.length > 0 ? (
+        <Section title="Hasonló tartalomgyártók">
+          <View style={{ gap: 10 }}>
+            {data.similar.map((s) => (
+              <Pressable
+                key={s.username}
+                onPress={() => router.push(`/creators/${s.username}`)}
+                style={{ flexDirection: "row", alignItems: "center", gap: 12, backgroundColor: colors.surface, borderRadius: radius.lg, padding: 12, borderWidth: 1, borderColor: colors.border }}
+              >
+                {s.avatarUrl ? (
+                  <Image source={{ uri: s.avatarUrl }} style={{ width: 50, height: 50, borderRadius: 25 }} />
+                ) : (
+                  <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: "#e9ecdf", alignItems: "center", justifyContent: "center" }}>
+                    <Text style={{ fontWeight: "800", color: colors.accentDark }}>{s.displayName.charAt(0).toUpperCase()}</Text>
+                  </View>
+                )}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+                    <Text style={{ fontWeight: "800", fontSize: 15 }} numberOfLines={1}>{s.displayName}</Text>
+                    {s.verified ? <Ionicons name="checkmark-circle" size={14} color={colors.accentDark} /> : null}
+                  </View>
+                  <Text style={{ color: colors.muted, fontSize: 12, marginTop: 1 }} numberOfLines={1}>
+                    {[s.city, s.categoryLabels[0]].filter(Boolean).join(" · ") || "Magyar tartalomgyártó"}
+                  </Text>
+                  <View style={{ flexDirection: "row", gap: 12, marginTop: 3 }}>
+                    {s.tiktokFollowers ? (
+                      <Text style={{ fontSize: 12 }}><Text style={{ fontWeight: "700" }}>{fmt(s.tiktokFollowers)}</Text> TikTok</Text>
+                    ) : null}
+                    {s.averageRating ? <Text style={{ fontSize: 12 }}>★ {s.averageRating} ({s.reviewCount})</Text> : null}
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        </Section>
+      ) : null}
     </ScrollView>
   );
 }
