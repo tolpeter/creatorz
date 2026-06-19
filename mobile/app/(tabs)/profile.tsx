@@ -34,7 +34,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={{ marginTop: 32, gap: 1, borderRadius: radius.lg, overflow: "hidden" }}>
-        <Row icon="settings-outline" label="Beállítások (hamarosan)" />
+        <Row icon="create-outline" label="Profil szerkesztése" onPress={() => router.push("/profile/edit")} />
         <Row icon="help-circle-outline" label="Súgó (hamarosan)" />
       </View>
 
@@ -60,9 +60,19 @@ export default function ProfileScreen() {
   );
 }
 
-function Row({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: string }) {
+function Row({
+  icon,
+  label,
+  onPress,
+}: {
+  icon: keyof typeof Ionicons.glyphMap;
+  label: string;
+  onPress?: () => void;
+}) {
   return (
-    <View
+    <Pressable
+      onPress={onPress}
+      disabled={!onPress}
       style={{
         flexDirection: "row",
         alignItems: "center",
@@ -73,7 +83,8 @@ function Row({ icon, label }: { icon: keyof typeof Ionicons.glyphMap; label: str
       }}
     >
       <Ionicons name={icon} size={20} color={colors.accentDark} />
-      <Text style={{ fontSize: 15 }}>{label}</Text>
-    </View>
+      <Text style={{ fontSize: 15, flex: 1 }}>{label}</Text>
+      {onPress ? <Ionicons name="chevron-forward" size={18} color={colors.muted} /> : null}
+    </Pressable>
   );
 }

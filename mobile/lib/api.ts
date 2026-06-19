@@ -124,6 +124,14 @@ export function applyToAd(id: string, message: string) {
   return apiPost<{ success: boolean }>(`/api/mobile/ads/${id}/apply`, { message }, { auth: true });
 }
 
+export type MeProfile = Record<string, string | null> | null;
+export function fetchMe() {
+  return apiGet<{ role: string; profile: MeProfile }>("/api/mobile/me", { auth: true });
+}
+export function saveProfile(fields: Record<string, string>) {
+  return apiPost<{ success: boolean; error?: string }>("/api/mobile/me", fields, { auth: true });
+}
+
 export type CreatorListItem = {
   username: string;
   displayName: string;
