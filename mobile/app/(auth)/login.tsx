@@ -32,12 +32,15 @@ export default function LoginScreen() {
   const blob1 = useRef(new Animated.Value(0)).current;
   const blob2 = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(0)).current;
+  // A play-kör ("o") belépő beperdülése.
+  const ringSpin = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
       Animated.parallel([
         Animated.timing(logoOpacity, { toValue: 1, duration: 550, useNativeDriver: true }),
         Animated.spring(logoScale, { toValue: 1, friction: 6, tension: 60, useNativeDriver: true }),
+        Animated.timing(ringSpin, { toValue: 1, duration: 750, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
       Animated.parallel([
         Animated.timing(formOpacity, { toValue: 1, duration: 450, useNativeDriver: true }),
@@ -63,7 +66,7 @@ export default function LoginScreen() {
       a2.stop();
       a3.stop();
     };
-  }, [logoOpacity, logoScale, formY, formOpacity, blob1, blob2, pulse]);
+  }, [logoOpacity, logoScale, formY, formOpacity, blob1, blob2, pulse, ringSpin]);
 
   const blob1T = {
     transform: [
@@ -79,7 +82,18 @@ export default function LoginScreen() {
       { scale: blob2.interpolate({ inputRange: [0, 1], outputRange: [1.1, 0.85] }) },
     ],
   };
-  const markPulse = { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }] };
+  // A play-kör: belépéskor beperdül (-150°→0°), majd folyamatosan lüktet.
+  const ringAnim = {
+    transform: [
+      { rotate: ringSpin.interpolate({ inputRange: [0, 1], outputRange: ["-150deg", "0deg"] }) },
+      { scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.09] }) },
+    ],
+  };
+  // A talajárnyék finoman tágul-szűkül a lüktetéssel.
+  const shadowAnim = {
+    opacity: pulse.interpolate({ inputRange: [0, 1], outputRange: [0.28, 0.5] }),
+    transform: [{ scaleX: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.18] }) }],
+  };
 
   async function onSubmit() {
     setError(null);
@@ -107,17 +121,43 @@ export default function LoginScreen() {
       <Animated.View pointerEvents="none" style={[{ position: "absolute", top: "32%", left: "30%", width: 200, height: 200, borderRadius: 100, backgroundColor: "#22d3ee", opacity: 0.06 }, blob2T]} />
 
       <View style={{ flex: 1, justifyContent: "center", padding: 28 }}>
-        {/* Animált logó + név */}
-        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }], alignItems: "flex-start" }}>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <Animated.View style={[{ width: 46, height: 46, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", shadowColor: colors.accent, shadowOpacity: 0.6, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } }, markPulse]}>
-              <Ionicons name="play" size={24} color="#000" style={{ marginLeft: 3 }} />
+        {/* Animált logó — a "creatorz" wordmark, ahol az "o" egy lime play-kör
+            (a megadott brand logó alapján). */}
+        <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }], alignItems: "center" }}>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <Text style={wordmarkStyle}>creat</Text>
+            <Animated.View
+              style={[
+                {
+                  width: 38,
+                  height: 38,
+                  borderRadius: 19,
+                  borderWidth: 5,
+                  borderColor: colors.accent,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  marginHorizontal: 1,
+                  shadowColor: colors.accent,
+                  shadowOpacity: 0.7,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 0 },
+                },
+                ringAnim,
+              ]}
+            >
+              <Ionicons name="play" size={16} color="#fff" style={{ marginLeft: 2 }} />
             </Animated.View>
-            <Text style={{ color: "#fff", fontWeight: "900", fontSize: 36, letterSpacing: -1 }}>
-              creat<Text style={{ color: colors.accent }}>o</Text>rz
-            </Text>
+            <Text style={wordmarkStyle}>rz</Text>
           </View>
-          <Text style={{ color: "rgba(255,255,255,0.55)", marginTop: 10, fontSize: 14 }}>
+          {/* Lágy talajárnyék a play-kör alatt (mint a logón). */}
+          <Animated.View
+            pointerEvents="none"
+            style={[
+              { width: 70, height: 10, borderRadius: 35, backgroundColor: colors.accent, marginTop: 6 },
+              shadowAnim,
+            ]}
+          />
+          <Text style={{ color: "rgba(255,255,255,0.55)", marginTop: 12, fontSize: 14 }}>
             A magyar UGC tartalomgyártó közösség
           </Text>
         </Animated.View>
@@ -175,6 +215,13 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
+
+const wordmarkStyle = {
+  color: "#fff",
+  fontWeight: "900",
+  fontSize: 40,
+  letterSpacing: -1.5,
+} as const;
 
 const inputStyle = {
   backgroundColor: "rgba(255,255,255,0.06)",
