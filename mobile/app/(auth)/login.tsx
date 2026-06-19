@@ -28,6 +28,10 @@ export default function LoginScreen() {
   const logoScale = useRef(new Animated.Value(0.8)).current;
   const formY = useRef(new Animated.Value(28)).current;
   const formOpacity = useRef(new Animated.Value(0)).current;
+  // Folyamatos háttér-animáció (lebegő foltok + logó-pulzálás).
+  const blob1 = useRef(new Animated.Value(0)).current;
+  const blob2 = useRef(new Animated.Value(0)).current;
+  const pulse = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.sequence([
@@ -40,7 +44,42 @@ export default function LoginScreen() {
         Animated.timing(formY, { toValue: 0, duration: 450, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
       ]),
     ]).start();
-  }, [logoOpacity, logoScale, formY, formOpacity]);
+
+    const loop = (val: Animated.Value, duration: number) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(val, { toValue: 1, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(val, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+      );
+    const a1 = loop(blob1, 7000);
+    const a2 = loop(blob2, 9000);
+    const a3 = loop(pulse, 2200);
+    a1.start();
+    a2.start();
+    a3.start();
+    return () => {
+      a1.stop();
+      a2.stop();
+      a3.stop();
+    };
+  }, [logoOpacity, logoScale, formY, formOpacity, blob1, blob2, pulse]);
+
+  const blob1T = {
+    transform: [
+      { translateY: blob1.interpolate({ inputRange: [0, 1], outputRange: [0, 50] }) },
+      { translateX: blob1.interpolate({ inputRange: [0, 1], outputRange: [0, -30] }) },
+      { scale: blob1.interpolate({ inputRange: [0, 1], outputRange: [1, 1.25] }) },
+    ],
+  };
+  const blob2T = {
+    transform: [
+      { translateY: blob2.interpolate({ inputRange: [0, 1], outputRange: [0, -40] }) },
+      { translateX: blob2.interpolate({ inputRange: [0, 1], outputRange: [0, 30] }) },
+      { scale: blob2.interpolate({ inputRange: [0, 1], outputRange: [1.1, 0.85] }) },
+    ],
+  };
+  const markPulse = { transform: [{ scale: pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] }) }] };
 
   async function onSubmit() {
     setError(null);
@@ -62,17 +101,18 @@ export default function LoginScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       style={{ flex: 1, backgroundColor: colors.bg }}
     >
-      {/* Dekoratív accent fény */}
-      <View pointerEvents="none" style={{ position: "absolute", top: -120, right: -100, width: 320, height: 320, borderRadius: 160, backgroundColor: colors.accent, opacity: 0.16 }} />
-      <View pointerEvents="none" style={{ position: "absolute", bottom: -140, left: -120, width: 320, height: 320, borderRadius: 160, backgroundColor: colors.accent, opacity: 0.08 }} />
+      {/* Animált accent fény-foltok a háttérben */}
+      <Animated.View pointerEvents="none" style={[{ position: "absolute", top: -120, right: -100, width: 320, height: 320, borderRadius: 160, backgroundColor: colors.accent, opacity: 0.16 }, blob1T]} />
+      <Animated.View pointerEvents="none" style={[{ position: "absolute", bottom: -140, left: -120, width: 340, height: 340, borderRadius: 170, backgroundColor: colors.accent, opacity: 0.09 }, blob2T]} />
+      <Animated.View pointerEvents="none" style={[{ position: "absolute", top: "32%", left: "30%", width: 200, height: 200, borderRadius: 100, backgroundColor: "#22d3ee", opacity: 0.06 }, blob2T]} />
 
       <View style={{ flex: 1, justifyContent: "center", padding: 28 }}>
         {/* Animált logó + név */}
         <Animated.View style={{ opacity: logoOpacity, transform: [{ scale: logoScale }], alignItems: "flex-start" }}>
           <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
-            <View style={{ width: 46, height: 46, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center" }}>
+            <Animated.View style={[{ width: 46, height: 46, borderRadius: 14, backgroundColor: colors.accent, alignItems: "center", justifyContent: "center", shadowColor: colors.accent, shadowOpacity: 0.6, shadowRadius: 14, shadowOffset: { width: 0, height: 0 } }, markPulse]}>
               <Ionicons name="play" size={24} color="#000" style={{ marginLeft: 3 }} />
-            </View>
+            </Animated.View>
             <Text style={{ color: "#fff", fontWeight: "900", fontSize: 36, letterSpacing: -1 }}>
               creat<Text style={{ color: colors.accent }}>o</Text>rz
             </Text>

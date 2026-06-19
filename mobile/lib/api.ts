@@ -172,6 +172,21 @@ export function uploadImage(bucket: "avatars" | "logos", base64: string, ext: st
   return apiPost<{ url?: string; error?: string }>("/api/mobile/upload", { bucket, base64, ext }, { auth: true });
 }
 
+export type MyStats = {
+  role: string;
+  completion: { percent: number; items: { label: string; done: boolean }[] };
+  views?: { weekly: number; weeklyViewers: number };
+  reviewCount?: number;
+  averageRating?: string | null;
+  verified?: boolean;
+  canSeeViewers?: boolean;
+  viewers?: { name: string; type: string; username: string | null; avatarUrl: string | null; lastAt: string; times: number }[];
+  anonymous?: number;
+};
+export function fetchMyStats() {
+  return apiGet<MyStats>("/api/mobile/my-stats", { auth: true });
+}
+
 export type CreatorListItem = {
   username: string;
   displayName: string;
