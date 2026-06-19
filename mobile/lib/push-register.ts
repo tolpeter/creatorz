@@ -40,8 +40,7 @@ export async function registerForPush() {
 
     const projectId =
       Constants.expoConfig?.extra?.eas?.projectId ??
-      // @ts-expect-error – régebbi mező
-      Constants.easConfig?.projectId;
+      (Constants as { easConfig?: { projectId?: string } }).easConfig?.projectId;
     if (!projectId) return; // EAS projekt nélkül nincs token
 
     const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
