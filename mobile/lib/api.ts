@@ -124,6 +124,25 @@ export function applyToAd(id: string, message: string) {
   return apiPost<{ success: boolean }>(`/api/mobile/ads/${id}/apply`, { message }, { auth: true });
 }
 
+export type AppNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body: string | null;
+  link: string | null;
+  read: boolean;
+  createdAt: string;
+};
+export function fetchNotifications() {
+  return apiGet<{ items: AppNotification[]; unread: number }>("/api/mobile/notifications", { auth: true });
+}
+export function markNotificationsRead() {
+  return apiPost<{ success: boolean }>("/api/mobile/notifications", {}, { auth: true });
+}
+export function fetchUnread() {
+  return apiGet<{ messages: number; notifications: number }>("/api/mobile/unread", { auth: true });
+}
+
 export type MeProfile = Record<string, string | null> | null;
 export function fetchMe() {
   return apiGet<{ role: string; profile: MeProfile }>("/api/mobile/me", { auth: true });
