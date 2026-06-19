@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users } from "@/lib/db/schema";
 import { activityLabel } from "@/lib/creator-stats";
@@ -16,6 +16,9 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const search = (url.searchParams.get("search") ?? "").trim();
   const offset = Math.max(0, Number(url.searchParams.get("offset") ?? 0) || 0);
+  const category = url.searchParams.get("category")?.trim() || "";
+  const minTt = Number(url.searchParams.get("minTt") ?? 0) || 0;
+  const verifiedOnly = url.searchParams.get("verified") === "1";
 
   const conditions = [eq(users.suspended, false)];
   if (search) {
@@ -28,6 +31,11 @@ export async function GET(req: Request) {
       )!,
     );
   }
+  if (category) {
+    conditions.push(sql`${creatorProfiles.categories} @> ${JSON.stringify([category])}::jsonb`);
+  }
+  if (minTt > 0) conditions.push(gte(creatorProfiles.tiktokFollowers, minTt));
+  if (verifiedOnly) conditions.push(eq(creatorProfiles.verified, true));
 
   const rows = await db
     .select({

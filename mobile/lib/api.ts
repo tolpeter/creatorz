@@ -112,9 +112,14 @@ export type AdDetail = {
   invited: boolean;
 };
 
-export function fetchAds(offset = 0) {
+export type AdFilters = { category?: string; contentType?: string };
+export function fetchAds(offset = 0, filters: AdFilters = {}) {
+  const qs = new URLSearchParams();
+  if (offset) qs.set("offset", String(offset));
+  if (filters.category) qs.set("category", filters.category);
+  if (filters.contentType) qs.set("contentType", filters.contentType);
   return apiGet<{ items: AdListItem[]; hasMore: boolean; nextOffset: number }>(
-    `/api/mobile/ads?offset=${offset}`,
+    `/api/mobile/ads?${qs.toString()}`,
   );
 }
 export function fetchAd(id: string) {
@@ -172,10 +177,14 @@ export type CreatorsResponse = {
   nextOffset: number;
 };
 
-export function fetchCreators(search = "", offset = 0) {
+export type CreatorFilters = { category?: string; minTt?: string; verified?: boolean };
+export function fetchCreators(search = "", offset = 0, filters: CreatorFilters = {}) {
   const qs = new URLSearchParams();
   if (search) qs.set("search", search);
   if (offset) qs.set("offset", String(offset));
+  if (filters.category) qs.set("category", filters.category);
+  if (filters.minTt) qs.set("minTt", filters.minTt);
+  if (filters.verified) qs.set("verified", "1");
   return apiGet<CreatorsResponse>(`/api/mobile/creators?${qs.toString()}`);
 }
 

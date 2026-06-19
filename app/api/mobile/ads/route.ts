@@ -14,7 +14,18 @@ function catLabel(v: string) {
 
 /** Publikus, aktív hirdetések listája a mobil apphoz. */
 export async function GET(req: Request) {
-  const offset = Math.max(0, Number(new URL(req.url).searchParams.get("offset") ?? 0) || 0);
+  const sp = new URL(req.url).searchParams;
+  const offset = Math.max(0, Number(sp.get("offset") ?? 0) || 0);
+  const category = sp.get("category")?.trim() || "";
+  const contentType = sp.get("contentType")?.trim() || "";
+
+  const conditions = [eq(ads.status, "active")];
+  if (category) {
+    conditions.push(sql`${ads.categories} @> ${JSON.stringify([category])}::jsonb`);
+  }
+  if (contentType === "video" || contentType === "photo" || contentType === "both") {
+    conditions.push(eq(ads.contentType, contentType));
+  }
 
   const rows = await db
     .select({
@@ -36,7 +47,7 @@ export async function GET(req: Request) {
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
-    .where(eq(ads.status, "active"))
+    .where(and(...conditions))
     .orderBy(desc(ads.isFeatured), desc(ads.createdAt))
     .limit(PAGE + 1)
     .offset(offset);

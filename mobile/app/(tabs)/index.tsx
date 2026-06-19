@@ -12,6 +12,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { fetchCreators, type CreatorListItem } from "@/lib/api";
+import { FilterChips } from "@/components/filter-chips";
+import { CATEGORIES } from "@/lib/constants";
 import { colors, radius } from "@/lib/theme";
 
 function formatNumber(n: number | null) {
@@ -22,16 +24,17 @@ function formatNumber(n: number | null) {
 export default function CreatorsScreen() {
   const [items, setItems] = useState<CreatorListItem[]>([]);
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async (q: string, reset: boolean) => {
+  const load = useCallback(async (q: string, cat: string, reset: boolean) => {
     try {
       setError(null);
-      const res = await fetchCreators(q, reset ? 0 : offset);
+      const res = await fetchCreators(q, reset ? 0 : offset, { category: cat });
       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
       setHasMore(res.hasMore);
       setOffset(res.nextOffset);
@@ -43,21 +46,15 @@ export default function CreatorsScreen() {
     }
   }, [offset]);
 
-  useEffect(() => {
-    setLoading(true);
-    load("", true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Kereső debounce
+  // Kereső debounce + kategória-szűrő (kezdő betöltés is innen)
   useEffect(() => {
     const t = setTimeout(() => {
       setLoading(true);
-      load(search, true);
-    }, 350);
+      load(search, category, true);
+    }, search ? 350 : 0);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search]);
+  }, [search, category]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceMuted }}>
@@ -83,6 +80,8 @@ export default function CreatorsScreen() {
         </View>
       </View>
 
+      <FilterChips options={CATEGORIES} value={category} onChange={setCategory} />
+
       {loading && items.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
           <ActivityIndicator color={colors.accentDark} size="large" />
@@ -97,14 +96,14 @@ export default function CreatorsScreen() {
               refreshing={refreshing}
               onRefresh={() => {
                 setRefreshing(true);
-                load(search, true);
+                load(search, category, true);
               }}
               tintColor={colors.accentDark}
             />
           }
           onEndReachedThreshold={0.4}
           onEndReached={() => {
-            if (hasMore && !loading) load(search, false);
+            if (hasMore && !loading) load(search, category, false);
           }}
           ListEmptyComponent={
             <Text style={{ textAlign: "center", color: colors.muted, marginTop: 40 }}>

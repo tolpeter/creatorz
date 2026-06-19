@@ -11,6 +11,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { fetchAds, type AdListItem } from "@/lib/api";
+import { FilterChips } from "@/components/filter-chips";
+import { CATEGORIES } from "@/lib/constants";
 import { colors, radius } from "@/lib/theme";
 
 function huDate(iso: string) {
@@ -20,14 +22,15 @@ function huDate(iso: string) {
 export default function AdsScreen() {
   const router = useRouter();
   const [items, setItems] = useState<AdListItem[]>([]);
+  const [category, setCategory] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [offset, setOffset] = useState(0);
   const [hasMore, setHasMore] = useState(false);
 
-  const load = useCallback(async (reset: boolean) => {
+  const load = useCallback(async (cat: string, reset: boolean) => {
     try {
-      const res = await fetchAds(reset ? 0 : offset);
+      const res = await fetchAds(reset ? 0 : offset, { category: cat });
       setItems((prev) => (reset ? res.items : [...prev, ...res.items]));
       setHasMore(res.hasMore);
       setOffset(res.nextOffset);
@@ -40,20 +43,19 @@ export default function AdsScreen() {
   }, [offset]);
 
   useEffect(() => {
-    load(true);
+    setLoading(true);
+    load(category, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  if (loading && items.length === 0) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.surfaceMuted }}>
-        <ActivityIndicator color={colors.accentDark} size="large" />
-      </View>
-    );
-  }
+  }, [category]);
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceMuted }}>
+      <FilterChips options={CATEGORIES} value={category} onChange={setCategory} />
+      {loading && items.length === 0 ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+          <ActivityIndicator color={colors.accentDark} size="large" />
+        </View>
+      ) : (
       <FlatList
         data={items}
         keyExtractor={(a) => a.id}
@@ -63,14 +65,14 @@ export default function AdsScreen() {
             refreshing={refreshing}
             onRefresh={() => {
               setRefreshing(true);
-              load(true);
+              load(category, true);
             }}
             tintColor={colors.accentDark}
           />
         }
         onEndReachedThreshold={0.4}
         onEndReached={() => {
-          if (hasMore && !loading) load(false);
+          if (hasMore && !loading) load(category, false);
         }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", color: colors.muted, marginTop: 50 }}>
@@ -120,6 +122,7 @@ export default function AdsScreen() {
           </Pressable>
         )}
       />
+      )}
     </View>
   );
 }
