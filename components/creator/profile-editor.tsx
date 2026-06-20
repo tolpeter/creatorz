@@ -55,6 +55,7 @@ import {
   updateCreatorSocial,
   connectCreatorSocials,
   verifyCreatorProfile,
+  disconnectTikTok,
 } from "@/app/actions/creator-profile";
 
 export type ProfileEditorInitial = {
@@ -134,6 +135,20 @@ export function ProfileEditor({
   }, [v]);
   const [saving, setSaving] = useState<string | null>(null);
   const [connecting, setConnecting] = useState<"tiktok" | "youtube" | null>(null);
+  const [disconnectingTt, setDisconnectingTt] = useState(false);
+
+  async function disconnectTt() {
+    setDisconnectingTt(true);
+    const res = await disconnectTikTok();
+    setDisconnectingTt(false);
+    if (res.error) {
+      toast.error(res.error);
+      return;
+    }
+    setV((prev) => ({ ...prev, tiktokOfficial: false }));
+    toast.success("TikTok szétkapcsolva");
+    router.refresh();
+  }
 
   function set<K extends keyof ProfileEditorInitial>(k: K, val: ProfileEditorInitial[K]) {
     setV((prev) => ({ ...prev, [k]: val }));
@@ -498,6 +513,8 @@ export function ProfileEditor({
               connecting={connecting === "tiktok"}
               officialHref="/api/auth/tiktok/start"
               official={v.tiktokOfficial}
+              onDisconnect={disconnectTt}
+              disconnecting={disconnectingTt}
             />
 
             {/* YouTube — automata */}
@@ -681,6 +698,8 @@ function SocialAutoRow({
   connecting,
   officialHref,
   official,
+  onDisconnect,
+  disconnecting,
 }: {
   platform: "tiktok" | "youtube";
   label: string;
@@ -693,6 +712,8 @@ function SocialAutoRow({
   connecting: boolean;
   officialHref?: string;
   official?: boolean;
+  onDisconnect?: () => void;
+  disconnecting?: boolean;
 }) {
   const needsCount = url.trim().length > 0 && !(Number(count) > 0);
   return (
@@ -763,6 +784,18 @@ function SocialAutoRow({
               {official ? "Újraszinkronizálás" : "Hivatalos TikTok összekötés"}
             </a>
           </Button>
+          {official && onDisconnect ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onDisconnect}
+              disabled={disconnecting}
+            >
+              {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Szétkapcsolás
+            </Button>
+          ) : null}
         </div>
       ) : null}
     </div>

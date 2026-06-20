@@ -78,6 +78,25 @@ export async function refreshAccessToken(refreshToken: string): Promise<TikTokTo
   });
 }
 
+/** A token visszavonása a TikToknál (szétkapcsoláskor) — best-effort, hogy a
+ *  következő összekötésnél újra megjelenjen a hozzájárulási képernyő. */
+export async function revokeToken(accessToken: string): Promise<void> {
+  try {
+    await fetch("https://open.tiktokapis.com/v2/oauth/revoke/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        client_key: process.env.TIKTOK_CLIENT_KEY || "",
+        client_secret: process.env.TIKTOK_CLIENT_SECRET || "",
+        token: accessToken,
+      }).toString(),
+      cache: "no-store",
+    });
+  } catch {
+    /* best-effort */
+  }
+}
+
 async function tokenRequest(body: Record<string, string>): Promise<TikTokToken | null> {
   try {
     const res = await fetch(TOKEN_URL, {

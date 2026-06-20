@@ -2,8 +2,9 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { creatorProfiles } from "@/lib/db/schema";
+import { creatorProfiles, tiktokConnections } from "@/lib/db/schema";
 import { and, eq, ne } from "drizzle-orm";
+import { revokeToken } from "@/lib/tiktok/oauth";
 import { revalidatePath } from "next/cache";
 import { getCurrentCreator } from "@/lib/auth";
 import { generateUsername } from "@/lib/utils/username";
@@ -178,6 +179,34 @@ async function backfillTikTokExtras(creatorId: string, tiktokUrl: string | null)
   } catch {
     /* best-effort — a 4 naponta futó cron úgyis pótolja */
   }
+}
+
+/**
+ * Hivatalos TikTok-összekötés bontása: token visszavonása a TikToknál, a
+ * tárolt tokenek törlése, és a `tiktokOfficial` flag kikapcsolása. (A statok
+ * megmaradnak utolsó ismert értéken, de már nem „hivatalos" jelöléssel.)
+ */
+export async function disconnectTikTok() {
+  const creator = await requireCreator();
+  if (!creator) return { error: "Nincs bejelentkezve" };
+
+  const [conn] = await db
+    .select()
+    .from(tiktokConnections)
+    .where(eq(tiktokConnections.userId, creator.appUserId))
+    .limit(1);
+  if (conn) {
+    await revokeToken(conn.accessToken);
+    await db.delete(tiktokConnections).where(eq(tiktokConnections.userId, creator.appUserId));
+  }
+
+  await db
+    .update(creatorProfiles)
+    .set({ tiktokOfficial: false, updatedAt: new Date() })
+    .where(eq(creatorProfiles.id, creator.profile.id));
+
+  revalidatePath("/creator/profile");
+  return { success: true };
 }
 
 const socialSchema = z.object({
