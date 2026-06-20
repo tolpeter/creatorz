@@ -24,18 +24,23 @@ export function tiktokConfigured(): boolean {
   return Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET);
 }
 
-export function tiktokRedirectUri(): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-  return `${base.replace(/\/$/, "")}/api/auth/tiktok/callback`;
+/**
+ * A redirect URI. Ha kapunk `origin`-t (a tényleges kérésből), abból építjük —
+ * így MINDIG egyezik azzal a domainnel, amin a felhasználó éppen van (www vs
+ * nem-www nem okoz eltérést). Fallback: NEXT_PUBLIC_APP_URL.
+ */
+export function tiktokRedirectUri(origin?: string): string {
+  const base = (origin || process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000").replace(/\/$/, "");
+  return `${base}/api/auth/tiktok/callback`;
 }
 
 /** Az authorizáló URL, ahová a felhasználót átirányítjuk. */
-export function buildAuthorizeUrl(state: string): string {
+export function buildAuthorizeUrl(state: string, origin?: string): string {
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY || "",
     scope: TIKTOK_SCOPES,
     response_type: "code",
-    redirect_uri: tiktokRedirectUri(),
+    redirect_uri: tiktokRedirectUri(origin),
     state,
   });
   return `${AUTH_URL}?${params.toString()}`;
@@ -51,14 +56,15 @@ export type TikTokToken = {
   token_type: string;
 };
 
-/** Authorization code → access/refresh token. */
-export async function exchangeCode(code: string): Promise<TikTokToken | null> {
+/** Authorization code → access/refresh token. A redirect_uri-nak egyeznie kell
+ *  azzal, amit az authorize lépésben küldtünk. */
+export async function exchangeCode(code: string, origin?: string): Promise<TikTokToken | null> {
   return tokenRequest({
     client_key: process.env.TIKTOK_CLIENT_KEY || "",
     client_secret: process.env.TIKTOK_CLIENT_SECRET || "",
     code,
     grant_type: "authorization_code",
-    redirect_uri: tiktokRedirectUri(),
+    redirect_uri: tiktokRedirectUri(origin),
   });
 }
 

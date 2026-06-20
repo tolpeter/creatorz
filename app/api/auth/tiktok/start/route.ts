@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * TikTok Login Kit indítása: a bejelentkezett creatort átirányítjuk a TikTok
  * authorizáló oldalára. CSRF-védelem: véletlen `state` httpOnly cookie-ban.
  */
-export async function GET() {
+export async function GET(req: Request) {
   const creator = await getCurrentCreator();
   if (!creator) {
     return NextResponse.redirect(new URL("/login", env.appUrl));
@@ -18,8 +18,9 @@ export async function GET() {
     return NextResponse.redirect(new URL("/creator/profile?tiktok=unconfigured", env.appUrl));
   }
 
+  const origin = new URL(req.url).origin;
   const state = crypto.randomUUID();
-  const res = NextResponse.redirect(buildAuthorizeUrl(state));
+  const res = NextResponse.redirect(buildAuthorizeUrl(state, origin));
   res.cookies.set("tiktok_oauth_state", state, {
     httpOnly: true,
     secure: env.isProd,

@@ -33,7 +33,7 @@ export async function GET(req: Request) {
   const creator = await getCurrentCreator();
   if (!creator) return NextResponse.redirect(new URL("/login", env.appUrl));
 
-  const token = await exchangeCode(code);
+  const token = await exchangeCode(code, url.origin);
   if (!token) return back("error");
 
   const info = await fetchUserInfo(token.access_token);
