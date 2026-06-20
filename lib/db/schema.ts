@@ -173,6 +173,10 @@ export const creatorProfiles = pgTable("creator_profiles", {
   tiktokVideoCount: integer("tiktok_video_count"),
   tiktokVerified: boolean("tiktok_verified").notNull().default(false),
   tiktokLastChecked: timestamp("tiktok_last_checked"),
+  // Hivatalos TikTok API (Login Kit) összekötés — ha igaz, a statok a TikTok
+  // hivatalos Display API-jából jönnek (nem scrape/AI). A tokenek külön
+  // táblában (tiktok_connections), nem itt.
+  tiktokOfficial: boolean("tiktok_official").notNull().default(false),
   facebookUrl: text("facebook_url"),
   facebookFollowers: integer("facebook_followers"),
   facebookVerified: boolean("facebook_verified").notNull().default(false),
@@ -218,6 +222,23 @@ export const creatorProfiles = pgTable("creator_profiles", {
   featuredIdx: index("creator_profiles_featured_idx").on(table.isFeatured),
   categoriesIdx: index("creator_profiles_categories_idx").on(table.categories),
 }));
+
+// ============= TIKTOK CONNECTIONS (hivatalos OAuth tokenek) =============
+// Külön tábla, hogy az érzékeny tokenek SOHA ne kerüljenek bele a publikus
+// creator_profiles lekérdezésekbe. Csak szerveroldali, service-role hozzáférés.
+export const tiktokConnections = pgTable("tiktok_connections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  openId: varchar("open_id", { length: 128 }).notNull(),
+  unionId: varchar("union_id", { length: 128 }),
+  accessToken: text("access_token").notNull(),
+  refreshToken: text("refresh_token").notNull(),
+  scope: text("scope"),
+  expiresAt: timestamp("expires_at"),
+  refreshExpiresAt: timestamp("refresh_expires_at"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
 
 // ============= BRAND PROFILES =============
 export const brandProfiles = pgTable("brand_profiles", {

@@ -26,6 +26,8 @@ export function SocialAutoRow({
   onCount,
   onConnect,
   connecting,
+  officialHref,
+  official,
 }: {
   platform: "tiktok" | "youtube";
   label: string;
@@ -36,6 +38,10 @@ export function SocialAutoRow({
   onCount: (v: string) => void;
   onConnect: () => void;
   connecting: boolean;
+  /** Ha meg van adva (csak TikTok), megjelenik a hivatalos OAuth gomb. */
+  officialHref?: string;
+  /** Igaz, ha a hivatalos TikTok-fiók már össze van kötve. */
+  official?: boolean;
 }) {
   const needsCount = url.trim().length > 0 && !(Number(count) > 0);
   return (
@@ -86,6 +92,27 @@ export function SocialAutoRow({
         <p className="mt-2 text-xs text-destructive">
           A szám megadása kötelező, ha megadtad a {label} linket.
         </p>
+      ) : null}
+
+      {officialHref ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3">
+          {official ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3f6212]">
+              <BadgeCheck className="h-4 w-4 text-accent" />
+              Hivatalosan összekötve — pontos statok a TikToktól
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Hitelesítsd a pontos statokat (követő, like, videó) a TikTok hivatalos összekötésével:
+            </span>
+          )}
+          <Button asChild size="sm" className="bg-black text-white hover:bg-black/85">
+            <a href={officialHref}>
+              <SocialTile platform="tiktok" className="h-4 w-4 rounded" />
+              {official ? "Újraszinkronizálás" : "Hivatalos TikTok összekötés"}
+            </a>
+          </Button>
+        </div>
       ) : null}
     </div>
   );

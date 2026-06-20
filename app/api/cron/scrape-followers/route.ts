@@ -1,10 +1,11 @@
 import { db } from "@/lib/db";
-import { creatorProfiles } from "@/lib/db/schema";
+import { creatorProfiles, tiktokConnections } from "@/lib/db/schema";
 import { eq, or, isNotNull } from "drizzle-orm";
 import { scrapeInstagramFollowers } from "@/lib/scrapers/instagram";
 import { scrapeTikTokStats } from "@/lib/scrapers/tiktok";
 import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
+import { syncOfficialTikTok } from "@/lib/tiktok/sync";
 
 export const maxDuration = 300; // 4 naponta futó cron: végigellenőrzi az összes linket, frissíti a követő/feliratkozó számokat
 
@@ -25,6 +26,11 @@ export async function GET(req: Request) {
         isNotNull(creatorProfiles.youtubeUrl)
       )
     );
+
+  // Hivatalosan (Login Kit) összekötött TikTok-fiókok — ezeknél API-szinkron,
+  // nem scrape (pontosabb, és nem írja felül a hiteles adatot).
+  const connectedRows = await db.select({ userId: tiktokConnections.userId }).from(tiktokConnections);
+  const tiktokConnected = new Set(connectedRows.map((r) => r.userId));
 
   let scraped = 0;
   let updated = 0;
@@ -47,7 +53,15 @@ export async function GET(req: Request) {
         /* ignore */
       }
     }
-    if (c.tiktokUrl) {
+    if (c.tiktokUrl && tiktokConnected.has(c.userId)) {
+      // Hivatalos API-szinkron (token-refresh + Display API). A scrape kihagyva.
+      try {
+        const ok = await syncOfficialTikTok(c.userId);
+        if (ok) updated++;
+      } catch {
+        /* ignore */
+      }
+    } else if (c.tiktokUrl) {
       try {
         const stats = await scrapeTikTokStats(c.tiktokUrl);
         if (stats.followers !== null) {

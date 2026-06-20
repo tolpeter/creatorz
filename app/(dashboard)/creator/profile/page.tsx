@@ -33,6 +33,7 @@ export default async function CreatorProfilePage() {
     facebookFollowers: p.facebookFollowers != null ? String(p.facebookFollowers) : "",
     youtubeUrl: p.youtubeUrl ?? "",
     youtubeSubscribers: p.youtubeSubscribers != null ? String(p.youtubeSubscribers) : "",
+    tiktokOfficial: p.tiktokOfficial ?? false,
   };
 
   return (

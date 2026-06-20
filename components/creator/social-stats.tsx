@@ -26,6 +26,7 @@ export function SocialStats({
     tiktokAvgViews?: number | null;
     tiktokVideoCount?: number | null;
     tiktokVerified: boolean;
+    tiktokOfficial?: boolean;
     tiktokLastChecked: Date | null;
     facebookUrl: string | null;
     facebookFollowers: number | null;
@@ -136,9 +137,11 @@ export function SocialStats({
                 </span>
               </p>
               <p className="text-xs text-white/50">
-                {tiktok.lastChecked
-                  ? `Frissítve: ${formatHuDate(tiktok.lastChecked)}`
-                  : "Hitelesített adat"}
+                {profile.tiktokOfficial
+                  ? "Hivatalos TikTok adat"
+                  : tiktok.lastChecked
+                    ? `Frissítve: ${formatHuDate(tiktok.lastChecked)}`
+                    : "Hitelesített adat"}
               </p>
             </div>
             <ArrowUpRight className="h-4 w-4 shrink-0 text-white/50 transition-colors group-hover:text-accent" />
