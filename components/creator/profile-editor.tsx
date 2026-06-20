@@ -515,6 +515,7 @@ export function ProfileEditor({
               official={v.tiktokOfficial}
               onDisconnect={disconnectTt}
               disconnecting={disconnectingTt}
+              officialOnly
             />
 
             {/* YouTube — automata */}
@@ -685,7 +686,13 @@ function ProfileHeaderCard({
   );
 }
 
-/** Automata sor: nagy logó-csempe + URL + behúzott szám + „Összekapcsol". */
+/**
+ * Automata sor:
+ *  - TikTok (officialOnly): KIZÁRÓLAG a hivatalos TikTok-összekötés (nincs kézi
+ *    URL/követőszám, nincs scrape) — a statok a TikTok hivatalos API-jából jönnek.
+ *  - YouTube: URL + „Összekapcsol" (a feliratkozószámot a szinkron húzza be,
+ *    nincs kézi szám-beírás).
+ */
 function SocialAutoRow({
   platform,
   label,
@@ -693,13 +700,13 @@ function SocialAutoRow({
   url,
   count,
   onUrl,
-  onCount,
   onConnect,
   connecting,
   officialHref,
   official,
   onDisconnect,
   disconnecting,
+  officialOnly,
 }: {
   platform: "tiktok" | "youtube";
   label: string;
@@ -714,70 +721,32 @@ function SocialAutoRow({
   official?: boolean;
   onDisconnect?: () => void;
   disconnecting?: boolean;
+  officialOnly?: boolean;
 }) {
-  const needsCount = url.trim().length > 0 && !(Number(count) > 0);
-  return (
-    <div className="rounded-xl border border-black/10 bg-white/60 p-3">
-      <div className="grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_160px_auto] lg:items-end">
-        <SocialTile platform={platform} className="h-14 w-14" />
-        <div className="min-w-0">
-          <Label className="text-sm">{label} profil URL</Label>
-          <Input
-            value={url}
-            onChange={(e) => onUrl(e.target.value)}
-            placeholder="https://…"
-            className="mt-1.5"
-          />
-        </div>
-        <div className="min-w-0">
-          <Label className="text-sm">{unit}szám *</Label>
-          <NumberInput
-            value={count}
-            onChange={onCount}
-            placeholder="pl. 24 500"
-            aria-invalid={needsCount}
-            className={`mt-1.5 ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}
-          />
-        </div>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onConnect}
-          disabled={connecting}
-          className="shrink-0"
-        >
-          {connecting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Link2 className="h-4 w-4" />
-          )}
-          Összekapcsol
-        </Button>
-      </div>
-      {count && Number(count) > 0 ? (
-        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
-          <BadgeCheck className="h-3.5 w-3.5 text-accent" />
-          {formatNumber(Number(count))} {unit}
-        </p>
-      ) : null}
-      {needsCount ? (
-        <p className="mt-2 text-xs text-destructive">
-          A szám megadása kötelező, ha megadtad a {label} linket.
-        </p>
-      ) : null}
+  const hasCount = Number(count) > 0;
 
-      {officialHref ? (
+  // TikTok — csak hivatalos összekötés.
+  if (officialOnly) {
+    return (
+      <div className="rounded-xl border border-black/10 bg-white/60 p-3">
+        <div className="flex items-center gap-3">
+          <SocialTile platform={platform} className="h-14 w-14" />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">{label}</p>
+            {hasCount ? (
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
+                <BadgeCheck className="h-3.5 w-3.5 text-accent" />
+                {formatNumber(Number(count))} {unit}
+                {official ? " · Hivatalos adat" : ""}
+              </p>
+            ) : (
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Kösd össze a TikTok-fiókodat a pontos statokért (követő, like, videó).
+              </p>
+            )}
+          </div>
+        </div>
         <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3">
-          {official ? (
-            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3f6212]">
-              <BadgeCheck className="h-4 w-4 text-accent" />
-              Hivatalosan összekötve — a statok közvetlenül a TikToktól jönnek
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">
-              Hitelesítsd a pontos statokat (követő, like, videó) a TikTok hivatalos összekötésével:
-            </span>
-          )}
           <Button asChild size="sm" className="bg-black text-white hover:bg-black/85">
             <a href={officialHref}>
               <SocialTile platform="tiktok" className="h-4 w-4 rounded" />
@@ -797,6 +766,48 @@ function SocialAutoRow({
             </Button>
           ) : null}
         </div>
+      </div>
+    );
+  }
+
+  // YouTube — URL + Összekapcsol (a számot a szinkron húzza be).
+  return (
+    <div className="rounded-xl border border-black/10 bg-white/60 p-3">
+      <div className="grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_auto] lg:items-end">
+        <SocialTile platform={platform} className="h-14 w-14" />
+        <div className="min-w-0">
+          <Label className="text-sm">{label} profil URL</Label>
+          <Input
+            value={url}
+            onChange={(e) => onUrl(e.target.value)}
+            placeholder="https://…"
+            className="mt-1.5"
+          />
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onConnect}
+          disabled={connecting}
+          className="shrink-0"
+        >
+          {connecting ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Link2 className="h-4 w-4" />
+          )}
+          Összekapcsol
+        </Button>
+      </div>
+      {hasCount ? (
+        <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
+          <BadgeCheck className="h-3.5 w-3.5 text-accent" />
+          {formatNumber(Number(count))} {unit}
+        </p>
+      ) : url.trim().length > 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Kattints az „Összekapcsol"-ra a {unit}szám automatikus behúzásához.
+        </p>
       ) : null}
     </div>
   );
