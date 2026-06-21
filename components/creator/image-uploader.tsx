@@ -13,12 +13,14 @@ export function ImageUploader({
   onChange,
   variant = "banner",
   label,
+  centered = false,
 }: {
   bucket: Bucket;
   value: string | null;
   onChange: (url: string | null) => void;
   variant?: "avatar" | "banner";
   label: string;
+  centered?: boolean;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ export function ImageUploader({
   }
 
   return (
-    <div className="space-y-2">
+    <div className={cn("space-y-2", centered && "flex flex-col items-center text-center")}>
       <p className="text-sm font-medium">{label}</p>
       <div
         className={cn(
@@ -65,7 +67,7 @@ export function ImageUploader({
           </div>
         )}
       </div>
-      <div className="flex gap-2">
+      <div className={cn("flex gap-2", centered && "justify-center")}>
         <input
           ref={inputRef}
           type="file"

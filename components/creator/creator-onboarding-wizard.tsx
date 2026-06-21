@@ -43,6 +43,7 @@ import {
 } from "@/components/creator/social-rows";
 import { SocialTile } from "@/components/creator/platform-icon";
 import { ImageUploader } from "@/components/creator/image-uploader";
+import { DateOfBirthPicker } from "@/components/shared/date-of-birth-picker";
 import {
   completeCreatorOnboarding,
   connectCreatorSocials,
@@ -227,44 +228,55 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
   }
 
   return (
-    <Card className="w-full">
+    <Card className="w-full overflow-hidden rounded-3xl border-black/10 shadow-[0_20px_60px_rgba(0,0,0,0.10)]">
+      <div className="h-1.5 bg-gradient-to-r from-accent via-[#bef264] to-accent" />
       <CardHeader>
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-4 flex items-center gap-2">
           {STEPS.map((label, i) => (
             <div key={label} className="flex flex-1 items-center gap-2">
               <div
-                className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-semibold ${
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-colors ${
                   i < step
-                    ? "bg-accent text-accent-foreground"
+                    ? "bg-accent text-black"
                     : i === step
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-foreground text-background ring-4 ring-accent/25"
                       : "bg-muted text-muted-foreground"
                 }`}
               >
                 {i < step ? <Check className="h-4 w-4" /> : i + 1}
               </div>
-              {i < STEPS.length - 1 && <div className="h-px flex-1 bg-border" />}
+              {i < STEPS.length - 1 && (
+                <div className={`h-1 flex-1 rounded-full ${i < step ? "bg-accent" : "bg-border"}`} />
+              )}
             </div>
           ))}
         </div>
-        <CardTitle>{STEPS[step]}</CardTitle>
+        <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#65a30d]">
+          {step + 1}/{STEPS.length} lépés
+        </p>
+        <CardTitle className="text-2xl tracking-tight">{STEPS[step]}</CardTitle>
         <CardDescription>
-          {step + 1}. lépés a {STEPS.length}-ből — tartalomgyártó profil beállítása
+          {step === 0
+            ? "Pár adat, és kész is a profilod — pár perc az egész. 🚀"
+            : step === 1
+              ? "Mondd el, milyen tartalmat készítesz és milyen nyelven."
+              : "Kösd össze a közösségi fiókjaidat a nagyobb bizalomért."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         {step === 0 && (
           <>
-            <div className="rounded-xl border border-accent/30 bg-accent/[0.05] p-4">
+            <div className="flex flex-col items-center gap-2 rounded-2xl border border-accent/30 bg-gradient-to-b from-accent/[0.08] to-transparent p-5 text-center">
               <ImageUploader
                 bucket="avatars"
                 variant="avatar"
                 label="Profilkép"
                 value={v.avatarUrl}
                 onChange={(url) => set("avatarUrl", url)}
+                centered
               />
-              <p className="mt-2 text-center text-xs text-muted-foreground">
-                Egy valódi arc akár 3× több megkeresést hoz a márkáktól.
+              <p className="max-w-xs text-xs text-muted-foreground">
+                Egy valódi arc akár <span className="font-semibold text-foreground">3× több</span> megkeresést hoz a márkáktól.
               </p>
             </div>
             <div className="space-y-1.5">
@@ -333,13 +345,10 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label htmlFor="birthDate">Születési dátum *</Label>
-                <Input
-                  id="birthDate"
-                  type="date"
-                  max={new Date().toISOString().slice(0, 10)}
+                <Label>Születési dátum *</Label>
+                <DateOfBirthPicker
                   value={v.birthDate}
-                  onChange={(e) => set("birthDate", e.target.value)}
+                  onChange={(iso) => set("birthDate", iso)}
                 />
                 <p className="text-xs text-muted-foreground">
                   A profilodon csak az életkorod jelenik meg, a pontos dátum nem.
@@ -395,7 +404,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
               kitöltesz egy linket, a követőszám megadása kötelező.
             </p>
 
-            {/* TikTok — automata szinkron */}
+            {/* TikTok — automata szinkron (a követőszámot az Összekapcsol tölti ki) */}
             <SocialAutoRow
               platform="tiktok"
               label="TikTok"
@@ -406,6 +415,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
               onCount={(val) => set("tiktokFollowers", val)}
               onConnect={() => connectOne("tiktok")}
               connecting={connecting === "tiktok"}
+              countReadOnly
             />
 
             {/* YouTube — automata szinkron */}

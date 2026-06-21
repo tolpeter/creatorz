@@ -28,6 +28,7 @@ export function SocialAutoRow({
   connecting,
   officialHref,
   official,
+  countReadOnly,
 }: {
   platform: "tiktok" | "youtube";
   label: string;
@@ -42,8 +43,11 @@ export function SocialAutoRow({
   officialHref?: string;
   /** Igaz, ha a hivatalos TikTok-fiók már össze van kötve. */
   official?: boolean;
+  /** A követőszám-mező nem írható kézzel — az Összekapcsol tölti ki. */
+  countReadOnly?: boolean;
 }) {
-  const needsCount = url.trim().length > 0 && !(Number(count) > 0);
+  const hasCount = Number(count) > 0;
+  const needsCount = !countReadOnly && url.trim().length > 0 && !hasCount;
   return (
     <div className="rounded-xl border border-black/10 bg-white/60 p-3">
       <div className="grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_160px_auto] lg:items-end">
@@ -58,13 +62,21 @@ export function SocialAutoRow({
           />
         </div>
         <div className="min-w-0">
-          <Label className="text-sm">{unit}szám *</Label>
+          <Label className="text-sm">{unit}szám{countReadOnly ? "" : " *"}</Label>
           <NumberInput
             value={count}
             onChange={onCount}
-            placeholder="pl. 24 500"
+            disabled={countReadOnly}
+            readOnly={countReadOnly}
+            placeholder={countReadOnly ? "Összekapcsolásból" : "pl. 24 500"}
             aria-invalid={needsCount}
-            className={`mt-1.5 ${needsCount ? "border-destructive focus-visible:ring-destructive" : ""}`}
+            className={`mt-1.5 ${
+              countReadOnly
+                ? "cursor-not-allowed bg-muted text-muted-foreground"
+                : needsCount
+                  ? "border-destructive focus-visible:ring-destructive"
+                  : ""
+            }`}
           />
         </div>
         <Button
@@ -82,10 +94,14 @@ export function SocialAutoRow({
           Összekapcsol
         </Button>
       </div>
-      {count && Number(count) > 0 ? (
+      {hasCount ? (
         <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
           <BadgeCheck className="h-3.5 w-3.5 text-accent" />
           {formatNumber(Number(count))} {unit}
+        </p>
+      ) : countReadOnly && url.trim().length > 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Kattints az „Összekapcsol"-ra — a {unit}számot a rendszer tölti ki a valós adattal.
         </p>
       ) : null}
       {needsCount ? (
