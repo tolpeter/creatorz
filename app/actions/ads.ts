@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import { db } from "@/lib/db";
-import { ads, creatorProfiles, notifications, users } from "@/lib/db/schema";
+import { ads, brandProfiles, creatorProfiles, notifications, users } from "@/lib/db/schema";
 import { and, eq, inArray, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
@@ -140,6 +140,59 @@ export async function createAd(input: z.input<typeof adSchema>) {
 
   revalidatePath("/brand/ads");
   return { success: true, id: adId };
+}
+
+/**
+ * Admin hirdetés-létrehozás egy adott márka nevében (ha valaki közvetlenül az
+ * adminisztrátort kéri meg a feladásra). A hirdetés rögtön aktív lesz.
+ */
+export async function adminCreateAd(brandId: string, input: z.input<typeof adSchema>) {
+  const current = await getCurrentUser();
+  if (current?.dbUser?.role !== "admin") return { error: "Csak admin" };
+
+  const parsed = adSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const d = parsed.data;
+
+  const [brand] = await db
+    .select({ id: brandProfiles.id })
+    .from(brandProfiles)
+    .where(eq(brandProfiles.id, brandId))
+    .limit(1);
+  if (!brand) return { error: "A márka nem található" };
+
+  const inserted = await db
+    .insert(ads)
+    .values({
+      brandId: brand.id,
+      title: d.title,
+      slug: await uniqueAdSlug(d.title),
+      description: d.description,
+      categories: d.categories,
+      targetKinds: d.targetKinds,
+      contentType: d.contentType,
+      collaborationType: d.collaborationType,
+      itemCount: d.itemCount,
+      coverUrl: d.coverUrl || null,
+      budgetMinHuf: d.budgetMinHuf,
+      budgetMaxHuf: d.budgetMaxHuf,
+      budgetPublic: d.budgetPublic,
+      anonymous: d.anonymous,
+      deadline: d.deadline,
+      location: d.location || null,
+      usageRights: d.usageRights,
+      referenceLinks: d.referenceLinks,
+      // Admin által létrehozva → rögtön aktív.
+      status: "active",
+      approvedAt: new Date(),
+    })
+    .returning({ id: ads.id });
+
+  revalidatePath("/admin/ads");
+  revalidatePath("/ads");
+  return { success: true, id: inserted[0]!.id };
 }
 
 export async function updateAd(adId: string, input: z.input<typeof adUpdateSchema>) {

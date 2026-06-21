@@ -26,7 +26,7 @@ import {
   USAGE_RIGHTS,
   COLLABORATION_TYPES,
 } from "@/lib/constants";
-import { createAd, updateAd } from "@/app/actions/ads";
+import { createAd, updateAd, adminCreateAd } from "@/app/actions/ads";
 
 // "Kit keresel?" opciók — UGC creator + kreatív szakember típusok
 const TARGET_KIND_OPTIONS = [
@@ -57,9 +57,12 @@ export type AdFormInitial = {
 export function AdForm({
   adId,
   initial,
+  adminBrandId,
 }: {
   adId?: string;
   initial?: AdFormInitial;
+  /** Admin mód: a hirdetés ennek a márkának a nevében jön létre. */
+  adminBrandId?: string;
 }) {
   const router = useRouter();
   const isEdit = Boolean(adId);
@@ -101,14 +104,24 @@ export function AdForm({
       usageRights: usageRights as "organic" | "paid_ads" | "perpetual",
       referenceLinks: links.filter((l) => l.trim()),
     };
-    const res = isEdit ? await updateAd(adId!, payload) : await createAd(payload);
+    const res = isEdit
+      ? await updateAd(adId!, payload)
+      : adminBrandId
+        ? await adminCreateAd(adminBrandId, payload)
+        : await createAd(payload);
     setLoading(false);
     if (res.error) {
       toast.error(res.error);
       return;
     }
-    toast.success(isEdit ? "Hirdetés módosítva!" : "Hirdetés beküldve moderálásra!");
-    router.push(`/brand/ads/${res.id}`);
+    toast.success(
+      isEdit
+        ? "Hirdetés módosítva!"
+        : adminBrandId
+          ? "Hirdetés létrehozva (aktív)!"
+          : "Hirdetés beküldve moderálásra!",
+    );
+    router.push(adminBrandId ? "/admin/ads" : `/brand/ads/${res.id}`);
     router.refresh();
   }
 

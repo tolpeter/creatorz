@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
 import { AdModerationActions } from "@/components/admin/ad-moderation-actions";
 import { ExportButton } from "@/components/admin/export-button";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Hirdetések" };
@@ -37,7 +39,14 @@ export default async function AdminAdsPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold">Hirdetések moderálása</h1>
-        <ExportButton type="ads" />
+        <div className="flex items-center gap-2">
+          <Button asChild size="sm">
+            <Link href="/admin/ads/new">
+              <Plus className="h-4 w-4" /> Új hirdetés
+            </Link>
+          </Button>
+          <ExportButton type="ads" />
+        </div>
       </div>
 
       <section className="space-y-3">
