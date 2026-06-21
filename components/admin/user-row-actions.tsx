@@ -57,12 +57,12 @@ export function UserRowActions({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center gap-2">
       <Select
         defaultValue={role}
         onValueChange={(v) => run(() => setUserRole(userId, v))}
       >
-        <SelectTrigger className="h-8 w-[110px]">
+        <SelectTrigger className="h-8 w-[104px]">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
