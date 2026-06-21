@@ -434,9 +434,14 @@ function authErrorMessage(message: string) {
 
   if (
     normalized.includes("already registered") ||
-    normalized.includes("user already registered")
+    normalized.includes("already been registered") || // Supabase admin createUser
+    normalized.includes("user already registered") ||
+    normalized.includes("already exists") ||
+    normalized.includes("email_exists") ||
+    normalized.includes("email address has already") ||
+    normalized.includes("duplicate")
   ) {
-    return "Ezzel az email címmel már létezik fiók. Próbálj meg bejelentkezni.";
+    return "Ezzel az e-mail címmel már létezik fiók. Jelentkezz be, vagy használj másik e-mail címet.";
   }
 
   if (normalized.includes("password")) {
