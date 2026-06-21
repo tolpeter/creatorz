@@ -38,7 +38,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
           <Logo variant="light" className="text-2xl" />
         </Link>
 
-        <nav className="hidden items-center gap-6 text-base font-medium text-white/70 lg:flex xl:gap-8">
+        <nav className="hidden items-center gap-5 whitespace-nowrap text-[15px] font-medium text-white/70 lg:flex xl:gap-7">
           {LINKS.map((link) =>
             link.href === "/creators" ? (
               // "Alkotók" — CSS-hover dropdown a típusokkal
@@ -66,9 +66,12 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Link
                 key={link.label}
                 href={link.href}
-                className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-black"
+                className="group/dev inline-flex items-center gap-1.5 whitespace-nowrap text-accent transition-colors hover:text-accent/80"
               >
-                <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(163,230,53,0.9)]" />
+                <span className="relative flex h-2 w-2 items-center justify-center">
+                  <span className="absolute inline-flex h-2 w-2 animate-ping rounded-full bg-accent opacity-70" />
+                  <span className="relative h-1.5 w-1.5 rounded-full bg-accent" />
+                </span>
                 {link.label}
               </Link>
             ) : (
