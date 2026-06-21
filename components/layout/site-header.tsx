@@ -9,6 +9,7 @@ const LINKS = [
   { label: "Márkák", href: "/#markak" },
   { label: "Hogyan működik", href: "/#hogyan" },
   { label: "Hirdetések", href: "/ads" },
+  { label: "Aktuális fejlesztések", href: "/status" },
   { label: "Blog", href: "/blog" },
   { label: "Kapcsolat", href: "/kapcsolat" },
 ] as const;
@@ -61,6 +62,15 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
                   ))}
                 </div>
               </div>
+            ) : link.href === "/status" ? (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-black"
+              >
+                <span className="h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(163,230,53,0.9)]" />
+                {link.label}
+              </Link>
             ) : (
               <Link
                 key={link.label}

@@ -1,11 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Activity,
   Globe,
   LogIn,
   MessagesSquare,
   Megaphone,
-  CreditCard,
   Mail,
   ImageUp,
   Bot,
@@ -14,7 +14,11 @@ import {
   Rocket,
   Sparkles,
   Wrench,
+  Clock,
+  Smartphone,
 } from "lucide-react";
+import { CircularProgress } from "@/components/shared/circular-progress";
+import { SocialTile } from "@/components/creator/platform-icon";
 
 export const metadata = {
   title: "Platform státusz",
@@ -27,49 +31,43 @@ const COMPONENTS = [
     icon: Globe,
     name: "Weboldal és böngészés",
     desc: "A nyilvános oldalak és a tartalomgyártó-kereső elérése.",
-    uptime: "99,98%",
+    uptime: "100%",
   },
   {
     icon: LogIn,
     name: "Regisztráció és bejelentkezés",
     desc: "Fiókhozzáférés, jelszó-visszaállítás, munkamenetek.",
-    uptime: "99,99%",
+    uptime: "100%",
   },
   {
     icon: MessagesSquare,
     name: "Üzenetküldés",
     desc: "Tartalomgyártók és márkák közötti üzenetváltás.",
-    uptime: "99,97%",
+    uptime: "100%",
   },
   {
     icon: Megaphone,
     name: "Hirdetések és pályázatok",
     desc: "Briefek feladása és a pályázatok kezelése.",
-    uptime: "99,99%",
-  },
-  {
-    icon: CreditCard,
-    name: "Fizetés (Stripe)",
-    desc: "Előfizetések és kiemelések kártyás fizetése.",
     uptime: "100%",
   },
   {
     icon: Mail,
     name: "E-mail értesítések (Resend)",
     desc: "Visszaigazolások, értesítések és rendszerüzenetek.",
-    uptime: "99,95%",
+    uptime: "100%",
   },
   {
     icon: ImageUp,
     name: "Képfeltöltés és tárhely",
     desc: "Profilképek, portfólió- és borítóképek tárolása.",
-    uptime: "99,98%",
+    uptime: "100%",
   },
   {
     icon: Bot,
     name: "AI követőszám-frissítés",
     desc: "A közösségi követőszámok automatikus hitelesítése.",
-    uptime: "99,90%",
+    uptime: "100%",
   },
 ];
 
@@ -154,6 +152,72 @@ export default function StatusPage() {
           Itt valós időben követheted a Creatorz szolgáltatásainak működését.
         </p>
       </div>
+
+      {/* Mobil app — fejlesztési állapot (animált kör) */}
+      <div className="mt-8 grid items-center gap-6 rounded-3xl border border-white/10 bg-[#0b0d0a] p-6 text-white sm:grid-cols-[150px_1fr] sm:p-8">
+        <Image
+          src="/images/mobilapp2.webp"
+          alt="Creatorz mobil applikáció"
+          width={320}
+          height={320}
+          className="mx-auto h-auto w-[130px] object-contain drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)] sm:w-[150px]"
+        />
+        <div className="text-center sm:text-left">
+          <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+            <Smartphone className="h-3.5 w-3.5" />
+            Mobil applikáció
+          </span>
+          <h2 className="mt-3 text-2xl font-black">Készül a Creatorz app</h2>
+          <p className="mx-auto mt-2 max-w-md text-sm text-white/70 sm:mx-0">
+            Natív iOS és Android alkalmazás — böngészés, üzenetek, pályázatok és
+            push értesítések egy helyen. Jelenleg aktív fejlesztés alatt.
+          </p>
+          <div className="mt-5 flex justify-center sm:justify-start">
+            <div className="rounded-2xl bg-white p-4 text-foreground shadow-lg">
+              <CircularProgress value={70} label="Fejlesztés állapota" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Aktuális fejlesztések — amin éppen dolgozunk */}
+      <section className="mt-8">
+        <h2 className="flex items-center gap-2 text-lg font-bold">
+          <Clock className="h-5 w-5 text-[#4d7c0f]" />
+          Aktuális fejlesztések
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Amin éppen dolgozunk — hamarosan élesedik.
+        </p>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          {[
+            {
+              platform: "facebook" as const,
+              title: "Hivatalos Facebook összekapcsolás",
+              note: "Várunk a Meta jóváhagyására",
+            },
+            {
+              platform: "tiktok" as const,
+              title: "Hivatalos TikTok összekapcsolás",
+              note: "Várunk a TikTok jóváhagyására",
+            },
+          ].map((d) => (
+            <div
+              key={d.platform}
+              className="flex items-start gap-3 rounded-2xl border bg-card p-4"
+            >
+              <SocialTile platform={d.platform} className="h-10 w-10 shrink-0" />
+              <div className="min-w-0 flex-1">
+                <p className="font-semibold leading-tight">{d.title}</p>
+                <p className="mt-1 inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                  <Clock className="h-3 w-3" />
+                  {d.note}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {/* Összesített állapot */}
       <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-[#a3e635]/40 bg-[#f6f7f2] p-6 text-center sm:flex-row sm:text-left">
