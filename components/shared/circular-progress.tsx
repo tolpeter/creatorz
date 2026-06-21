@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Animált, kör alakú százalékmutató. Betöltéskor 0-ról a célértékre tölt
@@ -18,34 +18,26 @@ export function CircularProgress({
   label?: string;
 }) {
   const [shown, setShown] = useState(0);
-  const ref = useRef<HTMLDivElement>(null);
-  const started = useRef(false);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    // Csak akkor indul, amikor láthatóvá válik (és csak egyszer).
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting && !started.current) {
-          started.current = true;
-          const target = Math.max(0, Math.min(100, value));
-          const start = performance.now();
-          const dur = 1400;
-          const tick = (t: number) => {
-            const p = Math.min(1, (t - start) / dur);
-            // easeOutCubic
-            const eased = 1 - Math.pow(1 - p, 3);
-            setShown(Math.round(eased * target));
-            if (p < 1) requestAnimationFrame(tick);
-          };
-          requestAnimationFrame(tick);
-        }
-      },
-      { threshold: 0.4 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
+    const target = Math.max(0, Math.min(100, value));
+    const dur = 1400;
+    let raf = 0;
+    let start = 0;
+    const tick = (t: number) => {
+      if (!start) start = t;
+      const p = Math.min(1, (t - start) / dur);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      setShown(Math.round(eased * target));
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    // Garancia: ha az rAF fojtott (pl. háttér-tab), a végén biztosan a célérték.
+    const fb = setTimeout(() => setShown(target), dur + 250);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(fb);
+    };
   }, [value]);
 
   const r = (size - stroke) / 2;
@@ -53,7 +45,7 @@ export function CircularProgress({
   const offset = circ - (shown / 100) * circ;
 
   return (
-    <div ref={ref} className="flex flex-col items-center gap-2">
+    <div className="flex flex-col items-center gap-2">
       <div className="relative" style={{ width: size, height: size }}>
         <svg width={size} height={size} className="-rotate-90">
           <circle
