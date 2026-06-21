@@ -14,6 +14,7 @@ export default async function AdminAdsPage() {
   const rows = await db
     .select({
       id: ads.id,
+      slug: ads.slug,
       title: ads.title,
       description: ads.description,
       status: ads.status,
@@ -81,7 +82,7 @@ export default async function AdminAdsPage() {
               {others.map((a) => (
                 <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
                   <td className="p-3">
-                    <Link href={`/ads/${a.id}`} target="_blank" className="hover:underline">
+                    <Link href={`/ads/${a.slug ?? a.id}`} target="_blank" className="hover:underline">
                       {a.title}
                     </Link>
                   </td>

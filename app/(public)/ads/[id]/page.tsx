@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ApplyModal } from "@/components/creator/apply-modal";
 import { ReportButton } from "@/components/shared/report-button";
+import { AdShareButtons } from "@/components/shared/ad-share-buttons";
 import {
   CREATOR_CATEGORIES,
   CONTENT_TYPES,
@@ -437,6 +438,11 @@ export default async function AdDetailPage({
                     </Button>
                   )}
                 </div>
+
+                <AdShareButtons
+                  url={`${process.env.NEXT_PUBLIC_APP_URL || "https://www.creatorz.hu"}/ads/${ad.slug ?? ad.id}`}
+                  title={ad.title}
+                />
 
                 <div className="mt-3 text-center">
                   <ReportButton
