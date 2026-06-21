@@ -511,11 +511,11 @@ export function ProfileEditor({
               onCount={(val) => set("tiktokFollowers", val)}
               onConnect={() => connectOne("tiktok")}
               connecting={connecting === "tiktok"}
+              showCount
               officialHref="/api/auth/tiktok/start"
               official={v.tiktokOfficial}
               onDisconnect={disconnectTt}
               disconnecting={disconnectingTt}
-              officialOnly
             />
 
             {/* YouTube — automata */}
@@ -687,11 +687,11 @@ function ProfileHeaderCard({
 }
 
 /**
- * Automata sor:
- *  - TikTok (officialOnly): KIZÁRÓLAG a hivatalos TikTok-összekötés (nincs kézi
- *    URL/követőszám, nincs scrape) — a statok a TikTok hivatalos API-jából jönnek.
- *  - YouTube: URL + „Összekapcsol" (a feliratkozószámot a szinkron húzza be,
- *    nincs kézi szám-beírás).
+ * Automata sor: URL + „Összekapcsol" (a követőt scrape/AI húzza be).
+ *  - showCount: kézi {unit}szám mező is megjelenik (TikTok — ha a scrape nem
+ *    fogná, kézzel is megadható).
+ *  - officialHref: a sor alatt megjelenik a hivatalos TikTok-összekötés gomb is
+ *    (a TikTok jóváhagyása után ez lesz a pontos, hitelesített forrás).
  */
 function SocialAutoRow({
   platform,
@@ -700,13 +700,14 @@ function SocialAutoRow({
   url,
   count,
   onUrl,
+  onCount,
   onConnect,
   connecting,
+  showCount,
   officialHref,
   official,
   onDisconnect,
   disconnecting,
-  officialOnly,
 }: {
   platform: "tiktok" | "youtube";
   label: string;
@@ -717,73 +718,45 @@ function SocialAutoRow({
   onCount: (v: string) => void;
   onConnect: () => void;
   connecting: boolean;
+  showCount?: boolean;
   officialHref?: string;
   official?: boolean;
   onDisconnect?: () => void;
   disconnecting?: boolean;
-  officialOnly?: boolean;
 }) {
   const hasCount = Number(count) > 0;
+  const needsCount = Boolean(showCount) && url.trim().length > 0 && !hasCount;
 
-  // TikTok — csak hivatalos összekötés.
-  if (officialOnly) {
-    return (
-      <div className="rounded-xl border border-black/10 bg-white/60 p-3">
-        <div className="flex items-center gap-3">
-          <SocialTile platform={platform} className="h-14 w-14" />
-          <div className="min-w-0 flex-1">
-            <p className="font-semibold">{label}</p>
-            {hasCount ? (
-              <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-[#3f6212]">
-                <BadgeCheck className="h-3.5 w-3.5 text-accent" />
-                {formatNumber(Number(count))} {unit}
-                {official ? " · Hivatalos adat" : ""}
-              </p>
-            ) : (
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                Kösd össze a TikTok-fiókodat a pontos statokért (követő, like, videó).
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3">
-          <Button asChild size="sm" className="bg-black text-white hover:bg-black/85">
-            <a href={officialHref}>
-              <SocialTile platform="tiktok" className="h-4 w-4 rounded" />
-              {official ? "Újraszinkronizálás" : "Hivatalos TikTok összekötés"}
-            </a>
-          </Button>
-          {official && onDisconnect ? (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={onDisconnect}
-              disabled={disconnecting}
-            >
-              {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Szétkapcsolás
-            </Button>
-          ) : null}
-        </div>
-      </div>
-    );
-  }
-
-  // YouTube — URL + Összekapcsol (a számot a szinkron húzza be).
   return (
     <div className="rounded-xl border border-black/10 bg-white/60 p-3">
-      <div className="grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_auto] lg:items-end">
+      <div
+        className={
+          showCount
+            ? "grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_160px_auto] lg:items-end"
+            : "grid gap-3 sm:grid-cols-[56px_minmax(0,1fr)] lg:grid-cols-[56px_minmax(0,1fr)_auto] lg:items-end"
+        }
+      >
         <SocialTile platform={platform} className="h-14 w-14" />
         <div className="min-w-0">
           <Label className="text-sm">{label} profil URL</Label>
           <Input
             value={url}
             onChange={(e) => onUrl(e.target.value)}
-            placeholder="https://…"
+            placeholder="@felhasználónév vagy URL"
             className="mt-1.5"
           />
         </div>
+        {showCount ? (
+          <div className="min-w-0">
+            <Label className="text-sm">{unit}szám</Label>
+            <NumberInput
+              value={count}
+              onChange={onCount}
+              placeholder="pl. 24 500"
+              className="mt-1.5"
+            />
+          </div>
+        ) : null}
         <Button
           type="button"
           variant="outline"
@@ -804,10 +777,47 @@ function SocialAutoRow({
           <BadgeCheck className="h-3.5 w-3.5 text-accent" />
           {formatNumber(Number(count))} {unit}
         </p>
+      ) : needsCount ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Kattints az „Összekapcsol"-ra a behúzáshoz, vagy add meg kézzel a {unit}számot.
+        </p>
       ) : url.trim().length > 0 ? (
         <p className="mt-2 text-xs text-muted-foreground">
           Kattints az „Összekapcsol"-ra a {unit}szám automatikus behúzásához.
         </p>
+      ) : null}
+
+      {officialHref ? (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-black/[0.06] pt-3">
+          {official ? (
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3f6212]">
+              <BadgeCheck className="h-4 w-4 text-accent" />
+              Hivatalosan összekötve — a statok közvetlenül a TikToktól jönnek
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              Vagy hitelesítsd a pontos statokat a TikTok hivatalos összekötésével:
+            </span>
+          )}
+          <Button asChild size="sm" className="bg-black text-white hover:bg-black/85">
+            <a href={officialHref}>
+              <SocialTile platform="tiktok" className="h-4 w-4 rounded" />
+              {official ? "Újraszinkronizálás" : "Hivatalos TikTok összekötés"}
+            </a>
+          </Button>
+          {official && onDisconnect ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onDisconnect}
+              disabled={disconnecting}
+            >
+              {disconnecting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+              Szétkapcsolás
+            </Button>
+          ) : null}
+        </div>
       ) : null}
     </div>
   );

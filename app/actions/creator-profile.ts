@@ -236,9 +236,9 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
     youtubeUrl: normalizeSocialUrl("youtube", parsed.data.youtubeUrl),
   };
 
-  // A TikTokot kizárólag a hivatalos összekötés kezeli — itt nem írjuk felül.
   const missingCount = [
     { label: "Instagram", url: d.instagramUrl, count: d.instagramFollowers },
+    { label: "TikTok", url: d.tiktokUrl, count: d.tiktokFollowers },
     { label: "Facebook", url: d.facebookUrl, count: d.facebookFollowers },
     { label: "YouTube", url: d.youtubeUrl, count: d.youtubeSubscribers },
   ].find((item) => item.url && !(item.count && item.count > 0));
@@ -253,6 +253,10 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
     .set({
       instagramUrl: d.instagramUrl || null,
       instagramFollowers: d.instagramFollowers ?? null,
+      // TikTok URL + követő kézzel is menthető (a scrape/AI fallbackhez). A
+      // hivatalos like/videó/official mezőket NEM bántjuk (azt az OAuth kezeli).
+      tiktokUrl: d.tiktokUrl || null,
+      tiktokFollowers: d.tiktokFollowers ?? null,
       facebookUrl: d.facebookUrl || null,
       facebookFollowers: d.facebookFollowers ?? null,
       youtubeUrl: d.youtubeUrl || null,
@@ -260,6 +264,12 @@ export async function updateCreatorSocial(input: z.input<typeof socialSchema>) {
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));
+
+  // Ha van TikTok link, de a like-ot nem ismerjük, best-effort behúzzuk a
+  // bővített statokat (csak ha nem hivatalosan kötött — azt nem írjuk felül).
+  if (d.tiktokUrl && d.tiktokFollowers && d.tiktokLikes == null) {
+    await backfillTikTokExtras(creator.profile.id, d.tiktokUrl);
+  }
 
   revalidatePath("/creator/profile");
   return { success: true };
