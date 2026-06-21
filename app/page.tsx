@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { redirect } from "next/navigation";
 import { or, eq, sql } from "drizzle-orm";
 import {
   ArrowRight,
@@ -31,6 +32,11 @@ export default async function LandingPage() {
     current = await getCurrentUser();
   } catch {
     current = null;
+  }
+
+  // Bejelentkezett felhasználót egyből a vezérlőpultra visszük.
+  if (current?.dbUser) {
+    redirect("/dashboard");
   }
 
   const mobileAppPopup = await getSetting("mobile_app_popup_enabled").catch(

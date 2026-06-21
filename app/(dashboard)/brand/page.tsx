@@ -16,7 +16,6 @@ import { savedCreators, ads, messages } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { BrandLogoUpload } from "@/components/brand/brand-logo-upload";
 
 export default async function BrandOverviewPage() {
   const brand = await getCurrentBrand();
@@ -91,19 +90,6 @@ export default async function BrandOverviewPage() {
           </div>
         </div>
       </section>
-
-      {/* LOGÓ-FELTÖLTÉS PROMPT — ha még nincs logó */}
-      {!brand.profile.logoUrl && (
-        <div className="rounded-2xl border border-accent/40 bg-accent/[0.06] p-5">
-          <h2 className="text-base font-bold">Tölts fel egy logót</h2>
-          <p className="mb-3 mt-0.5 text-sm text-muted-foreground">
-            A logó megjelenik a hirdetéseiden és a tartalomgyártók felé — sokkal
-            megbízhatóbb benyomást kelt. Húzd ide a képet, vagy kattints a
-            feltöltéshez.
-          </p>
-          <BrandLogoUpload initialUrl={brand.profile.logoUrl ?? null} />
-        </div>
-      )}
 
       {/* FELSŐ 2 STAT KÁRTYA */}
       <div className="grid gap-4 md:grid-cols-2">

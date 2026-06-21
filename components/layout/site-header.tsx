@@ -33,7 +33,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a0a]/85 backdrop-blur-xl">
       <div className="mx-auto flex h-14 w-full max-w-[1280px] items-center justify-between gap-4 px-4 sm:h-16 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="Creatorz főoldal">
+        <Link href={isLoggedIn ? "/dashboard" : "/"} aria-label="Creatorz főoldal">
           <Logo variant="light" className="text-2xl" />
         </Link>
 

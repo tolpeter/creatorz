@@ -4,8 +4,9 @@ import { and, eq, sql } from "drizzle-orm";
 import { Mail } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { users, messages } from "@/lib/db/schema";
+import { users, messages, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { LogoutButton } from "@/components/shared/logout-button";
+import { ProfilePhotoPrompt } from "@/components/shared/profile-photo-prompt";
 
 // A dashboard minden oldala auth-mögötti, élő adat — sosem prerendereljük build-időben.
 export const dynamic = "force-dynamic";
@@ -65,6 +66,30 @@ export default async function DashboardLayout({
   let unreadMessages = 0;
   const role = current.dbUser?.role ?? "creator";
   const inboxHref = INBOX_HREF[role] ?? "/dashboard";
+
+  // Profilkép-emlékeztető: ha nincs avatar/logó, felugró ablakban kérjük.
+  let needsPhoto = false;
+  if (current.dbUser) {
+    try {
+      if (role === "brand") {
+        const [b] = await db
+          .select({ logoUrl: brandProfiles.logoUrl })
+          .from(brandProfiles)
+          .where(eq(brandProfiles.userId, current.dbUser.id))
+          .limit(1);
+        needsPhoto = b ? !b.logoUrl : false;
+      } else if (role === "creator") {
+        const [c] = await db
+          .select({ avatarUrl: creatorProfiles.avatarUrl })
+          .from(creatorProfiles)
+          .where(eq(creatorProfiles.userId, current.dbUser.id))
+          .limit(1);
+        needsPhoto = c ? !c.avatarUrl : false;
+      }
+    } catch {
+      // best-effort: ne blokkolja a dashboardot
+    }
+  }
   if (current.dbUser) {
     try {
       const [mc] = await db
@@ -82,7 +107,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f6f2]">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-4 text-white shadow-sm backdrop-blur sm:px-6">
-        <Link href="/">
+        <Link href="/dashboard">
           <Logo variant="light" className="text-lg" />
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
@@ -106,6 +131,9 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
+      {needsPhoto && (role === "brand" || role === "creator") ? (
+        <ProfilePhotoPrompt role={role === "brand" ? "brand" : "creator"} />
+      ) : null}
     </div>
   );
 }

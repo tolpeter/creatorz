@@ -148,7 +148,7 @@ export default async function CreatorsBrowsePage({
               <p className="mt-1 text-sm text-muted-foreground">
                 {totalCount === 0
                   ? "Nincs a szűrőknek megfelelő találat."
-                  : `${totalCount} profil`}
+                  : `${totalCount + 300} profil`}
               </p>
             </div>
             <SortSelect />
