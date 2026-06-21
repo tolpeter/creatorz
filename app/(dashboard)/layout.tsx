@@ -110,7 +110,7 @@ export default async function DashboardLayout({
   return (
     <div className="flex min-h-screen flex-col bg-[#f5f6f2]">
       <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-white/10 bg-[#0A0A0A]/95 px-4 text-white shadow-sm backdrop-blur sm:px-6">
-        <Link href="/dashboard">
+        <Link href="/">
           <Logo variant="light" className="text-lg" />
         </Link>
         <div className="flex items-center gap-2 sm:gap-3">
