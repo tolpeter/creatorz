@@ -418,7 +418,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
               countReadOnly
             />
 
-            {/* YouTube — automata szinkron */}
+            {/* YouTube — automata szinkron (a feliratkozót az Összekapcsol tölti ki) */}
             <SocialAutoRow
               platform="youtube"
               label="YouTube"
@@ -429,6 +429,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
               onCount={(val) => set("youtubeSubscribers", val)}
               onConnect={() => connectOne("youtube")}
               connecting={connecting === "youtube"}
+              countReadOnly
             />
 
             {/* IG/FB — kézi megadás magyarázat */}
