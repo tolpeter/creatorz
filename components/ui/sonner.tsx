@@ -47,12 +47,12 @@ const Toaster = ({ ...props }: ToasterProps) => {
       toastOptions={{
         classNames: {
           toast:
-            "cn-toast group rounded-2xl border px-4 py-3.5 gap-3 shadow-[0_12px_40px_rgba(0,0,0,0.16)] backdrop-blur",
+            "cn-toast group rounded-2xl border py-3.5 pl-4 pr-11 gap-3 shadow-[0_12px_40px_rgba(0,0,0,0.16)] backdrop-blur",
           title: "text-sm font-semibold",
           description: "text-sm opacity-90",
           icon: "mt-0.5",
           closeButton:
-            "!left-auto !right-2 !top-2 !flex !h-6 !w-6 !items-center !justify-center !rounded-full !border !bg-white/80 !p-0 !text-foreground/70 hover:!bg-white hover:!text-foreground [&>svg]:!m-0",
+            "!left-auto !right-3 !top-1/2 !-translate-y-1/2 !m-0 !flex !h-6 !w-6 !items-center !justify-center !rounded-full !border !bg-white/90 !p-0 !text-foreground/70 hover:!bg-white hover:!text-foreground [&>svg]:!m-0 [&>svg]:!size-3.5",
         },
       }}
       {...props}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 import { and, eq, sql } from "drizzle-orm";
 import { Mail } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
@@ -67,9 +68,11 @@ export default async function DashboardLayout({
   const role = current.dbUser?.role ?? "creator";
   const inboxHref = INBOX_HREF[role] ?? "/dashboard";
 
-  // Profilkép-emlékeztető: ha nincs avatar/logó, felugró ablakban kérjük.
+  // Profilkép-emlékeztető: ha nincs avatar/logó, felugró ablakban kérjük —
+  // de munkamenetenként csak egyszer (a pop-up beállít egy session cookie-t).
+  const promptSeen = (await cookies()).get("creatorz_photo_prompt")?.value === "1";
   let needsPhoto = false;
-  if (current.dbUser) {
+  if (current.dbUser && !promptSeen) {
     try {
       if (role === "brand") {
         const [b] = await db

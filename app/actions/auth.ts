@@ -373,6 +373,13 @@ export async function resetPasswordWithToken(
 export async function signOutAction() {
   const supabase = await createClient();
   await supabase.auth.signOut();
+  // A profilkép-pop-up munkamenet-jelzőjét töröljük, hogy új belépéskor
+  // megint felugorjon (egyszer / belépés).
+  try {
+    (await cookies()).delete("creatorz_photo_prompt");
+  } catch {
+    /* best-effort */
+  }
   return { success: true };
 }
 

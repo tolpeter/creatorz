@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -17,6 +17,13 @@ export function ProfilePhotoPrompt({ role }: { role: "brand" | "creator" }) {
   const router = useRouter();
   const [open, setOpen] = useState(true);
   const [url, setUrl] = useState<string | null>(null);
+
+  // Munkamenet-cookie: a pop-up belépésenként CSAK EGYSZER ugorjon fel (a
+  // dashboard layout ez alapján dönt). Nem böngésző-tároló (localStorage),
+  // hanem session cookie — kijelentkezéskor töröljük.
+  useEffect(() => {
+    document.cookie = "creatorz_photo_prompt=1; path=/; samesite=lax";
+  }, []);
 
   if (!open) return null;
   const isBrand = role === "brand";

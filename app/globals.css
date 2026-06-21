@@ -232,3 +232,10 @@ body {
 @utility animate-blob {
   animation: blob-float 18s ease-in-out infinite;
 }
+
+/* WYSIWYG szerkesztő placeholder (üres állapotban) */
+.rte-content:empty::before {
+  content: attr(data-placeholder);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
