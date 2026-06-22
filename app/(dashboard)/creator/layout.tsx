@@ -64,7 +64,7 @@ export default async function CreatorLayout({
 
   return (
     <div className="flex w-full flex-col md:flex-row">
-      <aside className="px-4 pt-4 md:sticky md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64 md:shrink-0 md:px-0 md:pt-0">
+      <aside className="sticky top-14 z-30 bg-[#f5f6f2] px-4 pb-3 pt-4 shadow-sm md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64 md:shrink-0 md:bg-transparent md:px-0 md:pb-0 md:pt-0 md:shadow-none">
         <CreatorSidebar
           unreadMessages={unreadMessages}
           profileScore={profileScore}
