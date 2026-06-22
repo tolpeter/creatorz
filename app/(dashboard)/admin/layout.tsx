@@ -38,7 +38,7 @@ export default async function AdminLayout({
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 md:flex-row lg:gap-8 lg:py-8">
       <NewMessageToast count={unreadContact} pendingAds={pendingAds} openReports={openReports} />
-      <aside className="md:sticky md:top-20 md:self-start">
+      <aside className="sticky top-14 z-30 -mx-4 bg-[#f5f6f2] px-4 pb-3 pt-1 sm:-mx-6 sm:px-6 md:top-20 md:z-auto md:mx-0 md:self-start md:bg-transparent md:px-0 md:pb-0 md:pt-0">
         <AdminSidebar
           unreadContact={unreadContact}
           badges={{ ads: pendingAds, reports: openReports }}
