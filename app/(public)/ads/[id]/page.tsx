@@ -59,14 +59,13 @@ export async function generateMetadata({
     stripMarkdown(row.description ?? "").slice(0, 160) ||
     `${publicBrandName} brief a Creatorzon.`;
   const canonical = `/ads/${row.slug ?? id}`;
-  // Link-előnézet (Facebook/OG): borítókép → (nem anonim) márka logó → Creatorz
-  // alapkép. A Supabase WebP-ket render-JPEG-re konvertáljuk 1200×630-ra, mert
-  // a Facebook a WebP og:image-et nem jeleníti meg.
+  // Link-előnézet (Facebook/OG): ha van borítókép, azt használjuk; ha NINCS,
+  // a Creatorz logó jelenik meg (NEM a márka logója). A Supabase WebP-ket
+  // render-JPEG-re konvertáljuk 1200×630-ra (a Facebook a WebP og:image-et
+  // nem jeleníti meg). A /og-image.png a Creatorz alap-OG kép.
   const ogImage = row.coverUrl
     ? supabaseOgImage(row.coverUrl, { width: 1200, height: 630, resize: "cover" })
-    : !row.anonymous && row.brandLogo
-      ? supabaseOgImage(row.brandLogo, { width: 1200, height: 630, resize: "contain" })
-      : "/og-image.png";
+    : "/og-image.png";
   return {
     title: row.title,
     description: desc,
