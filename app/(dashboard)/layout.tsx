@@ -8,6 +8,7 @@ import { db } from "@/lib/db";
 import { users, messages, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { LogoutButton } from "@/components/shared/logout-button";
 import { ProfilePhotoPrompt } from "@/components/shared/profile-photo-prompt";
+import { AnnouncementPopup } from "@/components/shared/announcement-popup";
 
 // A dashboard minden oldala auth-mögötti, élő adat — sosem prerendereljük build-időben.
 export const dynamic = "force-dynamic";
@@ -68,9 +69,11 @@ export default async function DashboardLayout({
   const role = current.dbUser?.role ?? "creator";
   const inboxHref = INBOX_HREF[role] ?? "/dashboard";
 
-  // Profilkép-emlékeztető: ha nincs avatar/logó, felugró ablakban kérjük —
-  // de munkamenetenként csak egyszer (a pop-up beállít egy session cookie-t).
-  const promptSeen = (await cookies()).get("creatorz_photo_prompt")?.value === "1";
+  // Felugró ablakok belépésenként egyszer (session cookie alapján). Egyszerre
+  // csak EGY jelenik meg: előbb a „Fejlesztések" hír, utána a profilkép-kérő.
+  const cookieStore = await cookies();
+  const devNewsSeen = cookieStore.get("cz_devnews")?.value === "1";
+  const promptSeen = cookieStore.get("creatorz_photo_prompt")?.value === "1";
   let needsPhoto = false;
   if (current.dbUser && !promptSeen) {
     try {
@@ -134,7 +137,9 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      {needsPhoto && (role === "brand" || role === "creator") ? (
+      {!devNewsSeen ? (
+        <AnnouncementPopup />
+      ) : needsPhoto && (role === "brand" || role === "creator") ? (
         <ProfilePhotoPrompt role={role === "brand" ? "brand" : "creator"} />
       ) : null}
     </div>
