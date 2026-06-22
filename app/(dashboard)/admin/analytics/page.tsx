@@ -122,8 +122,10 @@ export default async function AdminAnalyticsPage() {
   // még nincs migrálva / nincs adat, üresen marad.
   type SegRow = { registered: boolean; avg_ms: number; sessions: number };
   type PathRow = { path: string; avg_ms: number; views: number };
+  type DailyRow = { d: string; avg_ms: number };
   let segRows: SegRow[] = [];
   let pathRows: PathRow[] = [];
+  let dailyRows: DailyRow[] = [];
   try {
     segRows = (await db.execute(sql`
       SELECT registered, round(avg(total))::int AS avg_ms, count(*)::int AS sessions
@@ -137,11 +139,22 @@ export default async function AdminAnalyticsPage() {
       FROM page_events WHERE created_at > ${since}
       GROUP BY path ORDER BY count(*) DESC LIMIT 15
     `)) as unknown as PathRow[];
+    dailyRows = (await db.execute(sql`
+      SELECT to_char(d, 'YYYY-MM-DD') AS d, round(avg(total))::int AS avg_ms
+      FROM (
+        SELECT session_id, date_trunc('day', min(created_at)) AS d, sum(duration_ms) AS total
+        FROM page_events WHERE created_at > ${since} GROUP BY session_id
+      ) s GROUP BY d ORDER BY d
+    `)) as unknown as DailyRow[];
   } catch {
     /* tábla még nincs / nincs adat */
   }
   const regSeg = segRows.find((r) => r.registered);
   const anonSeg = segRows.find((r) => !r.registered);
+  const totalSessions = (regSeg?.sessions ?? 0) + (anonSeg?.sessions ?? 0);
+  const regSharePct =
+    totalSessions > 0 ? Math.round(((regSeg?.sessions ?? 0) / totalSessions) * 100) : 0;
+  const timeSeries = buildSeries(new Map(dailyRows.map((r) => [r.d, r.avg_ms])));
 
   const kpis = [
     { label: "Új regisztráció", value: formatNumber(newCreators + newBrands), sub: `${newCreators} creator · ${newBrands} márka`, icon: Users },
@@ -193,7 +206,7 @@ export default async function AdminAnalyticsPage() {
             </p>
           ) : (
             <>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border bg-[#f6f7f2] p-4">
                   <p className="text-xs font-semibold uppercase tracking-wide text-[#4d7c0f]">
                     Regisztrált felhasználók
@@ -212,6 +225,22 @@ export default async function AdminAnalyticsPage() {
                     átlagos munkamenet · {formatNumber(anonSeg?.sessions ?? 0)} munkamenet
                   </p>
                 </div>
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Belépők aránya
+                  </p>
+                  <p className="mt-1 text-2xl font-black text-[#3f6212]">{regSharePct}%</p>
+                  <p className="text-xs text-muted-foreground">
+                    a munkamenetek {formatNumber(totalSessions)}-ből regisztrált
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-semibold">
+                  Átlagos munkamenet-idő naponta
+                </p>
+                <TimeBars days={timeSeries} />
               </div>
 
               {pathRows.length > 0 && (
@@ -324,6 +353,25 @@ function MiniBars({ days }: { days: { label: string; n: number }[] }) {
             className="w-full rounded-t bg-accent"
             style={{ height: `${(d.n / max) * 100}%`, minHeight: d.n > 0 ? "3px" : "0" }}
             title={`${d.label}. — ${d.n}`}
+          />
+        ))}
+      </div>
+      <DayAxis days={days} />
+    </>
+  );
+}
+
+function TimeBars({ days }: { days: { label: string; n: number }[] }) {
+  const max = Math.max(1, ...days.map((d) => d.n));
+  return (
+    <>
+      <div className="flex h-32 items-end gap-[3px]">
+        {days.map((d, i) => (
+          <div
+            key={i}
+            className="w-full rounded-t bg-accent"
+            style={{ height: `${(d.n / max) * 100}%`, minHeight: d.n > 0 ? "3px" : "0" }}
+            title={`${d.label}. — ${fmtDur(d.n)}`}
           />
         ))}
       </div>
