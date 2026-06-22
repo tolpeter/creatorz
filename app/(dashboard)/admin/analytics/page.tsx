@@ -122,10 +122,13 @@ export default async function AdminAnalyticsPage() {
   // még nincs migrálva / nincs adat, üresen marad.
   type SegRow = { registered: boolean; avg_ms: number; sessions: number };
   type PathRow = { path: string; avg_ms: number; views: number };
-  type DailyRow = { d: string; avg_ms: number };
+  type DailySegRow = { d: string; registered: boolean; avg_ms: number };
+  type EntryRow = { path: string; n: number };
   let segRows: SegRow[] = [];
   let pathRows: PathRow[] = [];
-  let dailyRows: DailyRow[] = [];
+  let dailySegRows: DailySegRow[] = [];
+  let entryRows: EntryRow[] = [];
+  let exitRows: EntryRow[] = [];
   try {
     segRows = (await db.execute(sql`
       SELECT registered, round(avg(total))::int AS avg_ms, count(*)::int AS sessions
@@ -139,13 +142,28 @@ export default async function AdminAnalyticsPage() {
       FROM page_events WHERE created_at > ${since}
       GROUP BY path ORDER BY count(*) DESC LIMIT 15
     `)) as unknown as PathRow[];
-    dailyRows = (await db.execute(sql`
-      SELECT to_char(d, 'YYYY-MM-DD') AS d, round(avg(total))::int AS avg_ms
+    dailySegRows = (await db.execute(sql`
+      SELECT to_char(d, 'YYYY-MM-DD') AS d, registered, round(avg(total))::int AS avg_ms
       FROM (
-        SELECT session_id, date_trunc('day', min(created_at)) AS d, sum(duration_ms) AS total
+        SELECT session_id, date_trunc('day', min(created_at)) AS d, sum(duration_ms) AS total,
+               bool_or(user_id IS NOT NULL) AS registered
         FROM page_events WHERE created_at > ${since} GROUP BY session_id
-      ) s GROUP BY d ORDER BY d
-    `)) as unknown as DailyRow[];
+      ) s GROUP BY d, registered ORDER BY d
+    `)) as unknown as DailySegRow[];
+    entryRows = (await db.execute(sql`
+      SELECT path, count(*)::int AS n FROM (
+        SELECT DISTINCT ON (session_id) session_id, path
+        FROM page_events WHERE created_at > ${since}
+        ORDER BY session_id, created_at ASC
+      ) e GROUP BY path ORDER BY count(*) DESC LIMIT 8
+    `)) as unknown as EntryRow[];
+    exitRows = (await db.execute(sql`
+      SELECT path, count(*)::int AS n FROM (
+        SELECT DISTINCT ON (session_id) session_id, path
+        FROM page_events WHERE created_at > ${since}
+        ORDER BY session_id, created_at DESC
+      ) e GROUP BY path ORDER BY count(*) DESC LIMIT 8
+    `)) as unknown as EntryRow[];
   } catch {
     /* tábla még nincs / nincs adat */
   }
@@ -154,7 +172,16 @@ export default async function AdminAnalyticsPage() {
   const totalSessions = (regSeg?.sessions ?? 0) + (anonSeg?.sessions ?? 0);
   const regSharePct =
     totalSessions > 0 ? Math.round(((regSeg?.sessions ?? 0) / totalSessions) * 100) : 0;
-  const timeSeries = buildSeries(new Map(dailyRows.map((r) => [r.d, r.avg_ms])));
+  // Napi átlagidő, regisztrált vs nem regisztrált bontásban.
+  const regDaily = new Map(dailySegRows.filter((r) => r.registered).map((r) => [r.d, r.avg_ms]));
+  const anonDaily = new Map(dailySegRows.filter((r) => !r.registered).map((r) => [r.d, r.avg_ms]));
+  const regTimeSeries = buildSeries(regDaily);
+  const anonTimeSeries = buildSeries(anonDaily);
+  const timeSplit = regTimeSeries.map((c, i) => ({
+    label: c.label,
+    a: c.n,
+    b: anonTimeSeries[i]?.n ?? 0,
+  }));
 
   const kpis = [
     { label: "Új regisztráció", value: formatNumber(newCreators + newBrands), sub: `${newCreators} creator · ${newBrands} márka`, icon: Users },
@@ -240,8 +267,19 @@ export default async function AdminAnalyticsPage() {
                 <p className="mb-2 text-sm font-semibold">
                   Átlagos munkamenet-idő naponta
                 </p>
-                <TimeBars days={timeSeries} />
+                <TwoTimeBars days={timeSplit} />
+                <div className="mt-3 flex gap-5 text-sm">
+                  <Legend color="bg-accent" label="Regisztrált" />
+                  <Legend color="bg-[#3f6212]" label="Nem regisztrált" />
+                </div>
               </div>
+
+              {(entryRows.length > 0 || exitRows.length > 0) && (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <EntryExitList title="Belépési oldalak" rows={entryRows} />
+                  <EntryExitList title="Kilépési oldalak" rows={exitRows} />
+                </div>
+              )}
 
               {pathRows.length > 0 && (
                 <div>
@@ -361,22 +399,58 @@ function MiniBars({ days }: { days: { label: string; n: number }[] }) {
   );
 }
 
-function TimeBars({ days }: { days: { label: string; n: number }[] }) {
-  const max = Math.max(1, ...days.map((d) => d.n));
+function TwoTimeBars({ days }: { days: { label: string; a: number; b: number }[] }) {
+  const max = Math.max(1, ...days.map((d) => Math.max(d.a, d.b)));
   return (
     <>
       <div className="flex h-32 items-end gap-[3px]">
         {days.map((d, i) => (
           <div
             key={i}
-            className="w-full rounded-t bg-accent"
-            style={{ height: `${(d.n / max) * 100}%`, minHeight: d.n > 0 ? "3px" : "0" }}
-            title={`${d.label}. — ${fmtDur(d.n)}`}
-          />
+            className="flex w-full items-end gap-[1px]"
+            title={`${d.label}. — Regisztrált: ${fmtDur(d.a)} · Nem regisztrált: ${fmtDur(d.b)}`}
+          >
+            <div
+              className="w-1/2 rounded-t bg-accent"
+              style={{ height: `${(d.a / max) * 100}%`, minHeight: d.a > 0 ? "3px" : "0" }}
+            />
+            <div
+              className="w-1/2 rounded-t bg-[#3f6212]"
+              style={{ height: `${(d.b / max) * 100}%`, minHeight: d.b > 0 ? "3px" : "0" }}
+            />
+          </div>
         ))}
       </div>
       <DayAxis days={days} />
     </>
+  );
+}
+
+function EntryExitList({
+  title,
+  rows,
+}: {
+  title: string;
+  rows: { path: string; n: number }[];
+}) {
+  return (
+    <div className="rounded-xl border p-4">
+      <p className="mb-2 text-sm font-semibold">{title}</p>
+      {rows.length === 0 ? (
+        <p className="text-xs text-muted-foreground">Nincs adat.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {rows.map((r) => (
+            <li key={r.path} className="flex items-center justify-between gap-3 text-sm">
+              <span className="min-w-0 truncate">{r.path}</span>
+              <span className="shrink-0 font-medium text-muted-foreground">
+                {formatNumber(r.n)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
 
