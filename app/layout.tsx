@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/shared/cookie-banner";
 import { Analytics } from "@/components/analytics/analytics";
+import { PageTimeTracker } from "@/components/analytics/page-time-tracker";
 import "@/lib/env";
 
 const inter = Inter({
@@ -88,6 +89,7 @@ export default function RootLayout({
           }}
         />
         <Analytics />
+        <PageTimeTracker />
         <TooltipProvider>{children}</TooltipProvider>
         <CookieBanner />
         <Toaster />

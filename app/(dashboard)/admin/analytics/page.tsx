@@ -42,6 +42,15 @@ function buildSeries(map: Map<string, number>) {
   return out;
 }
 
+/** Ezredmásodperc → emberi olvasható idő (pl. "2 p 14 mp"). */
+function fmtDur(ms: number): string {
+  const s = Math.round((ms || 0) / 1000);
+  if (s < 60) return `${s} mp`;
+  const m = Math.floor(s / 60);
+  const r = s % 60;
+  return r ? `${m} p ${r} mp` : `${m} p`;
+}
+
 export default async function AdminAnalyticsPage() {
   const since = new Date(Date.now() - DAYS * 86400000);
   const dayExpr = sql<string>`to_char(date_trunc('day', ${users.createdAt}), 'YYYY-MM-DD')`;
@@ -109,6 +118,31 @@ export default async function AdminAnalyticsPage() {
   const activeSubs = subsRow[0]?.n ?? 0;
   const mrr = activeSubs * Number(price ?? 0);
 
+  // First-party "idő az oldalon" mérés (page_events). Best-effort: ha a tábla
+  // még nincs migrálva / nincs adat, üresen marad.
+  type SegRow = { registered: boolean; avg_ms: number; sessions: number };
+  type PathRow = { path: string; avg_ms: number; views: number };
+  let segRows: SegRow[] = [];
+  let pathRows: PathRow[] = [];
+  try {
+    segRows = (await db.execute(sql`
+      SELECT registered, round(avg(total))::int AS avg_ms, count(*)::int AS sessions
+      FROM (
+        SELECT session_id, sum(duration_ms) AS total, bool_or(user_id IS NOT NULL) AS registered
+        FROM page_events WHERE created_at > ${since} GROUP BY session_id
+      ) s GROUP BY registered
+    `)) as unknown as SegRow[];
+    pathRows = (await db.execute(sql`
+      SELECT path, round(avg(duration_ms))::int AS avg_ms, count(*)::int AS views
+      FROM page_events WHERE created_at > ${since}
+      GROUP BY path ORDER BY count(*) DESC LIMIT 15
+    `)) as unknown as PathRow[];
+  } catch {
+    /* tábla még nincs / nincs adat */
+  }
+  const regSeg = segRows.find((r) => r.registered);
+  const anonSeg = segRows.find((r) => !r.registered);
+
   const kpis = [
     { label: "Új regisztráció", value: formatNumber(newCreators + newBrands), sub: `${newCreators} creator · ${newBrands} márka`, icon: Users },
     { label: "Új hirdetés", value: formatNumber(newAds), sub: `${DAYS} nap alatt`, icon: Megaphone },
@@ -142,6 +176,75 @@ export default async function AdminAnalyticsPage() {
           );
         })}
       </div>
+
+      {/* Látogatottság — eltöltött idő (first-party mérés) */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Eltöltött idő az oldalon</CardTitle>
+          <p className="text-xs text-muted-foreground">
+            Átlagos munkamenet-hossz és oldalankénti bontás · {DAYS} nap
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          {segRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Még nincs elég mérési adat (a mérés most indult — pár óra/nap múlva
+              jelennek meg az értékek).
+            </p>
+          ) : (
+            <>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border bg-[#f6f7f2] p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-[#4d7c0f]">
+                    Regisztrált felhasználók
+                  </p>
+                  <p className="mt-1 text-2xl font-black">{fmtDur(regSeg?.avg_ms ?? 0)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    átlagos munkamenet · {formatNumber(regSeg?.sessions ?? 0)} munkamenet
+                  </p>
+                </div>
+                <div className="rounded-xl border bg-card p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Nem regisztrált látogatók
+                  </p>
+                  <p className="mt-1 text-2xl font-black">{fmtDur(anonSeg?.avg_ms ?? 0)}</p>
+                  <p className="text-xs text-muted-foreground">
+                    átlagos munkamenet · {formatNumber(anonSeg?.sessions ?? 0)} munkamenet
+                  </p>
+                </div>
+              </div>
+
+              {pathRows.length > 0 && (
+                <div>
+                  <p className="mb-2 text-sm font-semibold">Hol töltik az időt (oldalanként)</p>
+                  <div className="overflow-hidden rounded-xl border">
+                    <table className="w-full text-sm">
+                      <thead className="border-b bg-muted/50 text-left text-xs text-muted-foreground">
+                        <tr>
+                          <th className="px-3 py-2 font-medium">Oldal</th>
+                          <th className="px-3 py-2 text-right font-medium">Átlagos idő</th>
+                          <th className="px-3 py-2 text-right font-medium">Megtekintés</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pathRows.map((p) => (
+                          <tr key={p.path} className="border-b last:border-0">
+                            <td className="max-w-0 truncate px-3 py-2 font-medium">{p.path}</td>
+                            <td className="whitespace-nowrap px-3 py-2 text-right">{fmtDur(p.avg_ms)}</td>
+                            <td className="whitespace-nowrap px-3 py-2 text-right text-muted-foreground">
+                              {formatNumber(p.views)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader className="pb-2">

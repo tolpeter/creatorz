@@ -240,6 +240,22 @@ export const tiktokConnections = pgTable("tiktok_connections", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// ============= PAGE EVENTS (first-party látogatottság-mérés) =============
+// Oldalanként eltöltött idő (ms), munkamenet-azonosítóval és (ha be van lépve)
+// userId-vel. Ebből számoljuk az admin analitikán a regisztrált vs nem
+// regisztrált átlagos időt és az oldalankénti bontást.
+export const pageEvents = pgTable("page_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: varchar("session_id", { length: 64 }).notNull(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  path: varchar("path", { length: 300 }).notNull(),
+  durationMs: integer("duration_ms").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  createdIdx: index("page_events_created_idx").on(t.createdAt),
+  sessionIdx: index("page_events_session_idx").on(t.sessionId),
+}));
+
 // ============= BRAND PROFILES =============
 export const brandProfiles = pgTable("brand_profiles", {
   id: uuid("id").primaryKey().defaultRandom(),
