@@ -4,7 +4,7 @@ import { db } from "@/lib/db";
 import { messages, notifications, users } from "@/lib/db/schema";
 import { getMobileUser } from "@/lib/mobile-auth";
 import { resolveViewers } from "@/lib/viewers";
-import { sendEmailSafe } from "@/lib/resend/client";
+import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
 import { renderNewMessageEmail } from "@/lib/email/templates";
 import { sendExpoPush } from "@/lib/push";
 
@@ -128,7 +128,7 @@ export async function POST(
     preview: body.slice(0, 220),
     inboxUrl: `${APP_URL}${link}`,
   });
-  await sendEmailSafe({ to: partnerRow.email, ...email });
+  await sendMessageEmailThrottled(partnerId, partnerRow.email, email);
   await sendExpoPush([partnerId], {
     title: meName,
     body: body.slice(0, 140),

@@ -3,7 +3,7 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { messages, notifications, creatorProfiles, brandProfiles, users } from "@/lib/db/schema";
 import { getMobileUser } from "@/lib/mobile-auth";
-import { sendEmailSafe } from "@/lib/resend/client";
+import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
 import { renderNewMessageEmail } from "@/lib/email/templates";
 import { sendExpoPush } from "@/lib/push";
 
@@ -74,7 +74,7 @@ export async function POST(req: Request) {
     preview: body.slice(0, 220),
     inboxUrl: `${APP_URL}/creator/messages`,
   });
-  await sendEmailSafe({ to: recipient.email, ...email });
+  await sendMessageEmailThrottled(recipient.creatorUserId, recipient.email, email);
   await sendExpoPush([recipient.creatorUserId], {
     title: senderName,
     body: body.slice(0, 140),

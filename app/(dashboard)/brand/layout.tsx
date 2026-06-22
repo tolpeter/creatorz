@@ -27,7 +27,7 @@ export default async function BrandLayout({
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 md:flex-row lg:gap-8 lg:py-8">
-      <aside className="sticky top-14 z-30 bg-[#f5f6f2] pb-3 md:top-20 md:max-h-[calc(100vh-6rem)] md:self-start md:overflow-y-auto md:bg-transparent md:pb-0 md:pr-1">
+      <aside className="sticky top-[60px] z-30 pb-2 md:top-20 md:max-h-[calc(100vh-6rem)] md:self-start md:overflow-y-auto md:pb-0 md:pr-1">
         <BrandSidebar unreadMessages={unreadMessages} />
       </aside>
       <div className="min-w-0 flex-1">{children}</div>

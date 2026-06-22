@@ -43,7 +43,7 @@ export function DashboardMobileNav({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-2 rounded-lg border bg-card px-3 py-3 text-sm font-semibold shadow-sm"
+        className="flex w-full items-center gap-2 rounded-xl border border-black/10 bg-white/75 px-3.5 py-3 text-sm font-semibold shadow-lg ring-1 ring-black/5 backdrop-blur-xl"
         aria-expanded={open}
       >
         <CurrentIcon className="h-4 w-4 text-accent" />
@@ -66,7 +66,7 @@ export function DashboardMobileNav({
             aria-hidden
             onClick={() => setOpen(false)}
           />
-          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-lg border bg-card p-1.5 shadow-xl">
+          <div className="absolute z-50 mt-2 w-full overflow-hidden rounded-xl border border-black/10 bg-white/90 p-1.5 shadow-2xl backdrop-blur-xl">
             {items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);

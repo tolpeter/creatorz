@@ -12,7 +12,7 @@ import {
 import { and, eq, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser, getCurrentBrand } from "@/lib/auth";
-import { sendEmailSafe } from "@/lib/resend/client";
+import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
 import { renderNewMessageEmail } from "@/lib/email/templates";
 import { sendExpoPush } from "@/lib/push";
 import { formatHuf } from "@/lib/utils/format";
@@ -87,7 +87,7 @@ export async function sendMessage(input: z.input<typeof initSchema>) {
       preview: previewLine,
       inboxUrl: `${APP_URL}/creator/messages`,
     });
-    await sendEmailSafe({ to: recipient.email, ...email });
+    await sendMessageEmailThrottled(recipient.creatorUserId, recipient.email, email);
   }
 
   revalidatePath("/brand/messages");
@@ -201,7 +201,7 @@ export async function replyToUser(input: z.input<typeof replySchema>) {
       preview: bodyText ? bodyText.slice(0, 220) : (d.attachmentName ? `📎 ${d.attachmentName}` : undefined),
       inboxUrl: `${APP_URL}${link}`,
     });
-    await sendEmailSafe({ to: recipient.email, ...email });
+    await sendMessageEmailThrottled(d.toUserId, recipient.email, email);
   }
 
   revalidatePath("/creator/messages");
@@ -267,7 +267,7 @@ export async function adminMessageCreator(input: z.input<typeof adminMsgSchema>)
     preview: d.body.slice(0, 220),
     inboxUrl: `${APP_URL}/creator/messages`,
   });
-  await sendEmailSafe({ to: recipient.email, ...email });
+  await sendMessageEmailThrottled(recipient.creatorUserId, recipient.email, email);
 
   revalidatePath("/admin/inbox");
   revalidatePath("/creator/messages");
