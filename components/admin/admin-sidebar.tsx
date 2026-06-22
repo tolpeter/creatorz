@@ -17,6 +17,7 @@ import {
   Mail,
   BarChart3,
   FileText,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -58,14 +59,15 @@ export function AdminSidebar({
         unreadMessages={unreadContact}
         rootHref="/admin"
       />
-      <nav className="hidden gap-2 rounded-lg border bg-card p-2 shadow-sm md:flex md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
-      <div className="hidden px-3 pb-3 pt-2 md:block">
-        <p className="text-xs font-semibold uppercase text-accent">
-          Admin Control
-        </p>
-        <p className="mt-1 text-sm text-white/60">
-          Moderáció, pénzügy és platform állapot.
-        </p>
+      <nav className="hidden gap-1 rounded-2xl border bg-card p-2 shadow-sm md:flex md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
+      <div className="hidden items-center gap-2.5 border-b border-white/10 px-2 pb-3 pt-1 md:flex">
+        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent text-black shadow-[0_0_18px_rgba(163,230,53,0.35)]">
+          <ShieldCheck className="h-5 w-5" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-sm font-black leading-tight text-white">Admin Control</p>
+          <p className="truncate text-[11px] text-white/55">Moderáció &amp; platform</p>
+        </div>
       </div>
       {navItems.map((item) => {
         const active = item.exact

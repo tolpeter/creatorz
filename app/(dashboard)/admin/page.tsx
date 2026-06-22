@@ -12,6 +12,10 @@ import {
   TrendingUp,
   Download,
   DatabaseBackup,
+  Sparkles,
+  ArrowUpRight,
+  AlertTriangle,
+  CheckCircle2,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import {
@@ -112,61 +116,121 @@ export default async function AdminOverviewPage() {
   const maxN = Math.max(1, ...days.map((d) => d.n));
 
   const kpis = [
-    { label: "Összes felhasználó", value: v(summary?.usersN), icon: Users },
-    { label: "Tartalomgyártók", value: v(summary?.creatorsN), icon: UserCheck },
-    { label: "Márkák", value: v(summary?.brandsN), icon: Building2 },
-    { label: "Hitelesített creator", value: v(summary?.verifiedN), icon: BadgeCheck },
-    { label: "Aktív hirdetés", value: v(summary?.activeAdsN), icon: Megaphone },
-    { label: "Együttműködések", value: v(summary?.collabsN), icon: Handshake },
-    { label: "Üzenetek", value: v(summary?.messagesN), icon: MessageSquare },
-    { label: "Értékelések", value: v(summary?.reviewsN), icon: Star },
+    { label: "Összes felhasználó", value: v(summary?.usersN), icon: Users, tint: "bg-[#eef4dc] text-[#3f6212]" },
+    { label: "Tartalomgyártók", value: v(summary?.creatorsN), icon: UserCheck, tint: "bg-violet-50 text-violet-600" },
+    { label: "Márkák", value: v(summary?.brandsN), icon: Building2, tint: "bg-blue-50 text-blue-600" },
+    { label: "Hitelesített creator", value: v(summary?.verifiedN), icon: BadgeCheck, tint: "bg-emerald-50 text-emerald-600" },
+    { label: "Aktív hirdetés", value: v(summary?.activeAdsN), icon: Megaphone, tint: "bg-amber-50 text-amber-600" },
+    { label: "Együttműködések", value: v(summary?.collabsN), icon: Handshake, tint: "bg-teal-50 text-teal-600" },
+    { label: "Üzenetek", value: v(summary?.messagesN), icon: MessageSquare, tint: "bg-sky-50 text-sky-600" },
+    { label: "Értékelések", value: v(summary?.reviewsN), icon: Star, tint: "bg-rose-50 text-rose-600" },
   ];
 
   const todos = [
-    { label: "Moderálandó hirdetés", value: v(summary?.pendingAdsN), href: "/admin/ads" },
-    { label: "Nyitott bejelentés", value: v(summary?.openReportsN), href: "/admin/reports" },
-    { label: "Bejelentett értékelés", value: v(summary?.reportedReviewsN), href: "/admin/reports" },
+    { label: "Moderálandó hirdetés", value: v(summary?.pendingAdsN), href: "/admin/ads", icon: Megaphone },
+    { label: "Nyitott bejelentés", value: v(summary?.openReportsN), href: "/admin/reports", icon: AlertTriangle },
+    { label: "Bejelentett értékelés", value: v(summary?.reportedReviewsN), href: "/admin/reports", icon: Star },
   ];
+  const openTodos = todos.reduce((s, t) => s + t.value, 0);
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold">Admin áttekintés</h1>
+    <div className="space-y-7">
+      {/* HERO */}
+      <section className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#0b0d0a] p-6 text-white shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:p-8">
+        <div aria-hidden className="pointer-events-none absolute -right-16 -top-20 h-64 w-64 rounded-full bg-accent/20 blur-3xl" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_12%_0%,rgba(163,230,53,0.16),transparent_42%)]" />
+        <div className="relative flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-accent/35 bg-accent/10 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.12em] text-accent">
+              <Sparkles className="h-3 w-3" /> Admin
+            </span>
+            <h1 className="mt-2 text-3xl font-black tracking-tight">Admin áttekintés</h1>
+            <p className="mt-1 text-sm text-white/60">
+              A platform pillanatképe — felhasználók, hirdetések és bevétel egy helyen.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {openTodos > 0 ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/90 px-3 py-1.5 text-sm font-bold">
+                <AlertTriangle className="h-4 w-4" /> {openTodos} teendő
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1.5 text-sm font-semibold text-accent">
+                <CheckCircle2 className="h-4 w-4" /> Minden rendben
+              </span>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Teendők — kiemelten, ha van nyitott */}
+      <div className="grid gap-3 sm:grid-cols-3">
+        {todos.map((t) => {
+          const Icon = t.icon;
+          const has = t.value > 0;
+          return (
+            <Link
+              key={t.label}
+              href={t.href}
+              className={
+                "group flex items-center gap-3 rounded-2xl border p-4 transition-all hover:-translate-y-0.5 hover:shadow-md " +
+                (has ? "border-red-200 bg-red-50/60" : "border-black/10 bg-card")
+              }
+            >
+              <span
+                className={
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-xl " +
+                  (has ? "bg-red-100 text-red-600" : "bg-muted text-muted-foreground")
+                }
+              >
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className={"text-2xl font-black leading-none " + (has ? "text-red-600" : "")}>{t.value}</p>
+                <p className="mt-1 truncate text-xs text-muted-foreground">{t.label}</p>
+              </div>
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            </Link>
+          );
+        })}
+      </div>
 
       {/* Fő KPI-k */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => {
           const Icon = k.icon;
           return (
-            <Card key={k.label}>
-              <CardContent className="flex items-center gap-3 p-4">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0f4e5] text-[#4d7c0f]">
-                  <Icon className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-2xl font-black leading-none">{k.value}</p>
-                  <p className="mt-1 truncate text-xs text-muted-foreground">{k.label}</p>
-                </div>
-              </CardContent>
-            </Card>
+            <div
+              key={k.label}
+              className="group rounded-2xl border border-black/10 bg-card p-4 transition-all hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <span className={"flex h-11 w-11 items-center justify-center rounded-xl " + k.tint}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <p className="mt-3 text-3xl font-black leading-none tracking-tight">{k.value}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{k.label}</p>
+            </div>
           );
         })}
       </div>
 
       {/* Növekedés + bevétel */}
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
+        <Card className="rounded-2xl lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
-              <TrendingUp className="h-4 w-4 text-[#4d7c0f]" />
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#eef4dc] text-[#3f6212]">
+                <TrendingUp className="h-4 w-4" />
+              </span>
               Regisztrációk — utolsó 14 nap
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex h-32 items-end gap-1.5">
+            <div className="flex h-36 items-end gap-1.5">
               {days.map((d, i) => (
                 <div key={i} className="flex flex-1 flex-col items-center gap-1">
                   <div
-                    className="w-full rounded-t bg-accent"
+                    className="w-full rounded-t bg-gradient-to-t from-accent/70 to-accent transition-all group-hover:opacity-90"
                     style={{ height: `${(d.n / maxN) * 100}%`, minHeight: d.n > 0 ? "4px" : "0" }}
                     title={`${d.n} regisztráció`}
                   />
@@ -187,81 +251,58 @@ export default async function AdminOverviewPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Bevétel</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+        <Card className="overflow-hidden rounded-2xl border-0 bg-[#0b0d0a] text-white">
+          <CardContent className="space-y-5 p-6">
             <div>
-              <p className="text-3xl font-black text-[#3f6212]">{formatHuf(activeSubs * monthly)}</p>
-              <p className="text-xs text-muted-foreground">Becsült havi MRR</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+                Becsült havi bevétel (MRR)
+              </p>
+              <p className="mt-1 text-4xl font-black text-accent">{formatHuf(activeSubs * monthly)}</p>
             </div>
-            <div>
-              <p className="text-2xl font-bold">{activeSubs}</p>
-              <p className="text-xs text-muted-foreground">Aktív előfizetés · {formatHuf(monthly)}/hó</p>
+            <div className="flex items-end justify-between border-t border-white/10 pt-4">
+              <div>
+                <p className="text-2xl font-bold">{activeSubs}</p>
+                <p className="text-xs text-white/50">Aktív előfizetés</p>
+              </div>
+              <p className="text-sm text-white/60">{formatHuf(monthly)}/hó</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Biztonsági mentés és exportok */}
-      <div>
-        <h2 className="mb-3 text-lg font-bold">Biztonsági mentés</h2>
-        <Card>
-          <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#f0f4e5] text-[#4d7c0f]">
-                <DatabaseBackup className="h-5 w-5" />
-              </span>
-              <div>
-                <p className="font-semibold">Teljes adatbázis-mentés (JSON)</p>
-                <p className="text-sm text-muted-foreground">
-                  Letölti az összes táblát egyetlen JSON fájlba (felhasználók, hirdetések, üzenetek, beállítások).
-                </p>
-              </div>
+      <Card className="rounded-2xl">
+        <CardContent className="flex flex-col gap-4 p-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#eef4dc] text-[#3f6212]">
+              <DatabaseBackup className="h-5 w-5" />
+            </span>
+            <div>
+              <p className="font-semibold">Teljes adatbázis-mentés (JSON)</p>
+              <p className="text-sm text-muted-foreground">
+                Az összes tábla egyetlen JSON fájlban (felhasználók, hirdetések, üzenetek, beállítások).
+              </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="bg-[#0a0a0a] text-white hover:bg-accent hover:text-black">
-                <a href="/api/admin/backup" download>
-                  <DatabaseBackup className="h-4 w-4" /> Mentés letöltése
-                </a>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <a href="/api/admin/export?type=users" download>
-                  <Download className="h-4 w-4" /> Felhasználók CSV
-                </a>
-              </Button>
-              <Button asChild variant="outline" size="sm">
-                <a href="/api/admin/export?type=ads" download>
-                  <Download className="h-4 w-4" /> Hirdetések CSV
-                </a>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Teendők */}
-      <div>
-        <h2 className="mb-3 text-lg font-bold">Teendők</h2>
-        <div className="grid gap-4 sm:grid-cols-3">
-          {todos.map((t) => (
-            <Card key={t.label} className={t.value > 0 ? "border-accent/50" : undefined}>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">{t.label}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex items-center justify-between">
-                <span className={"text-2xl font-bold " + (t.value > 0 ? "text-red-600" : "")}>
-                  {t.value}
-                </span>
-                <Button asChild size="sm" variant="outline">
-                  <Link href={t.href}>Megnyitás</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild className="bg-[#0a0a0a] text-white hover:bg-accent hover:text-black">
+              <a href="/api/admin/backup" download>
+                <DatabaseBackup className="h-4 w-4" /> Mentés letöltése
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <a href="/api/admin/export?type=users" download>
+                <Download className="h-4 w-4" /> Felhasználók CSV
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="sm">
+              <a href="/api/admin/export?type=ads" download>
+                <Download className="h-4 w-4" /> Hirdetések CSV
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
