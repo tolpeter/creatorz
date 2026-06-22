@@ -46,15 +46,20 @@ export async function createApplication(input: z.input<typeof applySchema>) {
   const rl = checkRateLimit(`apply:${creator.profile.id}`, 10, DAY);
   if (!rl.allowed) return { error: "Elérted a napi 10 pályázat limitet." };
 
-  // Profil teljesség: avatar + bio + min 1 portfolio
+  // Profil teljesség: avatar + bio + min 1 portfólió. Csak a ténylegesen
+  // hiányzó elemeket soroljuk fel (személyre szabottan).
   const pf = await db
     .select({ n: sql<number>`count(*)::int` })
     .from(portfolioItems)
     .where(eq(portfolioItems.creatorId, creator.profile.id));
-  if (!creator.profile.avatarUrl || !creator.profile.bio || (pf[0]?.n ?? 0) < 1) {
+  const missing: string[] = [];
+  if (!creator.profile.avatarUrl) missing.push("profilkép");
+  if (!creator.profile.bio || creator.profile.bio.trim().length === 0)
+    missing.push("bemutatkozás");
+  if ((pf[0]?.n ?? 0) < 1) missing.push("legalább 1 portfólió elem");
+  if (missing.length > 0) {
     return {
-      error:
-        "A pályázáshoz tölts fel profilképet, írj bemutatkozást és legalább 1 portfolió elemet.",
+      error: `A pályázáshoz még hiányzik a profilodból: ${missing.join(", ")}. Töltsd ki a profilodnál, és próbáld újra.`,
     };
   }
 

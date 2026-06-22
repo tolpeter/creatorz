@@ -51,9 +51,13 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .select({ n: sql<number>`count(*)::int` })
     .from(portfolioItems)
     .where(eq(portfolioItems.creatorId, creator.id));
-  if (!creator.avatarUrl || !creator.bio || (pf[0]?.n ?? 0) < 1) {
+  const missing: string[] = [];
+  if (!creator.avatarUrl) missing.push("profilkép");
+  if (!creator.bio || creator.bio.trim().length === 0) missing.push("bemutatkozás");
+  if ((pf[0]?.n ?? 0) < 1) missing.push("legalább 1 portfólió elem");
+  if (missing.length > 0) {
     return Response.json(
-      { error: "A pályázáshoz tölts fel profilképet, írj bemutatkozást és legalább 1 portfólió elemet (a weben)." },
+      { error: `A pályázáshoz még hiányzik a profilodból: ${missing.join(", ")}. Töltsd ki a profilodnál, és próbáld újra.` },
       { status: 400 },
     );
   }
