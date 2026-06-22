@@ -16,6 +16,7 @@ import {
   Newspaper,
   Mail,
   BarChart3,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -34,6 +35,7 @@ const navItems = [
   { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },
   { href: "/admin/brands", label: "Márkák", icon: Building2, key: "brands" },
   { href: "/admin/ads", label: "Hirdetések", icon: Megaphone, key: "ads" },
+  { href: "/admin/applications", label: "Jelentkezők", icon: FileText, key: "applications" },
   { href: "/admin/blog", label: "Blog", icon: Newspaper, key: "blog" },
   { href: "/admin/reviews", label: "Értékelések", icon: Star, key: "reviews" },
   { href: "/admin/reports", label: "Bejelentések", icon: Flag, key: "reports" },

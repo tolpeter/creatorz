@@ -30,6 +30,7 @@ import {
 import { formatHuf, formatHuDate, formatNumber } from "@/lib/utils/format";
 import { renderMarkdownToHtml, stripMarkdown } from "@/lib/utils/markdown";
 import { supabaseOgImage } from "@/lib/utils/og-image";
+import { getTikTokEmbed } from "@/lib/utils/oembed";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -191,6 +192,31 @@ export default async function AdDetailPage({
 
   const categories = ad.categories ?? [];
   const referenceLinks = ad.referenceLinks ?? [];
+
+  // Referencia-linkek előnézete: TikTok-linkeknél oEmbed thumbnail + cím,
+  // egyébként a domain. Így nem csak egy nyers link látszik.
+  const referencePreviews = await Promise.all(
+    referenceLinks.map(async (link) => {
+      const url = /^https?:\/\//i.test(link) ? link : `https://${link}`;
+      let domain = url;
+      try {
+        domain = new URL(url).hostname.replace(/^www\./, "");
+      } catch {
+        /* hagyjuk az eredetit */
+      }
+      const isTikTok = /tiktok\.com/i.test(url);
+      let thumbnail: string | null = null;
+      let title: string | null = null;
+      let author: string | null = null;
+      if (isTikTok) {
+        const e = await getTikTokEmbed(url);
+        thumbnail = e?.thumbnail_url ?? null;
+        title = e?.title ?? null;
+        author = e?.author_name ?? null;
+      }
+      return { link, url, domain, isTikTok, thumbnail, title, author };
+    }),
+  );
   const categoryLabels = categories.map(
     (c) => CREATOR_CATEGORIES.find((x) => x.value === c)?.label ?? c,
   );
@@ -460,17 +486,42 @@ export default async function AdDetailPage({
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               Referenciák
             </p>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2">
-              {referenceLinks.map((link) => (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {referencePreviews.map((p) => (
                 <a
-                  key={link}
-                  href={/^https?:\/\//i.test(link) ? link : `https://${link}`}
+                  key={p.link}
+                  href={p.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center justify-between gap-3 rounded-lg border border-black/10 px-4 py-3 text-sm font-medium transition-colors hover:border-accent hover:bg-[#f6f7f2]"
+                  className="group block overflow-hidden rounded-xl border border-black/10 transition-all hover:border-accent hover:shadow-md"
                 >
-                  <span className="min-w-0 truncate">{link}</span>
-                  <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  {p.thumbnail ? (
+                    <div className="relative aspect-video w-full overflow-hidden bg-black">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={p.thumbnail}
+                        alt={p.title ?? "Referencia"}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <span className="absolute inset-0 flex items-center justify-center">
+                        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-black/55 text-white backdrop-blur">
+                          <Film className="h-5 w-5" />
+                        </span>
+                      </span>
+                      <span className="absolute left-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-[11px] font-bold text-white">
+                        {p.isTikTok ? "TikTok" : p.domain}
+                      </span>
+                    </div>
+                  ) : null}
+                  <div className="flex items-center justify-between gap-3 px-4 py-3">
+                    <span className="min-w-0 truncate text-sm font-medium">
+                      {p.title ?? p.domain}
+                      {p.author ? (
+                        <span className="text-muted-foreground"> · @{p.author}</span>
+                      ) : null}
+                    </span>
+                    <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent" />
+                  </div>
                 </a>
               ))}
             </div>
