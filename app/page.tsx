@@ -299,7 +299,7 @@ function HomeHero() {
       />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1280px] flex-col">
-        <div className="grid flex-1 items-center gap-2 pt-8 sm:gap-10 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
+        <div className="grid flex-1 items-center gap-1 pt-4 sm:gap-10 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
           {/* Bal: sz\u00f6veg */}
           <div className="min-w-0 max-w-full lg:max-w-[640px]">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm">
@@ -318,7 +318,7 @@ function HomeHero() {
               }
             </p>
 
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-6 flex flex-col gap-3 sm:mt-7 sm:flex-row">
               <Button
                 asChild
                 size="lg"
@@ -357,7 +357,7 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[330px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
+    <div className="relative mx-auto flex h-[280px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
@@ -383,7 +383,35 @@ function HeroVisual() {
         height={1241}
         priority
         sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 170px"
-        className="animate-float relative z-10 h-auto w-[170px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+        className="animate-float relative z-10 h-auto w-[150px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+      />
+
+      {/* === Mobil-only lebego kartyak (2-3 db) — asztali nezetben a lenti kartyak === */}
+      <Image
+        src="/images/home-hero/card-followers.webp"
+        alt=""
+        width={1156}
+        height={910}
+        sizes="120px"
+        className="animate-float absolute left-[-2%] top-[6%] z-20 h-auto w-[120px] rotate-[-4deg] object-contain drop-shadow-2xl md:hidden"
+      />
+      <Image
+        src="/images/home-hero/card-views.webp"
+        alt=""
+        width={1197}
+        height={803}
+        sizes="116px"
+        className="animate-float absolute right-[-2%] top-[3%] z-20 h-auto w-[116px] rotate-[4deg] object-contain drop-shadow-2xl md:hidden"
+        style={{ animationDelay: "0.5s" }}
+      />
+      <Image
+        src="/images/home-hero/card-messages.webp"
+        alt=""
+        width={1049}
+        height={698}
+        sizes="124px"
+        className="animate-float absolute bottom-[14%] left-[-3%] z-20 h-auto w-[124px] rotate-[3deg] object-contain drop-shadow-2xl md:hidden"
+        style={{ animationDelay: "1s" }}
       />
 
       {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
