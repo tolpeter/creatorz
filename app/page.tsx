@@ -17,6 +17,7 @@ import {
   CreatorCard,
   type CreatorCardData,
 } from "@/components/creator/creator-card";
+import { FeaturedCreatorsCarousel } from "@/components/creator/featured-creators-carousel";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { NicheBrowser } from "@/components/shared/niche-browser";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -107,7 +108,12 @@ export default async function LandingPage() {
                 Mind megtekintése <ArrowRight className="inline h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Mobil: egysoros, automatikusan úszó + kézzel húzható carousel. */}
+            <div className="sm:hidden">
+              <FeaturedCreatorsCarousel creators={featured} />
+            </div>
+            {/* Tablet/asztali: rács. */}
+            <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
               {featured.map((c) => (
                 <CreatorCard key={c.username} creator={c} />
               ))}
