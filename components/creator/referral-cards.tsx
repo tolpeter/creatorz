@@ -7,6 +7,7 @@ import { Check, Gift, Link2, Share2, Sparkles, Trophy, Users } from "lucide-reac
 import { SocialTile } from "@/components/creator/platform-icon";
 
 const REWARD_DAYS = 7;
+const REFERRALS_PER_REWARD = 3;
 
 /* ───────────────────────── Ajánlási (referral) kártya ───────────────────── */
 
@@ -18,7 +19,9 @@ export function ReferralCard({
   count: number;
 }) {
   const [copied, setCopied] = useState(false);
-  const earnedDays = count * REWARD_DAYS;
+  const earnedDays = Math.floor(count / REFERRALS_PER_REWARD) * REWARD_DAYS;
+  const progress = count % REFERRALS_PER_REWARD; // hányadik a következő jutalom felé (0–2)
+  const toNext = REFERRALS_PER_REWARD - progress; // még ennyi meghívás kell
 
   async function copyLink() {
     try {
@@ -60,9 +63,13 @@ export function ReferralCard({
           <Gift className="h-5 w-5" />
         </span>
         <div>
-          <h2 className="text-lg font-bold">Hívj meg egy alkotót — kapj kiemelést</h2>
+          <h2 className="text-lg font-bold">Hívj meg alkotókat — kapj kiemelést</h2>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Minden sikeres meghívás után{" "}
+            Minden{" "}
+            <span className="font-semibold text-foreground">
+              {REFERRALS_PER_REWARD} sikeres meghívás
+            </span>{" "}
+            után{" "}
             <span className="font-semibold text-foreground">{REWARD_DAYS} nap</span>{" "}
             kiemelést kapsz a keresőben. A meghívottnak ingyenes a regisztráció.
           </p>
@@ -129,6 +136,30 @@ export function ReferralCard({
             <p className="mt-2 text-2xl font-bold">
               {earnedDays} <span className="text-base font-medium text-muted-foreground">nap</span>
             </p>
+          </div>
+        </div>
+
+        {/* Haladás a következő jutalomig */}
+        <div className="rounded-lg bg-muted/40 p-4">
+          <div className="flex items-center justify-between gap-2 text-sm">
+            <span className="font-medium">
+              Még{" "}
+              <span className="font-bold text-foreground">{toNext} meghívás</span> a
+              következő {REWARD_DAYS} nap kiemelésig
+            </span>
+            <span className="shrink-0 text-xs font-semibold text-muted-foreground">
+              {progress}/{REFERRALS_PER_REWARD}
+            </span>
+          </div>
+          <div className="mt-2 flex gap-1.5">
+            {Array.from({ length: REFERRALS_PER_REWARD }).map((_, i) => (
+              <span
+                key={i}
+                className={`h-1.5 flex-1 rounded-full ${
+                  i < progress ? "bg-accent" : "bg-black/10"
+                }`}
+              />
+            ))}
           </div>
         </div>
       </div>

@@ -3,7 +3,8 @@ import { eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users, referrals, creatorProfiles } from "@/lib/db/schema";
 
-// Ajánlásonként ennyi nap kiemelést kap a meghívó (creator).
+// Minden REFERRALS_PER_REWARD. sikeres meghívás után jár a jutalom (creator).
+export const REFERRALS_PER_REWARD = 3;
 export const REFERRAL_REWARD_DAYS = 7;
 
 function genCode(): string {
@@ -61,16 +62,24 @@ export async function recordReferral(code: string, referredUserId: string): Prom
     .returning({ id: referrals.id });
   if (!inserted[0]) return false; // ezt a usert már beajánlották
 
-  // Jutalom: a meghívó creator-profiljának +REWARD nap kiemelés (ha van profilja).
+  // Jutalom: MINDEN REFERRALS_PER_REWARD. sikeres meghívás után +REWARD nap
+  // kiemelés a meghívó creator-profiljának (ha van profilja).
   try {
-    await db
-      .update(creatorProfiles)
-      .set({
-        isFeatured: true,
-        featuredUntil: sql`GREATEST(coalesce(${creatorProfiles.featuredUntil}, now()), now()) + (${REFERRAL_REWARD_DAYS} || ' days')::interval`,
-        updatedAt: new Date(),
-      })
-      .where(eq(creatorProfiles.userId, ref.id));
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(referrals)
+      .where(eq(referrals.referrerUserId, ref.id));
+    const total = row?.n ?? 0;
+    if (total > 0 && total % REFERRALS_PER_REWARD === 0) {
+      await db
+        .update(creatorProfiles)
+        .set({
+          isFeatured: true,
+          featuredUntil: sql`GREATEST(coalesce(${creatorProfiles.featuredUntil}, now()), now()) + (${REFERRAL_REWARD_DAYS} || ' days')::interval`,
+          updatedAt: new Date(),
+        })
+        .where(eq(creatorProfiles.userId, ref.id));
+    }
   } catch {
     // best-effort (ha a meghívó nem creator)
   }
