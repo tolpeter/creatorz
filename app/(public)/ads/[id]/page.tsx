@@ -54,7 +54,7 @@ export async function generateMetadata({
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
     .where(UUID_RE.test(id) ? eq(ads.id, id) : eq(ads.slug, id))
     .limit(1);
-  if (!row) return { title: "Hirdetés" };
+  if (!row) return { title: "Kampány" };
   const publicBrandName = row.anonymous ? "Bizalmas márka" : row.brandName;
   const desc =
     stripMarkdown(row.description ?? "").slice(0, 160) ||
@@ -113,7 +113,7 @@ export default async function AdDetailPage({
   if (!row || row.ad.status !== "active") notFound();
   const ad = row.ad;
 
-  // Anonim hirdetésnél elrejtjük a márka publikus adatait — a logót, cégnevet,
+  // Anonim kampánynál elrejtjük a márka publikus adatait — a logót, cégnevet,
   // weboldalt. A részleteket csak az érdeklődő creator látja az üzenetekben.
   const publicBrandName = ad.anonymous ? "Bizalmas márka" : row.brandName;
   const publicBrandLogo = ad.anonymous ? null : row.brandLogo;
@@ -140,7 +140,7 @@ export default async function AdDetailPage({
   }
 
   // Megtekintés-rögzítés: MINDEN megtekintés számít (ismétlés is), kivéve a
-  // hirdetés tulajdonosát. A viewer-sor a "ki nézte" funkcióhoz kell.
+  // kampány tulajdonosát. A viewer-sor a "ki nézte" funkcióhoz kell.
   const isAdOwner = current?.dbUser?.id === row.brandUserId;
   if (!isAdOwner) {
     const today = new Date().toISOString().slice(0, 10);
@@ -255,7 +255,7 @@ export default async function AdDetailPage({
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link href="/ads">
           <ArrowLeft className="h-3.5 w-3.5" />
-          Vissza a hirdetésekhez
+          Vissza a kampányokhoz
         </Link>
       </Button>
 
@@ -433,7 +433,7 @@ export default async function AdDetailPage({
                     <Star className="mt-0.5 h-4 w-4 shrink-0 fill-accent text-accent" />
                     <p className="text-sm font-medium text-[#3f6212]">
                       <strong>{publicBrandName}</strong> kifejezetten téged hívott meg
-                      erre a hirdetésre. Pályázz, hogy ne maradj le róla!
+                      erre a kampányra. Pályázz, hogy ne maradj le róla!
                     </p>
                   </div>
                 )}
@@ -442,7 +442,7 @@ export default async function AdDetailPage({
                   {creator ? (
                     alreadyApplied ? (
                       <Badge className="bg-accent text-black hover:bg-accent">
-                        Erre a hirdetésre már pályáztál
+                        Erre a kampányra már pályáztál
                       </Badge>
                     ) : (
                       <div className="[&_button]:w-full [&_button]:bg-[#0b0d0a] [&_button]:text-white [&_button]:hover:bg-accent [&_button]:hover:text-black">
@@ -451,7 +451,7 @@ export default async function AdDetailPage({
                     )
                   ) : current?.dbUser?.role === "brand" ? (
                     <p className="text-sm text-muted-foreground">
-                      Márkaként nem tudsz pályázni saját vagy más hirdetésére.
+                      Márkaként nem tudsz pályázni saját vagy más kampányára.
                     </p>
                   ) : (
                     <Button

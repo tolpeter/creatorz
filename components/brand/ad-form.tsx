@@ -61,7 +61,7 @@ export function AdForm({
 }: {
   adId?: string;
   initial?: AdFormInitial;
-  /** Admin mód: a hirdetés ennek a márkának a nevében jön létre. */
+  /** Admin mód: a kampány ennek a márkának a nevében jön létre. */
   adminBrandId?: string;
 }) {
   const router = useRouter();
@@ -116,10 +116,10 @@ export function AdForm({
     }
     toast.success(
       isEdit
-        ? "Hirdetés módosítva!"
+        ? "Kampány módosítva!"
         : adminBrandId
-          ? "Hirdetés létrehozva (aktív)!"
-          : "Hirdetés beküldve moderálásra!",
+          ? "Kampány létrehozva (aktív)!"
+          : "Kampány beküldve moderálásra!",
     );
     router.push(adminBrandId ? "/admin/ads" : `/brand/ads/${res.id}`);
     router.refresh();
@@ -128,13 +128,13 @@ export function AdForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{isEdit ? "Hirdetés szerkesztése" : "Új hirdetés"}</CardTitle>
+        <CardTitle>{isEdit ? "Kampány szerkesztése" : "Új kampány"}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="space-y-1.5">
           <Label>Borítókép (opcionális)</Label>
           <p className="text-xs text-muted-foreground">
-            Egy figyelemfelkeltő kép a hirdetésed tetejére és a listában.
+            Egy figyelemfelkeltő kép a kampányod tetejére és a listában.
           </p>
           <ImageUploader
             bucket="banners"
@@ -163,7 +163,7 @@ export function AdForm({
         <div className="space-y-2">
           <Label>Kit keresel? *</Label>
           <p className="text-xs text-muted-foreground">
-            Több típust is megjelölhetsz — a megfelelő alkotók látják a hirdetést.
+            Több típust is megjelölhetsz — a megfelelő alkotók látják a kampányt.
           </p>
           <ChipMultiSelect
             options={TARGET_KIND_OPTIONS}
@@ -227,7 +227,7 @@ export function AdForm({
             <span className="text-sm leading-snug">
               <span className="font-medium">A bérezés legyen publikus</span>
               <span className="block text-xs text-muted-foreground">
-                Ha nincs bepipálva, a hirdetésen „Megegyezés szerint" jelenik meg,
+                Ha nincs bepipálva, a kampányon „Megegyezés szerint" jelenik meg,
                 és a díjazást személyesen egyeztetitek.
               </span>
             </span>
@@ -250,9 +250,9 @@ export function AdForm({
             className="mt-0.5"
           />
           <span className="text-sm leading-snug">
-            <span className="font-medium text-[#3f6212]">Anonim hirdetés</span>
+            <span className="font-medium text-[#3f6212]">Anonim kampány</span>
             <span className="block text-xs text-muted-foreground">
-              A publikus hirdetésben NEM jelenik meg a cégnév, logó, weboldal.
+              A publikus kampányban NEM jelenik meg a cégnév, logó, weboldal.
               A részleteket csak az érdeklődő tartalomgyártókkal osztod meg az
               üzenetekben. (Az admin és a moderáció természetesen látja.)
             </span>
@@ -288,7 +288,7 @@ export function AdForm({
         <div className="flex justify-end">
           <Button onClick={submit} disabled={loading}>
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-            {isEdit ? "Mentés" : "Hirdetés beküldése"}
+            {isEdit ? "Mentés" : "Kampány beküldése"}
           </Button>
         </div>
       </CardContent>

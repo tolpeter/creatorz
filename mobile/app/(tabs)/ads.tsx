@@ -53,7 +53,7 @@ export default function AdsScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.surfaceMuted }}>
       <View style={{ padding: 12, backgroundColor: colors.bg, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>Hirdetések</Text>
+        <Text style={{ color: "#fff", fontWeight: "800", fontSize: 18 }}>Kampányok</Text>
         <Pressable
           onPress={() => setFilterOpen(true)}
           hitSlop={8}
@@ -98,7 +98,7 @@ export default function AdsScreen() {
         }}
         ListEmptyComponent={
           <Text style={{ textAlign: "center", color: colors.muted, marginTop: 50 }}>
-            Jelenleg nincs aktív hirdetés.
+            Jelenleg nincs aktív kampány.
           </Text>
         }
         renderItem={({ item }) => (

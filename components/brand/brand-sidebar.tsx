@@ -40,7 +40,7 @@ const navItems = [
     icon: Heart,
     key: "saved",
   },
-  { href: "/brand/ads", label: "Hirdetéseim", icon: Megaphone, key: "ads" },
+  { href: "/brand/ads", label: "Kampányaim", icon: Megaphone, key: "ads" },
   {
     href: "/brand/applications",
     label: "Jelentkezők",

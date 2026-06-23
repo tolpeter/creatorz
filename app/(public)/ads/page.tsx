@@ -27,8 +27,8 @@ import {
 } from "lucide-react";
 
 export const metadata = {
-  title: "Hirdetések",
-  description: "Aktív márka-hirdetések magyar UGC tartalomgyártóknak.",
+  title: "Kampányok",
+  description: "Aktív márka-kampányok magyar UGC tartalomgyártóknak.",
 };
 
 type SP = Record<string, string | string[] | undefined>;
@@ -50,7 +50,7 @@ export default async function AdsFeedPage({
     return (
       <MembersOnlyGate
         next="/ads"
-        title="A hirdetések böngészése csak tagoknak elérhető"
+        title="A kampányok böngészése csak tagoknak elérhető"
         description="Regisztrálj ingyen tartalomgyártóként, és máris láthatod a márkák aktív briefjeit, amikre pályázhatsz — vagy lépj be a fiókodba."
       />
     );
@@ -105,7 +105,7 @@ export default async function AdsFeedPage({
   }
 
   const sort = one(sp.sort) ?? "newest";
-  // A kiemelt hirdetések minden rendezésnél elöl jelennek meg.
+  // A kiemelt kampányok minden rendezésnél elöl jelennek meg.
   const orderBy =
     sort === "deadline"
       ? [desc(ads.isFeatured), asc(ads.deadline)]
@@ -144,7 +144,7 @@ export default async function AdsFeedPage({
     slug: r.slug,
     title: r.title,
     description: r.description,
-    // Anonim hirdetésnél a publikus felületen elrejtjük a márka adatait
+    // Anonim kampánynál a publikus felületen elrejtjük a márka adatait
     brandName: r.anonymous ? "Bizalmas márka" : r.brandName,
     brandLogo: r.anonymous ? null : r.brandLogo,
     coverUrl: r.coverUrl,
@@ -207,7 +207,7 @@ export default async function AdsFeedPage({
               Márka briefek
             </div>
             <h1 className="text-balance text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
-              Hirdetések, amikből jó UGC együttműködések indulnak.
+              Kampányok, amikből jó UGC együttműködések indulnak.
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-white/70 sm:text-base">
               Böngéssz kampánycél, kategória, formátum és határidő alapján —
@@ -280,16 +280,16 @@ export default async function AdsFeedPage({
                 <Sparkles className="h-3.5 w-3.5 text-accent" />
                 Aktív kampányok
               </p>
-              <h2 className="mt-1 text-2xl font-bold">Hirdetések böngészése</h2>
+              <h2 className="mt-1 text-2xl font-bold">Kampányok böngészése</h2>
               <p className="text-sm text-muted-foreground">
-                {items.length} aktív hirdetés a beállított szűrőkkel.
+                {items.length} aktív kampány a beállított szűrőkkel.
               </p>
             </div>
             <AdsSortSelect />
           </div>
           {items.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-black/15 bg-white p-12 text-center text-muted-foreground">
-              Jelenleg nincs a szűrőknek megfelelő aktív hirdetés.
+              Jelenleg nincs a szűrőknek megfelelő aktív kampány.
             </div>
           ) : (
             <div className="space-y-4">

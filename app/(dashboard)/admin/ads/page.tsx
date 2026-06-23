@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
-export const metadata = { title: "Admin — Hirdetések" };
+export const metadata = { title: "Admin — Kampányok" };
 
 export default async function AdminAdsPage() {
   const rows = await db
@@ -38,11 +38,11 @@ export default async function AdminAdsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Hirdetések moderálása</h1>
+        <h1 className="text-2xl font-bold">Kampányok moderálása</h1>
         <div className="flex items-center gap-2">
           <Button asChild size="sm">
             <Link href="/admin/ads/new">
-              <Plus className="h-4 w-4" /> Új hirdetés
+              <Plus className="h-4 w-4" /> Új kampány
             </Link>
           </Button>
           <ExportButton type="ads" />
@@ -52,7 +52,7 @@ export default async function AdminAdsPage() {
       <section className="space-y-3">
         <h2 className="font-semibold">Moderálásra vár ({pending.length})</h2>
         {pending.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nincs moderálandó hirdetés.</p>
+          <p className="text-sm text-muted-foreground">Nincs moderálandó kampány.</p>
         ) : (
           pending.map((a) => (
             <Card key={a.id}>
@@ -76,7 +76,7 @@ export default async function AdminAdsPage() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="font-semibold">Összes hirdetés</h2>
+        <h2 className="font-semibold">Összes kampány</h2>
         <div className="overflow-x-auto rounded-lg border">
           <table className="w-full text-sm">
             <thead className="border-b bg-muted/50 text-left">

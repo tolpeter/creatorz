@@ -60,7 +60,7 @@ export async function submitReport(input: z.input<typeof schema>) {
       .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
       .where(eq(ads.id, d.targetId))
       .limit(1);
-    if (!a) return { error: "A bejelentett hirdetés nem található." };
+    if (!a) return { error: "A bejelentett kampány nem található." };
     targetLabel = a.title;
     targetUrl = `/ads/${d.targetId}`;
     reportedUserId = a.brandUserId;
@@ -103,7 +103,7 @@ export async function submitReport(input: z.input<typeof schema>) {
       subject: "Új tartalom-bejelentés – Creatorz",
       html: `
         <h2>Új bejelentés</h2>
-        <p><strong>Típus:</strong> ${d.targetType === "creator" ? "Tartalomgyártó" : "Hirdetés"}</p>
+        <p><strong>Típus:</strong> ${d.targetType === "creator" ? "Tartalomgyártó" : "Kampány"}</p>
         <p><strong>Tartalom:</strong> ${targetLabel}</p>
         <p><strong>Ok:</strong> ${reasonLabel}</p>
         ${d.note ? `<p><strong>Megjegyzés:</strong> ${d.note}</p>` : ""}

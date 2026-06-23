@@ -47,7 +47,7 @@ const COMPONENTS = [
   },
   {
     icon: Megaphone,
-    name: "Hirdetések és pályázatok",
+    name: "Kampányok és pályázatok",
     desc: "Briefek feladása és a pályázatok kezelése.",
     uptime: "100%",
   },
@@ -100,7 +100,7 @@ const CHANGELOG: {
   {
     date: "2026.06.",
     type: "improve",
-    title: "Hirdetések és pályázatok",
+    title: "Kampányok és pályázatok",
     desc: "Márka briefek opcionális (privát) bérezéssel és együttműködés-típussal; a tartalomgyártók pár kattintással pályázhatnak.",
   },
   {

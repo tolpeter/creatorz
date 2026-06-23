@@ -123,7 +123,7 @@ export function BrandProfileEditor({ initial }: { initial: BrandProfileInitial }
         <CardHeader>
           <CardTitle>Részletes adatok</CardTitle>
           <CardDescription>
-            Csak akkor kötelező, ha hirdetést szeretnél feladni (5. fázis).
+            Csak akkor kötelező, ha kampányt szeretnél feladni (5. fázis).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">

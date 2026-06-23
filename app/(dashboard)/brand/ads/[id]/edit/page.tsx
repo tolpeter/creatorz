@@ -8,7 +8,7 @@ import { getCurrentBrand } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AdForm, type AdFormInitial } from "@/components/brand/ad-form";
 
-export const metadata = { title: "Hirdetés szerkesztése" };
+export const metadata = { title: "Kampány szerkesztése" };
 
 export default async function EditAdPage({
   params,
@@ -49,7 +49,7 @@ export default async function EditAdPage({
       <Button asChild variant="ghost" size="sm" className="-ml-2">
         <Link href={`/brand/ads/${id}`}>
           <ArrowLeft className="h-3.5 w-3.5" />
-          Vissza a hirdetéshez
+          Vissza a kampányhoz
         </Link>
       </Button>
       <AdForm adId={id} initial={initial} />

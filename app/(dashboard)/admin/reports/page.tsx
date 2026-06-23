@@ -60,7 +60,7 @@ export default async function AdminReportsPage() {
         </p>
       </div>
 
-      {/* Tartalom-bejelentések (profil / hirdetés) */}
+      {/* Tartalom-bejelentések (profil / kampány) */}
       <section className="space-y-3">
         <h2 className="flex items-center gap-2 text-lg font-bold">
           <Flag className="h-4 w-4 text-red-500" /> Tartalom-bejelentések
@@ -77,7 +77,7 @@ export default async function AdminReportsPage() {
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2 text-sm">
                       <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold">
-                        {r.targetType === "creator" ? "Tartalomgyártó" : "Hirdetés"}
+                        {r.targetType === "creator" ? "Tartalomgyártó" : "Kampány"}
                       </span>
                       {r.targetUrl ? (
                         <Link href={r.targetUrl} target="_blank" className="inline-flex items-center gap-1 font-medium hover:underline">

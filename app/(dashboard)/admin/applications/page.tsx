@@ -39,7 +39,7 @@ export default async function AdminApplicationsPage() {
     .orderBy(desc(ads.createdAt), desc(adApplications.createdAt))
     .limit(500);
 
-  // Csoportosítás hirdetésenként (a sorrendet megtartva).
+  // Csoportosítás kampányonként (a sorrendet megtartva).
   const groups = new Map<
     string,
     { adTitle: string; adSlug: string | null; brandName: string; apps: typeof rows }

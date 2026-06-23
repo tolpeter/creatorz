@@ -54,9 +54,9 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
     { key: "registration_enabled", label: "Regisztráció engedélyezve", desc: "Új fiókok létrehozása." },
     { key: "auto_approve_creators", label: "Tartalomgyártók automatikus jóváhagyása", desc: "" },
     { key: "auto_approve_brands", label: "Márkák automatikus jóváhagyása", desc: "" },
-    { key: "auto_approve_ads", label: "Hirdetések automatikus jóváhagyása", desc: "" },
+    { key: "auto_approve_ads", label: "Kampányok automatikus jóváhagyása", desc: "" },
     { key: "public_view_creators", label: "Tartalomgyártók-lista nyilvános", desc: "Ha ki van kapcsolva, csak bejelentkezett felhasználó látja a /creators oldalt." },
-    { key: "public_view_ads", label: "Hirdetések-lista nyilvános", desc: "Ha ki van kapcsolva, csak bejelentkezett felhasználó látja a /ads oldalt." },
+    { key: "public_view_ads", label: "Kampányok-lista nyilvános", desc: "Ha ki van kapcsolva, csak bejelentkezett felhasználó látja a /ads oldalt." },
     { key: "mobile_app_popup_enabled", label: "Mobil-app popup a főoldalon", desc: "„Hamarosan elérhető a Creatorz mobil app” felugró ablak a kezdőlapon (Android + iOS)." },
     { key: "analytics_enabled", label: "Látogatottság-mérés (Analytics)", desc: "Google Analytics / Tag Manager betöltése. Csak akkor működik, ha a NEXT_PUBLIC_GA_ID vagy NEXT_PUBLIC_GTM_ID is be van állítva." },
   ];

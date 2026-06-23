@@ -6,8 +6,8 @@ import { Check, Link2, Share2 } from "lucide-react";
 import { SocialTile } from "@/components/creator/platform-icon";
 
 /**
- * Hirdetés-megosztó gombok: egy kattintással Facebook-megosztás, link-másolás,
- * és mobilon natív megosztás. A Facebook a hirdetés OG-tagjeit (cím, borítókép)
+ * Kampány-megosztó gombok: egy kattintással Facebook-megosztás, link-másolás,
+ * és mobilon natív megosztás. A Facebook a kampány OG-tagjeit (cím, borítókép)
  * automatikusan beolvassa az URL-ből.
  */
 export function AdShareButtons({ url, title }: { url: string; title: string }) {

@@ -85,7 +85,7 @@ export function CookieBanner() {
               <Row
                 icon={<Megaphone className="h-4 w-4" />}
                 title="Marketing"
-                desc="Hirdetések személyre szabása. Jelenleg nincs aktív hirdetés."
+                desc="Kampányok személyre szabása. Jelenleg nincs aktív kampány."
                 checked={marketing}
                 onChange={setMarketing}
               />

@@ -78,7 +78,7 @@ export const USAGE_RIGHTS = [
 export const CONTACT_SUBJECTS = [
   "Általános kérdés",
   "Regisztráció / fiók",
-  "Hirdetés / pályázat",
+  "Kampány / pályázat",
   "Fizetés / előfizetés",
   "Hibabejelentés",
   "Együttműködési ajánlat",

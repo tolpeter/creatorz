@@ -69,15 +69,15 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     .innerJoin(users, eq(users.id, brandProfiles.userId))
     .where(eq(ads.id, adId))
     .limit(1);
-  if (!ad) return Response.json({ error: "A hirdetés nem található" }, { status: 404 });
-  if (ad.status !== "active") return Response.json({ error: "Erre a hirdetésre nem lehet pályázni" }, { status: 400 });
+  if (!ad) return Response.json({ error: "A kampány nem található" }, { status: 404 });
+  if (ad.status !== "active") return Response.json({ error: "Erre a kampányra nem lehet pályázni" }, { status: 400 });
 
   const inserted = await db
     .insert(adApplications)
     .values({ adId, creatorId: creator.id, message: parsed.data.message })
     .onConflictDoNothing({ target: [adApplications.adId, adApplications.creatorId] })
     .returning({ id: adApplications.id });
-  if (!inserted[0]) return Response.json({ error: "Erre a hirdetésre már pályáztál." }, { status: 409 });
+  if (!inserted[0]) return Response.json({ error: "Erre a kampányra már pályáztál." }, { status: 409 });
 
   await db.update(ads).set({ applicationCount: sql`${ads.applicationCount} + 1` }).where(eq(ads.id, adId));
   await db
@@ -89,7 +89,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     userId: ad.brandUserId,
     type: "application",
     title: `Új pályázat: ${creator.displayName}`,
-    body: `"${ad.title}" hirdetésedre érkezett egy pályázat.`,
+    body: `"${ad.title}" kampányodra érkezett egy pályázat.`,
     link: "/brand/ads",
   });
 

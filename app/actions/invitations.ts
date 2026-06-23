@@ -27,7 +27,7 @@ export type InvitableAd = {
 };
 
 /**
- * A bejelentkezett márka aktív hirdetései, jelezve melyikre hívta már meg /
+ * A bejelentkezett márka aktív kampányai, jelezve melyikre hívta már meg /
  * pályázott már az adott tartalomgyártó. A meghívás-dialógus tölti fel ebből
  * a listát. Nem márka hívónál üres tömb.
  */
@@ -75,7 +75,7 @@ const inviteSchema = z.object({
   message: z.string().max(1000).optional().or(z.literal("")),
 });
 
-/** Márka meghív egy tartalomgyártót egy konkrét, aktív hirdetésére. */
+/** Márka meghív egy tartalomgyártót egy konkrét, aktív kampányára. */
 export async function inviteCreatorToAd(input: z.input<typeof inviteSchema>) {
   const brand = await getCurrentBrand();
   if (!brand) return { error: "Csak bejelentkezett márka hívhat meg creatort" };
@@ -90,17 +90,17 @@ export async function inviteCreatorToAd(input: z.input<typeof inviteSchema>) {
   const rl = checkRateLimit(`invite:${brand.profile.id}`, 30, HOUR);
   if (!rl.allowed) return { error: "Túl sok meghívás egy óra alatt. Próbáld később." };
 
-  // A hirdetés a márkáé és aktív.
+  // A kampány a márkáé és aktív.
   const [ad] = await db
     .select({ id: ads.id, title: ads.title, status: ads.status, brandId: ads.brandId })
     .from(ads)
     .where(eq(ads.id, d.adId))
     .limit(1);
   if (!ad || ad.brandId !== brand.profile.id) {
-    return { error: "A hirdetés nem található" };
+    return { error: "A kampány nem található" };
   }
   if (ad.status !== "active") {
-    return { error: "Csak aktív hirdetésre lehet meghívni." };
+    return { error: "Csak aktív kampányra lehet meghívni." };
   }
 
   // A creator létezik és nem felfüggesztett.
@@ -126,7 +126,7 @@ export async function inviteCreatorToAd(input: z.input<typeof inviteSchema>) {
     .where(and(eq(adApplications.adId, d.adId), eq(adApplications.creatorId, d.creatorId)))
     .limit(1);
   if (existingApp.length > 0) {
-    return { error: "Ez a creator már pályázott erre a hirdetésre." };
+    return { error: "Ez a creator már pályázott erre a kampányra." };
   }
 
   // Beszúrás — egyediség (adId, creatorId). Ha már meghívtuk, nem duplázunk.
@@ -141,13 +141,13 @@ export async function inviteCreatorToAd(input: z.input<typeof inviteSchema>) {
     .onConflictDoNothing({ target: [adInvitations.adId, adInvitations.creatorId] })
     .returning({ id: adInvitations.id });
   if (!inserted[0]) {
-    return { error: "Ezt a creatort már meghívtad erre a hirdetésre." };
+    return { error: "Ezt a creatort már meghívtad erre a kampányra." };
   }
 
   await db.insert(notifications).values({
     userId: recipient.creatorUserId,
     type: "ad_invitation",
-    title: `Meghívás egy hirdetésre: ${brand.profile.companyName}`,
+    title: `Meghívás egy kampányra: ${brand.profile.companyName}`,
     body: `„${ad.title}" — a márka kifejezetten téged hívott meg, hogy pályázz.`,
     link: `/ads/${d.adId}`,
   });

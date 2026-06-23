@@ -185,7 +185,7 @@ export default async function AdminAnalyticsPage() {
 
   const kpis = [
     { label: "Új regisztráció", value: formatNumber(newCreators + newBrands), sub: `${newCreators} creator · ${newBrands} márka`, icon: Users },
-    { label: "Új hirdetés", value: formatNumber(newAds), sub: `${DAYS} nap alatt`, icon: Megaphone },
+    { label: "Új kampány", value: formatNumber(newAds), sub: `${DAYS} nap alatt`, icon: Megaphone },
     { label: "Pályázat", value: formatNumber(newApps), sub: `${DAYS} nap alatt`, icon: Send },
     { label: "Kiemelés-bevétel", value: formatHuf(featureRevenue), sub: `${featureCount} vásárlás`, icon: Wallet },
   ];
@@ -332,7 +332,7 @@ export default async function AdminAnalyticsPage() {
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base">Új hirdetések</CardTitle>
+            <CardTitle className="text-base">Új kampányok</CardTitle>
           </CardHeader>
           <CardContent>
             <MiniBars days={adSeries} />

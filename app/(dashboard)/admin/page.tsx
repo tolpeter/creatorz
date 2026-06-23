@@ -120,14 +120,14 @@ export default async function AdminOverviewPage() {
     { label: "Tartalomgyártók", value: v(summary?.creatorsN), icon: UserCheck, tint: "bg-violet-50 text-violet-600" },
     { label: "Márkák", value: v(summary?.brandsN), icon: Building2, tint: "bg-blue-50 text-blue-600" },
     { label: "Hitelesített creator", value: v(summary?.verifiedN), icon: BadgeCheck, tint: "bg-emerald-50 text-emerald-600" },
-    { label: "Aktív hirdetés", value: v(summary?.activeAdsN), icon: Megaphone, tint: "bg-amber-50 text-amber-600" },
+    { label: "Aktív kampány", value: v(summary?.activeAdsN), icon: Megaphone, tint: "bg-amber-50 text-amber-600" },
     { label: "Együttműködések", value: v(summary?.collabsN), icon: Handshake, tint: "bg-teal-50 text-teal-600" },
     { label: "Üzenetek", value: v(summary?.messagesN), icon: MessageSquare, tint: "bg-sky-50 text-sky-600" },
     { label: "Értékelések", value: v(summary?.reviewsN), icon: Star, tint: "bg-rose-50 text-rose-600" },
   ];
 
   const todos = [
-    { label: "Moderálandó hirdetés", value: v(summary?.pendingAdsN), href: "/admin/ads", icon: Megaphone },
+    { label: "Moderálandó kampány", value: v(summary?.pendingAdsN), href: "/admin/ads", icon: Megaphone },
     { label: "Nyitott bejelentés", value: v(summary?.openReportsN), href: "/admin/reports", icon: AlertTriangle },
     { label: "Bejelentett értékelés", value: v(summary?.reportedReviewsN), href: "/admin/reports", icon: Star },
   ];
@@ -146,7 +146,7 @@ export default async function AdminOverviewPage() {
             </span>
             <h1 className="mt-2 text-3xl font-black tracking-tight">Admin áttekintés</h1>
             <p className="mt-1 text-sm text-white/60">
-              A platform pillanatképe — felhasználók, hirdetések és bevétel egy helyen.
+              A platform pillanatképe — felhasználók, kampányok és bevétel egy helyen.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -280,7 +280,7 @@ export default async function AdminOverviewPage() {
             <div>
               <p className="font-semibold">Teljes adatbázis-mentés (JSON)</p>
               <p className="text-sm text-muted-foreground">
-                Az összes tábla egyetlen JSON fájlban (felhasználók, hirdetések, üzenetek, beállítások).
+                Az összes tábla egyetlen JSON fájlban (felhasználók, kampányok, üzenetek, beállítások).
               </p>
             </div>
           </div>
@@ -297,7 +297,7 @@ export default async function AdminOverviewPage() {
             </Button>
             <Button asChild variant="outline" size="sm">
               <a href="/api/admin/export?type=ads" download>
-                <Download className="h-4 w-4" /> Hirdetések CSV
+                <Download className="h-4 w-4" /> Kampányok CSV
               </a>
             </Button>
           </div>

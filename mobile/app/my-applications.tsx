@@ -62,7 +62,7 @@ export default function MyApplicationsScreen() {
             <View style={{ alignItems: "center", marginTop: 60, paddingHorizontal: 32 }}>
               <Ionicons name="document-text-outline" size={44} color={colors.muted} />
               <Text style={{ color: colors.muted, marginTop: 12, textAlign: "center" }}>
-                Még nem pályáztál. A Hirdetések fülön találsz briefeket.
+                Még nem pályáztál. A Kampányok fülön találsz briefeket.
               </Text>
             </View>
           }

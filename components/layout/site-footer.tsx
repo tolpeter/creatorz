@@ -10,7 +10,7 @@ export function SiteFooter() {
       links: [
         { href: "/creators", label: "Tartalomgyártók" },
         { href: "/#markak", label: "Márkák" },
-        { href: "/ads", label: "Hirdetések" },
+        { href: "/ads", label: "Kampányok" },
         { href: "/#hogyan", label: "Hogyan működik" },
         { href: "/blog", label: "Blog" },
       ],
@@ -20,14 +20,14 @@ export function SiteFooter() {
       links: [
         { href: "/register", label: "Regisztráció" },
         { href: "/creators", label: "Tartalomgyártó keresés" },
-        { href: "/ads", label: "Hirdetésfeladás" },
+        { href: "/ads", label: "Kampányfeladás" },
       ],
     },
     {
       title: "Tartalomgyártóknak",
       links: [
         { href: "/register", label: "Csatlakozás" },
-        { href: "/ads", label: "Pályázható hirdetések" },
+        { href: "/ads", label: "Pályázható kampányok" },
       ],
     },
     {

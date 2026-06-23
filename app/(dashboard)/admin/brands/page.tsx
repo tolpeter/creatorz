@@ -63,7 +63,7 @@ export default async function AdminBrandsPage({
               <th className="p-3">Cégnév</th>
               <th className="p-3">Iparág</th>
               <th className="p-3">Weboldal</th>
-              <th className="p-3">Hirdetés</th>
+              <th className="p-3">Kampány</th>
               <th className="p-3">Regisztrált</th>
               <th className="p-3 text-right">Művelet</th>
             </tr>

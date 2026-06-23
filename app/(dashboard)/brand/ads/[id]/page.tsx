@@ -88,13 +88,13 @@ export default async function BrandAdDetailPage({
       .sort((a, b) => b.lastAt.getTime() - a.lastAt.getTime());
   }
 
-  // AI-ajánlott tartalomgyártók — csak aktív hirdetésnél (best-effort).
+  // AI-ajánlott tartalomgyártók — csak aktív kampánynál (best-effort).
   const recommended = ad.status === "active" ? await getRecommendedCreators(ad.id, 6) : [];
 
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm">
-        <Link href="/brand/ads">← Vissza a hirdetésekhez</Link>
+        <Link href="/brand/ads">← Vissza a kampányokhoz</Link>
       </Button>
 
       <Card>
@@ -112,7 +112,7 @@ export default async function BrandAdDetailPage({
             {ad.status === "active" && (
               <Button asChild size="sm" variant="outline">
                 <Link href={`/ads/${ad.slug ?? ad.id}`} target="_blank">
-                  <ExternalLink className="h-4 w-4" /> Hirdetésem megtekintése
+                  <ExternalLink className="h-4 w-4" /> Kampányom megtekintése
                 </Link>
               </Button>
             )}
@@ -141,7 +141,7 @@ export default async function BrandAdDetailPage({
           )}
           {ad.status === "pending" && (
             <p className="text-muted-foreground">
-              A hirdetés moderálásra vár. Jóváhagyás után jelenik meg a publikus
+              A kampány moderálásra vár. Jóváhagyás után jelenik meg a publikus
               feedben.
             </p>
           )}
@@ -152,7 +152,7 @@ export default async function BrandAdDetailPage({
         <ViewersPanel
           viewers={viewerRows}
           anonymousCount={anonymousViews}
-          emptyLabel="Még senki azonosítható nem nézte meg ezt a hirdetést."
+          emptyLabel="Még senki azonosítható nem nézte meg ezt a kampányt."
         />
       )}
 

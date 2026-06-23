@@ -21,7 +21,7 @@ const MAX_PER_RUN = 250; // biztonsági korlát a cron időkeretéhez
 /**
  * Heti AI-digest e-mail: személyre szabott statisztika + AI-tipp.
  *  - Tartalomgyártó: heti profil-megtekintés, profil-kitöltöttség, tipp.
- *  - Márka: aktív hirdetések, heti új pályázók + megtekintések, tipp.
+ *  - Márka: aktív kampányok, heti új pályázók + megtekintések, tipp.
  * Vercel cron hívja hetente. Best-effort: a tipp hiánya nem állítja meg a levelet.
  */
 export async function GET(req: Request) {
@@ -139,7 +139,7 @@ export async function GET(req: Request) {
     .innerJoin(users, eq(users.id, brandProfiles.userId))
     .where(and(eq(users.suspended, false), eq(users.emailVerified, true)));
 
-  // Aktív hirdetések / márka.
+  // Aktív kampányok / márka.
   const activeAdRows = await db
     .select({ brandId: ads.brandId, n: sql<number>`count(*)::int` })
     .from(ads)
@@ -156,7 +156,7 @@ export async function GET(req: Request) {
     .groupBy(ads.brandId);
   const applicantsByBrand = new Map(applicantRows.map((r) => [r.brandId, r.n]));
 
-  // Heti hirdetés-megtekintés / márka.
+  // Heti kampány-megtekintés / márka.
   const adViewRows = await db
     .select({ brandId: ads.brandId, n: sql<number>`count(*)::int` })
     .from(adViews)
@@ -169,7 +169,7 @@ export async function GET(req: Request) {
   for (const b of brands) {
     if (brandProcessed >= MAX_PER_RUN) break;
     const activeAds = activeByBrand.get(b.id) ?? 0;
-    if (activeAds === 0) continue; // csak ha van élő hirdetése
+    if (activeAds === 0) continue; // csak ha van élő kampánya
     brandProcessed++;
 
     const newApplicants = applicantsByBrand.get(b.id) ?? 0;
@@ -187,7 +187,7 @@ export async function GET(req: Request) {
         <tr>
           <td style="padding:14px 16px;background:#0b0d0a;border-radius:14px;color:#fff;">
             <div style="font-size:30px;font-weight:800;color:#a3e635;line-height:1.1;">${newApplicants}</div>
-            <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:2px;">új pályázó a héten · ${activeAds} aktív hirdetés · ${weeklyViews} megtekintés</div>
+            <div style="font-size:13px;color:rgba(255,255,255,.6);margin-top:2px;">új pályázó a héten · ${activeAds} aktív kampány · ${weeklyViews} megtekintés</div>
           </td>
         </tr>
         ${
@@ -204,9 +204,9 @@ export async function GET(req: Request) {
       subject: `Heti összefoglaló — ${newApplicants} új pályázó`,
       preheader: tip ? tip.slice(0, 90) : `${newApplicants} új pályázó a héten`,
       heading: `Szia ${escapeHtml(b.companyName)}!`,
-      intro: "Íme a hirdetéseid heti teljesítménye és egy tipp a jobb eredményekhez:",
+      intro: "Íme a kampányaid heti teljesítménye és egy tipp a jobb eredményekhez:",
       bodyHtml,
-      cta: { label: "Hirdetéseim megnyitása", href: `${APP_URL}/brand/ads` },
+      cta: { label: "Kampányaim megnyitása", href: `${APP_URL}/brand/ads` },
     });
 
     const res = await sendEmailSafe({ to: b.email, ...rendered });

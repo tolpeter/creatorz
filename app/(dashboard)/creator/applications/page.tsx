@@ -43,7 +43,7 @@ export default async function CreatorApplicationsPage() {
         <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
           Még nem pályáztál. Nézd meg az elérhető{" "}
           <Link href="/ads" className="text-accent underline">
-            hirdetéseket
+            kampányokat
           </Link>
           !
         </div>

@@ -37,7 +37,7 @@ export function AdModerationActions({
       const res = await approveAd(adId);
       if (res.error) toast.error(res.error);
       else {
-        toast.success("Hirdetés jóváhagyva");
+        toast.success("Kampány jóváhagyva");
         router.refresh();
       }
     });
@@ -48,7 +48,7 @@ export function AdModerationActions({
       const res = await rejectAd(adId, reason);
       if (res.error) toast.error(res.error);
       else {
-        toast.success("Hirdetés elutasítva");
+        toast.success("Kampány elutasítva");
         setOpen(false);
         router.refresh();
       }
@@ -89,7 +89,7 @@ export function AdModerationActions({
         </DialogTrigger>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Hirdetés elutasítása</DialogTitle>
+            <DialogTitle>Kampány elutasítása</DialogTitle>
           </DialogHeader>
           <Input
             value={reason}

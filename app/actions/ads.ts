@@ -50,7 +50,7 @@ const budgetMsg = {
   path: ["budgetMaxHuf"],
 };
 
-// Új hirdetés: a határidő legyen a jövőben.
+// Új kampány: a határidő legyen a jövőben.
 const adSchema = adObject
   .refine(checkBudget, budgetMsg)
   .refine((d) => d.deadline.getTime() > Date.now(), {
@@ -76,12 +76,12 @@ async function uniqueAdSlug(title: string): Promise<string> {
 
 export async function createAd(input: z.input<typeof adSchema>) {
   const brand = await getCurrentBrand();
-  if (!brand) return { error: "Csak bejelentkezett márka adhat fel hirdetést" };
+  if (!brand) return { error: "Csak bejelentkezett márka adhat fel kampányt" };
 
   const rl = checkRateLimit(`ad:${brand.profile.id}`, 3, HOUR);
-  if (!rl.allowed) return { error: "Túl sok hirdetés egy óra alatt. Próbáld később." };
+  if (!rl.allowed) return { error: "Túl sok kampány egy óra alatt. Próbáld később." };
 
-  // (Adószám/székhely nem kötelező a hirdetésfeladáshoz.)
+  // (Adószám/székhely nem kötelező a kampányfeladáshoz.)
 
   const parsed = adSchema.safeParse(input);
   if (!parsed.success) {
@@ -94,7 +94,7 @@ export async function createAd(input: z.input<typeof adSchema>) {
     .from(ads)
     .where(and(eq(ads.brandId, brand.profile.id), inArray(ads.status, ["pending", "active"])));
   if ((activeRows[0]?.n ?? 0) >= MAX_ACTIVE_ADS) {
-    return { error: `Egyszerre legfeljebb ${MAX_ACTIVE_ADS} aktív hirdetésed lehet.` };
+    return { error: `Egyszerre legfeljebb ${MAX_ACTIVE_ADS} aktív kampányod lehet.` };
   }
 
   const inserted = await db
@@ -127,10 +127,10 @@ export async function createAd(input: z.input<typeof adSchema>) {
   if (ADMIN_EMAIL) {
     await sendEmailSafe({
       to: ADMIN_EMAIL,
-      subject: "Új moderálandó hirdetés – Creatorz",
+      subject: "Új moderálandó kampány – Creatorz",
       html: `
-        <h2>Új hirdetés moderálásra vár</h2>
-        <p><strong>${brand.profile.companyName}</strong> új hirdetést adott fel:</p>
+        <h2>Új kampány moderálásra vár</h2>
+        <p><strong>${brand.profile.companyName}</strong> új kampányt adott fel:</p>
         <p style="font-weight:bold">${d.title}</p>
         <p>${d.description.slice(0, 200)}…</p>
         <p><a href="${APP_URL}/admin">Moderálás az admin panelen</a></p>
@@ -143,8 +143,8 @@ export async function createAd(input: z.input<typeof adSchema>) {
 }
 
 /**
- * Admin hirdetés-létrehozás egy adott márka nevében (ha valaki közvetlenül az
- * adminisztrátort kéri meg a feladásra). A hirdetés rögtön aktív lesz.
+ * Admin kampány-létrehozás egy adott márka nevében (ha valaki közvetlenül az
+ * adminisztrátort kéri meg a feladásra). A kampány rögtön aktív lesz.
  */
 export async function adminCreateAd(brandId: string, input: z.input<typeof adSchema>) {
   const current = await getCurrentUser();
@@ -211,7 +211,7 @@ export async function updateAd(adId: string, input: z.input<typeof adUpdateSchem
     .where(eq(ads.id, adId))
     .limit(1);
   if (!existing || existing.brandId !== brand.profile.id) {
-    return { error: "A hirdetés nem található" };
+    return { error: "A kampány nem található" };
   }
 
   // A slugot és a státuszt szándékosan NEM írjuk felül (az URL megmarad).
@@ -277,7 +277,7 @@ export async function approveAd(adId: string) {
     .set({ status: "active", approvedAt: new Date(), rejectionReason: null })
     .where(eq(ads.id, adId));
 
-  // Keresési riasztás: a hirdetés kategóriáival egyező tartalomgyártók értesítése.
+  // Keresési riasztás: a kampány kategóriáival egyező tartalomgyártók értesítése.
   await notifyMatchingCreators(adId, ad?.title ?? "", ad?.categories ?? []);
 
   revalidatePath("/admin");
@@ -285,7 +285,7 @@ export async function approveAd(adId: string) {
   return { success: true };
 }
 
-/** Új aktív hirdetésnél értesíti a kategóriával egyező, nem felfüggesztett creatorokat. */
+/** Új aktív kampánynál értesíti a kategóriával egyező, nem felfüggesztett creatorokat. */
 async function notifyMatchingCreators(adId: string, title: string, categories: string[]) {
   if (!categories.length) return;
   try {
@@ -308,7 +308,7 @@ async function notifyMatchingCreators(adId: string, title: string, categories: s
       matches.map((m) => ({
         userId: m.userId,
         type: "ad_match",
-        title: "Új hirdetés a kategóriádban",
+        title: "Új kampány a kategóriádban",
         body: title,
         link: `/ads/${adId}`,
       })),

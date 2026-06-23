@@ -12,7 +12,7 @@ function catLabel(v: string) {
   return CREATOR_CATEGORIES.find((c) => c.value === v)?.label ?? v;
 }
 
-/** Publikus, aktív hirdetések listája a mobil apphoz. */
+/** Publikus, aktív kampányok listája a mobil apphoz. */
 export async function GET(req: Request) {
   const sp = new URL(req.url).searchParams;
   const offset = Math.max(0, Number(sp.get("offset") ?? 0) || 0);

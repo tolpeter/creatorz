@@ -53,7 +53,7 @@ export default function PrivacyPage() {
       <h3>2.3. Márka-profil (cég) adatok</h3>
       <ul>
         <li>Cégnév, weboldal, iparág, székhely, adószám (számlázáshoz), kapcsolattartó.</li>
-        <li><strong>Cél:</strong> hirdetésfeladás, számla kiállítása, beazonosítás.</li>
+        <li><strong>Cél:</strong> kampányfeladás, számla kiállítása, beazonosítás.</li>
         <li><strong>Jogalap:</strong> a szerződés teljesítése + jogszabályi kötelezettség
           (számviteli törvény, Áfa-törvény).</li>
         <li><strong>Tárolási idő:</strong> a számlázott tételekhez kapcsolódó adatok a

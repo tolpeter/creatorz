@@ -9,7 +9,7 @@ let lastKey = "";
 
 /**
  * Belépéskori „push" értesítések az adminnak: olvasatlan kapcsolati üzenetek,
- * jóváhagyásra váró hirdetések és nyitott bejelentések.
+ * jóváhagyásra váró kampányok és nyitott bejelentések.
  */
 export function NewMessageToast({
   count = 0,
@@ -33,9 +33,9 @@ export function NewMessageToast({
     if (pendingAds > 0) {
       toast.warning(
         pendingAds === 1
-          ? "1 hirdetés vár jóváhagyásra"
-          : `${pendingAds} hirdetés vár jóváhagyásra`,
-        { description: "Nézd meg a Hirdetések menüben." },
+          ? "1 kampány vár jóváhagyásra"
+          : `${pendingAds} kampány vár jóváhagyásra`,
+        { description: "Nézd meg a Kampányok menüben." },
       );
     }
     if (openReports > 0) {

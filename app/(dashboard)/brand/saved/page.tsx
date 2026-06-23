@@ -41,7 +41,7 @@ export default async function BrandSavedPage() {
     .where(eq(savedCreators.brandId, brand.profile.id))
     .orderBy(desc(savedCreators.createdAt));
 
-  // A márka aktív hirdetései — egyszer kérjük le, minden creatornál ugyanazok.
+  // A márka aktív kampányai — egyszer kérjük le, minden creatornál ugyanazok.
   // A meghívás/pályázat állapotot batchelve számoljuk (2 lekérdezés).
   const activeAds = await db
     .select({ id: ads.id, title: ads.title })

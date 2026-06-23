@@ -43,7 +43,7 @@ export function RecommendedCreators({
           AI-ajánlott tartalomgyártók
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          A hirdetésed tartalma alapján a legjobban illeszkedő creatorok. Hívd meg
+          A kampányod tartalma alapján a legjobban illeszkedő creatorok. Hívd meg
           őket, hogy pályázzanak.
         </p>
       </CardHeader>

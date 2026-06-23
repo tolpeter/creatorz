@@ -26,7 +26,7 @@ export type Applicant = {
   tiktokLikes: number | null;
   instagramFollowers: number | null;
   facebookFollowers: number | null;
-  // Csak a kampányokon átívelő (Jelentkezők) listához — melyik hirdetésre.
+  // Csak a kampányokon átívelő (Jelentkezők) listához — melyik kampányra.
   adId?: string;
   adTitle?: string | null;
 };
@@ -107,7 +107,7 @@ export function ApplicantsList({
 
       {apps.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          Még nincs pályázat erre a hirdetésre.
+          Még nincs pályázat erre a kampányra.
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">

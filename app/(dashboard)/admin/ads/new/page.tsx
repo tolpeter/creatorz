@@ -5,7 +5,7 @@ import { brandProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { AdminAdCreator } from "@/components/admin/admin-ad-creator";
 
-export const metadata = { title: "Admin — Új hirdetés" };
+export const metadata = { title: "Admin — Új kampány" };
 
 export default async function AdminNewAdPage() {
   const current = await getCurrentUser();
@@ -20,9 +20,9 @@ export default async function AdminNewAdPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Új hirdetés (admin)</h1>
+        <h1 className="text-2xl font-bold">Új kampány (admin)</h1>
         <p className="text-muted-foreground">
-          Hirdetés feladása egy márka nevében — ha valaki közvetlenül téged kér meg rá.
+          Kampány feladása egy márka nevében — ha valaki közvetlenül téged kér meg rá.
         </p>
       </div>
       <AdminAdCreator brands={brands} />

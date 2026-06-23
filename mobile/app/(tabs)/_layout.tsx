@@ -83,7 +83,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="ads"
         options={{
-          title: "Hirdetések",
+          title: "Kampányok",
           tabBarIcon: ({ color, size }) => <Ionicons name="megaphone" size={size} color={color} />,
         }}
       />

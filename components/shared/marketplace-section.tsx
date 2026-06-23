@@ -36,7 +36,7 @@ const CARDS: { icon: LucideIcon; emoji: string; title: string; desc: string }[] 
     icon: KeyRound,
     emoji: "🔑",
     title: "A tartalom a tiéd",
-    desc: "A leadott anyagot szabadon felhasználhatod a közösségi médiában, a weboldaladon és a hirdetéseidben — a jogok nálad maradnak.",
+    desc: "A leadott anyagot szabadon felhasználhatod a közösségi médiában, a weboldaladon és a kampányaidban — a jogok nálad maradnak.",
   },
 ];
 

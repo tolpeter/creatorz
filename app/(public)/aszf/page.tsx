@@ -42,9 +42,9 @@ export default async function TermsPage() {
       <ul>
         <li><strong>Felhasználó:</strong> minden, a Szolgáltatást regisztrált vagy nem regisztrált módon használó természetes vagy jogi személy.</li>
         <li><strong>Tartalomgyártó (Creator):</strong> az a Felhasználó, aki a profilját és portfólióját meghirdeti, és márka-projektekre pályázik.</li>
-        <li><strong>Márka:</strong> az a Felhasználó (cég vagy egyéni vállalkozó), aki hirdetést ad fel és tartalomgyártót keres.</li>
-        <li><strong>Hirdetés:</strong> a márka által közzétett, együttműködésre szóló felhívás.</li>
-        <li><strong>Pályázat:</strong> a tartalomgyártó által egy hirdetésre küldött jelentkezés.</li>
+        <li><strong>Márka:</strong> az a Felhasználó (cég vagy egyéni vállalkozó), aki kampányt ad fel és tartalomgyártót keres.</li>
+        <li><strong>Kampány:</strong> a márka által közzétett, együttműködésre szóló felhívás.</li>
+        <li><strong>Pályázat:</strong> a tartalomgyártó által egy kampányra küldött jelentkezés.</li>
         <li><strong>Együttműködés:</strong> az elfogadott pályázat alapján létrejövő munkakapcsolat.</li>
         <li><strong>Kiemelt profil:</strong> a Szolgáltató rendszerében előfizetéssel vagy egyszeri vásárlással szerzett, magasabb láthatóságot biztosító funkció.</li>
       </ul>
@@ -61,16 +61,16 @@ export default async function TermsPage() {
       <p>Az aktuális díjszabást a Szolgáltató fenntartja a jogot egyoldalúan módosítani — a változás csak a jövőre nézve hatályos.</p>
       <h3>5.1. Tartalomgyártóknak</h3>
       <ul>
-        <li><strong>Alap regisztráció:</strong> ingyenes — profil létrehozása, pályázat hirdetésekre.</li>
+        <li><strong>Alap regisztráció:</strong> ingyenes — profil létrehozása, pályázat kampányokra.</li>
         <li><strong>Prémium előfizetés:</strong> jelenleg <strong>2 990 Ft / hó</strong>, havi automatikus megújulással. A jelenleg érvényes ár az adminisztrációs felületen kerül beállításra; ha módosul, az új ár csak az új előfizetésekre vagy a következő megújulási ciklusra vonatkozik.</li>
         <li><strong>Profil-kiemelés:</strong> 7 napra 4 990 Ft, 30 napra 12 990 Ft — egyszeri díj, automatikusan nem újul meg.</li>
       </ul>
       <h3>5.2. Márkáknak</h3>
       <ul>
         <li><strong>Regisztráció:</strong> ingyenes.</li>
-        <li><strong>Hirdetésfeladás:</strong> ingyenes.</li>
-        <li><strong>Hirdetés-kiemelés:</strong> az aktuális díjszabás szerint.</li>
-        <li><strong>Anonim hirdetés:</strong> külön opció, amellyel a márka adatai csak az elfogadott pályázat után válnak láthatóvá a tartalomgyártó számára.</li>
+        <li><strong>Kampányfeladás:</strong> ingyenes.</li>
+        <li><strong>Kampány-kiemelés:</strong> az aktuális díjszabás szerint.</li>
+        <li><strong>Anonim kampány:</strong> külön opció, amellyel a márka adatai csak az elfogadott pályázat után válnak láthatóvá a tartalomgyártó számára.</li>
       </ul>
       <h3>5.3. Fizetés</h3>
       <p>
@@ -88,7 +88,7 @@ export default async function TermsPage() {
 
       <h2>7. Felhasználói tartalom és szerzői jog</h2>
       <ul>
-        <li>A Felhasználó által feltöltött tartalom (profilkép, portfólió-elem, intro videó, hirdetés szövege, stb.) a Felhasználó tulajdona, illetve a Felhasználó által jogszerűen használt mű.</li>
+        <li>A Felhasználó által feltöltött tartalom (profilkép, portfólió-elem, intro videó, kampány szövege, stb.) a Felhasználó tulajdona, illetve a Felhasználó által jogszerűen használt mű.</li>
         <li>A Felhasználó nem kizárólagos, díjmentes felhasználási engedélyt biztosít a Szolgáltatónak arra, hogy ezeket a tartalmakat a platform működéséhez szükséges mértékben megjelenítse, terjessze és technikailag feldolgozza.</li>
         <li>A Felhasználó szavatol azért, hogy a feltöltött tartalom nem sérti harmadik személyek jogait (szerzői jog, képmás védelem, márkajog, személyiségi jog).</li>
         <li>Tilos: jogsértő, gyűlöletkeltő, pornográf, megtévesztő, spam jellegű, kiskorúak érdekét sértő, vagy hatóság által tiltott tartalom.</li>
@@ -101,10 +101,10 @@ export default async function TermsPage() {
         <li>A platformon belüli kommunikációt nem lehet megkerülni a fizetés platformon kívülre terelése céljából, amíg az együttműködés a platformon belül indult el.</li>
       </ul>
 
-      <h2>9. Anonim hirdetések és pályázat-folyamat</h2>
+      <h2>9. Anonim kampányok és pályázat-folyamat</h2>
       <ul>
-        <li>A márka jelölheti hirdetését „anonim"-ként — ekkor a brand nyilvános adatai (cégnév, logo, weboldal) csak elfogadott pályázat után válnak láthatóvá a tartalomgyártó számára.</li>
-        <li>Az anonim hirdetésnél is köteles a márka a Szolgáltató felé minden, az ÁSZF szerinti adatot megadni.</li>
+        <li>A márka jelölheti kampányát „anonim"-ként — ekkor a brand nyilvános adatai (cégnév, logo, weboldal) csak elfogadott pályázat után válnak láthatóvá a tartalomgyártó számára.</li>
+        <li>Az anonim kampánynál is köteles a márka a Szolgáltató felé minden, az ÁSZF szerinti adatot megadni.</li>
         <li>Értékelést (review) csak a lezárt együttműködés után, mindkét fél a másikról írhat.</li>
       </ul>
 

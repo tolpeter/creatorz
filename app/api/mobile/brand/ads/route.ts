@@ -6,7 +6,7 @@ import { getMobileUser } from "@/lib/mobile-auth";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-/** A bejelentkezett márka aktív hirdetései (a meghívás-választóhoz). */
+/** A bejelentkezett márka aktív kampányai (a meghívás-választóhoz). */
 export async function GET(req: Request) {
   const user = await getMobileUser(req);
   if (!user || user.role !== "brand") return Response.json({ items: [] });

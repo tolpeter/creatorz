@@ -132,9 +132,9 @@ export function renderNewApplicationEmail(input: {
   return {
     subject: `Új pályázat — ${input.adTitle}`,
     html: renderBrandedEmail({
-      preheader: `${input.creatorName} jelentkezett a hirdetésedre.`,
+      preheader: `${input.creatorName} jelentkezett a kampányodra.`,
       heading: "Új pályázat érkezett",
-      intro: `<strong>${escapeHtml(input.creatorName)}</strong> pályázott a(z) „<strong>${escapeHtml(input.adTitle)}</strong>" hirdetésedre.`,
+      intro: `<strong>${escapeHtml(input.creatorName)}</strong> pályázott a(z) „<strong>${escapeHtml(input.adTitle)}</strong>" kampányodra.`,
       bodyHtml: applicantCard,
       cta: { label: "Pályázat megnyitása", href: `${APP_URL}/brand/applications` },
     }),
@@ -176,11 +176,11 @@ export function renderApplicationRejectedEmail(input: {
       preheader: "Sajnos ezúttal nem téged választottak — nézz szét a többi briefen.",
       heading: "Pályázatod elbírálva",
       greeting: `Szia ${input.creatorName}!`,
-      intro: `A(z) „<strong>${escapeHtml(input.adTitle)}</strong>" hirdetésre adott pályázatodat ezúttal nem fogadták el.`,
+      intro: `A(z) „<strong>${escapeHtml(input.adTitle)}</strong>" kampányra adott pályázatodat ezúttal nem fogadták el.`,
       bodyHtml: input.reason
         ? `<p style="margin:0 0 10px;"><strong>Indok:</strong> ${escapeHtml(input.reason)}</p>`
         : "",
-      cta: { label: "Új hirdetések böngészése", href: `${APP_URL}/ads` },
+      cta: { label: "Új kampányok böngészése", href: `${APP_URL}/ads` },
       footnote: "Folyamatosan érkeznek új projektek — érdemes visszanézni.",
     }),
   };
@@ -197,16 +197,16 @@ export function renderAdInvitationEmail(input: {
   message?: string;
 }): { subject: string; html: string } {
   return {
-    subject: `Meghívást kaptál egy hirdetésre — ${input.brandName}`,
+    subject: `Meghívást kaptál egy kampányra — ${input.brandName}`,
     html: renderBrandedEmail({
       preheader: `${input.brandName} szeretne együtt dolgozni veled a(z) „${input.adTitle}" projekten.`,
-      heading: "Meghívást kaptál egy hirdetésre",
+      heading: "Meghívást kaptál egy kampányra",
       greeting: `Szia ${input.creatorName}!`,
-      intro: `A(z) <strong>${escapeHtml(input.brandName)}</strong> kifejezetten téged hívott meg, hogy pályázz a következő hirdetésére:<br><br><strong>„${escapeHtml(input.adTitle)}"</strong>`,
+      intro: `A(z) <strong>${escapeHtml(input.brandName)}</strong> kifejezetten téged hívott meg, hogy pályázz a következő kampányára:<br><br><strong>„${escapeHtml(input.adTitle)}"</strong>`,
       bodyHtml: input.message
         ? `<blockquote style="margin:8px 0;padding:12px 16px;border-left:3px solid #84cc16;background:#f6f7f2;border-radius:6px;color:#3f3f46;font-style:italic;">${escapeHtml(input.message)}</blockquote>`
         : "",
-      cta: { label: "Hirdetés megnyitása és pályázás", href: input.adUrl },
+      cta: { label: "Kampány megnyitása és pályázás", href: input.adUrl },
       footnote: "Ha most nem aktuális, nyugodtan figyelmen kívül hagyhatod ezt a meghívást.",
     }),
   };

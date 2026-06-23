@@ -64,7 +64,7 @@ export function ProfilePhotoPrompt({ role }: { role: "brand" | "creator" }) {
         </h2>
         <p className="mx-auto mt-1 max-w-xs text-sm text-muted-foreground">
           {isBrand
-            ? "A logó megbízhatóbb benyomást kelt a tartalomgyártók felé, és megjelenik a hirdetéseiden."
+            ? "A logó megbízhatóbb benyomást kelt a tartalomgyártók felé, és megjelenik a kampányaidon."
             : "A profilképpel sokkal többen kattintanak a profilodra, és bizalmat kelt a márkák felé."}
         </p>
 

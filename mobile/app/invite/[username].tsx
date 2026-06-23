@@ -39,7 +39,7 @@ export default function InviteScreen() {
 
   async function onSend() {
     if (!selected) {
-      setError("Válassz egy hirdetést.");
+      setError("Válassz egy kampányt.");
       return;
     }
     setSending(true);
@@ -84,12 +84,12 @@ export default function InviteScreen() {
       ) : ads.length === 0 ? (
         <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 32 }}>
           <Text style={{ color: colors.muted, textAlign: "center" }}>
-            Nincs aktív hirdetésed. Adj fel egyet a weboldalon, hogy meghívhass creatorokat.
+            Nincs aktív kampányod. Adj fel egyet a weboldalon, hogy meghívhass creatorokat.
           </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-          <Text style={{ fontWeight: "700" }}>Melyik hirdetésre?</Text>
+          <Text style={{ fontWeight: "700" }}>Melyik kampányra?</Text>
           {ads.map((ad) => {
             const active = selected === ad.id;
             return (

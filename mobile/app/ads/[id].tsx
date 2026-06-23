@@ -43,7 +43,7 @@ export default function AdDetailScreen() {
     let alive = true;
     fetchAd(String(id))
       .then((d) => alive && setData(d))
-      .catch(() => alive && setError("Nem sikerült betölteni a hirdetést."))
+      .catch(() => alive && setError("Nem sikerült betölteni a kampányt."))
       .finally(() => alive && setLoading(false));
     return () => {
       alive = false;
@@ -77,7 +77,7 @@ export default function AdDetailScreen() {
           <Ionicons name="chevron-back" size={26} color="#fff" />
         </Pressable>
         <Text style={{ flex: 1, color: "#fff", fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
-          Hirdetés
+          Kampány
         </Text>
         {data ? (
           <Pressable
@@ -146,7 +146,7 @@ export default function AdDetailScreen() {
               {data.invited && !alreadyApplied ? (
                 <View style={{ backgroundColor: "rgba(163,230,53,0.18)", borderRadius: radius.md, padding: 12, marginBottom: 12 }}>
                   <Text style={{ color: "#3f6212", fontWeight: "600" }}>
-                    ⭐ A márka kifejezetten téged hívott meg erre a hirdetésre!
+                    ⭐ A márka kifejezetten téged hívott meg erre a kampányra!
                   </Text>
                 </View>
               ) : null}
@@ -155,7 +155,7 @@ export default function AdDetailScreen() {
                 <Text style={{ color: colors.muted }}>Pályázni tartalomgyártó fiókkal lehet.</Text>
               ) : alreadyApplied ? (
                 <View style={{ backgroundColor: colors.accent, borderRadius: radius.md, paddingVertical: 14, alignItems: "center" }}>
-                  <Text style={{ color: "#000", fontWeight: "800" }}>Erre a hirdetésre már pályáztál ✓</Text>
+                  <Text style={{ color: "#000", fontWeight: "800" }}>Erre a kampányra már pályáztál ✓</Text>
                 </View>
               ) : showApply ? (
                 <View style={{ gap: 10 }}>

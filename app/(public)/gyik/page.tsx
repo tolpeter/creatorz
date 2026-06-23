@@ -27,7 +27,7 @@ const GROUPS: Group[] = [
     items: [
       {
         q: "Mi az a Creatorz?",
-        a: "A Creatorz egy magyar UGC (felhasználó által készített tartalom) platform, amely közvetlenül összeköti a tartalomgyártókat és a márkákat. Egy helyen böngészhetsz alkotók között, kapcsolatba léphetsz velük, hirdetést adhatsz fel, és pályázhatsz együttműködésekre — közvetítő ügynökség nélkül.",
+        a: "A Creatorz egy magyar UGC (felhasználó által készített tartalom) platform, amely közvetlenül összeköti a tartalomgyártókat és a márkákat. Egy helyen böngészhetsz alkotók között, kapcsolatba léphetsz velük, kampányt adhatsz fel, és pályázhatsz együttműködésekre — közvetítő ügynökség nélkül.",
       },
       {
         q: "Kinek szól a platform?",
@@ -71,7 +71,7 @@ const GROUPS: Group[] = [
       },
       {
         q: "Hogyan jutok munkához?",
-        a: "Három úton: (1) tölts ki egy erős, portfólióval ellátott profilt, hogy a márkák megtaláljanak és megkeressenek; (2) böngészd a Hirdetések oldalt, és pályázz a hozzád illő briefekre; (3) szerezz pozitív értékeléseket, amelyek növelik az esélyeidet a következő együttműködésnél.",
+        a: "Három úton: (1) tölts ki egy erős, portfólióval ellátott profilt, hogy a márkák megtaláljanak és megkeressenek; (2) böngészd a Kampányok oldalt, és pályázz a hozzád illő briefekre; (3) szerezz pozitív értékeléseket, amelyek növelik az esélyeidet a következő együttműködésnél.",
       },
       {
         q: "Honnan tudják a márkák, hogy valós a követőszámom?",
@@ -102,17 +102,17 @@ const GROUPS: Group[] = [
       },
       {
         q: "Mennyibe kerül a márkáknak a használat?",
-        a: "A böngészés, a tartalomgyártókkal való kapcsolatfelvétel és a hirdetés (brief) feladása a márkák számára ingyenes. Csak akkor merül fel költség, ha az alkotóval díjazásban állapodtok meg — ez közvetlenül köztetek dől el.",
+        a: "A böngészés, a tartalomgyártókkal való kapcsolatfelvétel és a kampány (brief) feladása a márkák számára ingyenes. Csak akkor merül fel költség, ha az alkotóval díjazásban állapodtok meg — ez közvetlenül köztetek dől el.",
       },
       {
-        q: "Hogyan adok fel hirdetést?",
+        q: "Hogyan adok fel kampányt?",
         a: (
           <>
             Jelentkezz be, lépj az{" "}
             <Link href="/dashboard" className="font-medium text-[#4d7c0f] underline">
               Irányítópultra
             </Link>
-            , és hozz létre egy új hirdetést. Add meg a kampány célját, a
+            , és hozz létre egy új kampányt. Add meg a kampány célját, a
             kategóriát, a formátumot és a határidőt — a tartalomgyártók pedig pár
             kattintással pályázhatnak rá.
           </>
@@ -120,7 +120,7 @@ const GROUPS: Group[] = [
       },
       {
         q: "Nyilvános lesz a bérezés?",
-        a: "Nem feltétlenül. A bérezés megjelenítése opcionális: ha nem teszed publikussá, a hirdetésednél „Megegyezés szerint” felirat jelenik meg, és a részleteket az alkotóval négyszemközt egyeztetheted.",
+        a: "Nem feltétlenül. A bérezés megjelenítése opcionális: ha nem teszed publikussá, a kampányodnál „Megegyezés szerint” felirat jelenik meg, és a részleteket az alkotóval négyszemközt egyeztetheted.",
       },
     ],
   },

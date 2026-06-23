@@ -12,8 +12,8 @@ import {
 import { AdForm } from "@/components/brand/ad-form";
 
 /**
- * Admin hirdetés-létrehozó: előbb kiválasztja, melyik márka nevében, majd a
- * megszokott hirdetés-űrlappal feladja (rögtön aktív).
+ * Admin kampány-létrehozó: előbb kiválasztja, melyik márka nevében, majd a
+ * megszokott kampány-űrlappal feladja (rögtön aktív).
  */
 export function AdminAdCreator({
   brands,
@@ -39,7 +39,7 @@ export function AdminAdCreator({
           </SelectContent>
         </Select>
         <p className="mt-2 text-xs text-muted-foreground">
-          A hirdetés ennek a márkának a nevében, rögtön <strong>aktív</strong> állapotban jön létre
+          A kampány ennek a márkának a nevében, rögtön <strong>aktív</strong> állapotban jön létre
           (nincs külön moderálás).
         </p>
       </div>
@@ -48,7 +48,7 @@ export function AdminAdCreator({
         <AdForm adminBrandId={brandId} />
       ) : (
         <p className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Előbb válassz egy márkát a hirdetés kitöltéséhez.
+          Előbb válassz egy márkát a kampány kitöltéséhez.
         </p>
       )}
     </div>

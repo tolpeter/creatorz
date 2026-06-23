@@ -81,7 +81,7 @@ export default async function LandingPage() {
     {
       icon: Search,
       title: "Találd meg a párost",
-      desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz hirdetésre.",
+      desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz kampányra.",
     },
     {
       icon: Handshake,
@@ -203,7 +203,7 @@ export default async function LandingPage() {
           image="/images/generated/feature-brand.webp"
           perks={[
             "Ingyenes böngészés és kapcsolatfelvétel",
-            "Hirdetésfeladás díjmentesen",
+            "Kampányfeladás díjmentesen",
             "Szűrés kategória, követőszám, ár szerint",
             "Ellenőrzött, értékelt tartalomgyártók",
           ]}
@@ -214,7 +214,7 @@ export default async function LandingPage() {
           image="/images/generated/feature-creator.webp"
           perks={[
             "Ingyenes profil és portfólió",
-            "Pályázz márkák hirdetéseire",
+            "Pályázz márkák kampányaira",
             "Építsd a hírneved értékelésekkel",
             "Opcionális kiemelés a directoryban",
           ]}

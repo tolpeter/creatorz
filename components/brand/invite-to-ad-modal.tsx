@@ -40,7 +40,7 @@ export function InviteToAdModal({
 
   async function submit() {
     if (!selected) {
-      toast.error("Válassz egy hirdetést");
+      toast.error("Válassz egy kampányt");
       return;
     }
     setLoading(true);
@@ -67,34 +67,34 @@ export function InviteToAdModal({
           )}
         >
           <Megaphone className="h-5 w-5" />
-          Meghívás hirdetésre
+          Meghívás kampányra
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Meghívás hirdetésre — {creatorName}</DialogTitle>
+          <DialogTitle>Meghívás kampányra — {creatorName}</DialogTitle>
           <DialogDescription>
             Hívd meg ezt a tartalomgyártót, hogy pályázzon az egyik aktív
-            hirdetésedre. Értesítést és emailt is kap róla.
+            kampányodra. Értesítést és emailt is kap róla.
           </DialogDescription>
         </DialogHeader>
 
         {ads.length === 0 ? (
           <div className="rounded-lg border border-dashed border-black/15 bg-[#f6f7f2] p-6 text-center">
             <p className="text-sm text-muted-foreground">
-              Még nincs aktív hirdetésed. Adj fel egyet, hogy meghívhasd a
+              Még nincs aktív kampányod. Adj fel egyet, hogy meghívhasd a
               creatorokat.
             </p>
             <Button asChild className="mt-4">
               <Link href="/brand/ads/new">
-                <Plus className="h-4 w-4" /> Új hirdetés feladása
+                <Plus className="h-4 w-4" /> Új kampány feladása
               </Link>
             </Button>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>Melyik hirdetésre?</Label>
+              <Label>Melyik kampányra?</Label>
               <div className="max-h-52 space-y-2 overflow-y-auto">
                 {ads.map((ad) => {
                   const disabled = ad.alreadyApplied || ad.alreadyInvited;
@@ -130,7 +130,7 @@ export function InviteToAdModal({
               </div>
               {selectableAds.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Erre a creatorra már minden aktív hirdetésednél van pályázat
+                  Erre a creatorra már minden aktív kampányodnál van pályázat
                   vagy meghívás.
                 </p>
               )}

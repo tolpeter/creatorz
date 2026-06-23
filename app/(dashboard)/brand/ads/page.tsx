@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
-export const metadata = { title: "Hirdetéseim" };
+export const metadata = { title: "Kampányaim" };
 
 export default async function BrandAdsPage() {
   const brand = await getCurrentBrand();
@@ -25,12 +25,12 @@ export default async function BrandAdsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Hirdetéseim</h1>
-          <p className="text-muted-foreground">{rows.length} hirdetés</p>
+          <h1 className="text-2xl font-bold">Kampányaim</h1>
+          <p className="text-muted-foreground">{rows.length} kampány</p>
         </div>
         <Button asChild>
           <Link href="/brand/ads/new">
-            <Plus className="h-4 w-4" /> Új hirdetés
+            <Plus className="h-4 w-4" /> Új kampány
           </Link>
         </Button>
       </div>
@@ -40,13 +40,13 @@ export default async function BrandAdsPage() {
           <span className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#f0f4e5] text-[#4d7c0f]">
             <Plus className="h-6 w-6" />
           </span>
-          <p className="mt-4 font-semibold">Még nincs hirdetésed</p>
+          <p className="mt-4 font-semibold">Még nincs kampányod</p>
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             Adj fel egy briefet, és a tartalomgyártók pár kattintással pályáznak rá — ingyenes.
           </p>
           <Button asChild className="mt-5">
             <Link href="/brand/ads/new">
-              <Plus className="h-4 w-4" /> Első hirdetés feladása
+              <Plus className="h-4 w-4" /> Első kampány feladása
             </Link>
           </Button>
         </div>

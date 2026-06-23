@@ -8,7 +8,7 @@ const LINKS = [
   { label: "Alkotók", href: "/creators" },
   { label: "Márkák", href: "/#markak" },
   { label: "Hogyan működik", href: "/#hogyan" },
-  { label: "Hirdetések", href: "/ads" },
+  { label: "Kampányok", href: "/ads" },
   { label: "Aktuális fejlesztések", href: "/status" },
   { label: "Blog", href: "/blog" },
   { label: "Kapcsolat", href: "/kapcsolat" },

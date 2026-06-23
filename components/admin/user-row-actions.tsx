@@ -50,7 +50,7 @@ export function UserRowActions({
   function confirmDelete() {
     const who = label ? `\n\n${label}` : "";
     const ok = window.confirm(
-      `Biztosan VÉGLEGESEN törlöd ezt a felhasználót?${who}\n\nEz törli a fiókot, a profilját, hirdetéseit és minden hozzá tartozó adatot. A művelet nem visszavonható!`,
+      `Biztosan VÉGLEGESEN törlöd ezt a felhasználót?${who}\n\nEz törli a fiókot, a profilját, kampányait és minden hozzá tartozó adatot. A művelet nem visszavonható!`,
     );
     if (!ok) return;
     run(() => deleteUser(userId), "Felhasználó törölve");
@@ -83,7 +83,7 @@ export function UserRowActions({
         size="sm"
         variant={canSeeViewers ? "default" : "outline"}
         disabled={pending}
-        title="Láthatja, KIK nézték meg a profilját / hirdetését"
+        title="Láthatja, KIK nézték meg a profilját / kampányát"
         onClick={() =>
           run(
             () => setUserCanSeeViewers(userId, !canSeeViewers),

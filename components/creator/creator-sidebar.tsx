@@ -51,7 +51,7 @@ const navItems = [
     icon: Handshake,
     key: "collaborations",
   },
-  { href: "/ads", label: "Hirdetések", icon: Megaphone, key: "ads" },
+  { href: "/ads", label: "Kampányok", icon: Megaphone, key: "ads" },
   {
     href: "/creator/messages",
     label: "Üzenetek",

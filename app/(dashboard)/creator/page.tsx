@@ -223,7 +223,7 @@ export default async function CreatorOverviewPage() {
                 className="bg-accent text-accent-foreground hover:bg-accent/90"
               >
                 <Link href={nextStep?.href ?? "/ads"}>
-                  {nextStep ? "Következő lépés" : "Új hirdetések keresése"}
+                  {nextStep ? "Következő lépés" : "Új kampányok keresése"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
@@ -385,7 +385,7 @@ export default async function CreatorOverviewPage() {
               <p className="mt-1 text-sm text-white/70">
                 {nextStep
                   ? "A profilod már látható, de ezzel a lépéssel sokkal könnyebb lesz dönteni rólad."
-                  : "A profilod rendben. Itt az ideje aktív hirdetésekre pályázni."}
+                  : "A profilod rendben. Itt az ideje aktív kampányokra pályázni."}
               </p>
             </div>
           </div>
@@ -396,7 +396,7 @@ export default async function CreatorOverviewPage() {
             <p className="mt-1 text-sm text-white/70">
               {nextStep
                 ? "Nyisd meg, töltsd ki, majd térj vissza ide a készültségi állapothoz."
-                : "Keress friss márka-hirdetéseket és küldj célzott ajánlatot."}
+                : "Keress friss márka-kampányokat és küldj célzott ajánlatot."}
             </p>
           </div>
           <Button

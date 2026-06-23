@@ -35,7 +35,7 @@ const navItems = [
   { href: "/admin/users", label: "Felhasználók", icon: Users, key: "users" },
   { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },
   { href: "/admin/brands", label: "Márkák", icon: Building2, key: "brands" },
-  { href: "/admin/ads", label: "Hirdetések", icon: Megaphone, key: "ads" },
+  { href: "/admin/ads", label: "Kampányok", icon: Megaphone, key: "ads" },
   { href: "/admin/applications", label: "Jelentkezők", icon: FileText, key: "applications" },
   { href: "/admin/blog", label: "Blog", icon: Newspaper, key: "blog" },
   { href: "/admin/reviews", label: "Értékelések", icon: Star, key: "reviews" },

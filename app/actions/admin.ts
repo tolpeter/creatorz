@@ -18,7 +18,7 @@ async function requireAdmin() {
 
 /**
  * Felhasználó VÉGLEGES törlése: a Supabase auth user + a public DB sor
- * (cascade törli a profilt, hirdetéseket, üzeneteket stb.). Admin nem
+ * (cascade törli a profilt, kampányokat, üzeneteket stb.). Admin nem
  * törölhető, és magadat sem törölheted.
  */
 export async function deleteUser(userId: string) {

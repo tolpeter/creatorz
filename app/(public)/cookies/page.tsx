@@ -36,8 +36,8 @@ export default function CookiesPage() {
           használhat, miután hozzájárultál.
         </li>
         <li>
-          <strong>Marketing sütik (engedélyhez kötött):</strong> hirdetések
-          személyre szabásához. Jelenleg nincs aktív hirdetési rendszer, ezért
+          <strong>Marketing sütik (engedélyhez kötött):</strong> kampányok
+          személyre szabásához. Jelenleg nincs aktív kampány rendszer, ezért
           ezek alapból kikapcsoltak.
         </li>
       </ul>

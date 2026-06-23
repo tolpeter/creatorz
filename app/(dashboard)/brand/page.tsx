@@ -75,7 +75,7 @@ export default async function BrandOverviewPage() {
           <div className="flex flex-wrap gap-2">
             <Button asChild className="bg-accent font-bold text-black hover:bg-white">
               <Link href="/brand/ads/new">
-                <Plus className="h-4 w-4" /> Új hirdetés
+                <Plus className="h-4 w-4" /> Új kampány
               </Link>
             </Button>
             <Button
@@ -169,24 +169,24 @@ export default async function BrandOverviewPage() {
         </div>
       </div>
 
-      {/* ALSÓ KÁRTYÁK: hirdetések + üzenetek */}
+      {/* ALSÓ KÁRTYÁK: kampányok + üzenetek */}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* Aktív hirdetések */}
+        {/* Aktív kampányok */}
         <div className="rounded-2xl border bg-card p-6">
           <div className="mb-4 flex items-center gap-2 text-sm font-medium text-muted-foreground">
             <Megaphone className="h-5 w-5 text-accent" />
-            Aktív hirdetéseim
+            Aktív kampányaim
           </div>
           <p className="text-4xl font-bold">{activeAdsCount}</p>
           <div className="mt-4 flex items-center justify-between gap-4">
             <p className="text-xs text-muted-foreground">
               {activeAdsCount === 0
-                ? "Jelenleg nincs aktív hirdetésed."
-                : `${activeAdsCount} hirdetés él jelenleg`}
+                ? "Jelenleg nincs aktív kampányod."
+                : `${activeAdsCount} kampány él jelenleg`}
             </p>
             <Button asChild size="sm" variant="outline">
               <Link href="/brand/ads/new">
-                <Plus className="h-4 w-4" /> Új hirdetés
+                <Plus className="h-4 w-4" /> Új kampány
               </Link>
             </Button>
           </div>

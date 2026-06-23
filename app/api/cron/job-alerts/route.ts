@@ -12,8 +12,8 @@ export const maxDuration = 120;
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 
 /**
- * Heti "új, hozzád illő hirdetések" email a tartalomgyártóknak.
- * Az elmúlt 7 nap aktív hirdetéseiből kigyűjti a creator kategóriájához /
+ * Heti "új, hozzád illő kampányok" email a tartalomgyártóknak.
+ * Az elmúlt 7 nap aktív kampányaiból kigyűjti a creator kategóriájához /
  * szerepköréhez illőket, és csak akkor küld levelet, ha van legalább 1 találat.
  * Vercel cron hívja (hetente).
  */
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
 
   const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-  // Elmúlt 7 nap aktív hirdetései
+  // Elmúlt 7 nap aktív kampányai
   const recentAds = await db
     .select({
       id: ads.id,
@@ -46,7 +46,7 @@ export async function GET(req: Request) {
     .where(and(eq(ads.status, "active"), gte(ads.createdAt, weekAgo)));
 
   if (recentAds.length === 0) {
-    return Response.json({ recipients: 0, sent: 0, note: "nincs friss hirdetés" });
+    return Response.json({ recipients: 0, sent: 0, note: "nincs friss kampány" });
   }
 
   // Jogosult creatorok (megerősített email, nem felfüggesztett)
@@ -108,12 +108,12 @@ export async function GET(req: Request) {
       </table>`;
 
     const rendered = renderNewsletterEmail({
-      subject: `${matched.length} új hirdetés, ami illik hozzád — Creatorz`,
+      subject: `${matched.length} új kampány, ami illik hozzád — Creatorz`,
       preheader: `${matched.length} friss, hozzád illő márka-brief vár rád.`,
-      heading: "Új hirdetések neked",
-      intro: `Szia ${escapeHtml(creator.displayName)}! Az elmúlt héten <strong>${matched.length}</strong> olyan hirdetés érkezett, ami illik a profilodhoz:`,
+      heading: "Új kampányok neked",
+      intro: `Szia ${escapeHtml(creator.displayName)}! Az elmúlt héten <strong>${matched.length}</strong> olyan kampány érkezett, ami illik a profilodhoz:`,
       bodyHtml,
-      cta: { label: "Összes hirdetés böngészése", href: `${APP_URL}/ads` },
+      cta: { label: "Összes kampány böngészése", href: `${APP_URL}/ads` },
     });
 
     const res = await sendEmailSafe({ to: creator.email, ...rendered });

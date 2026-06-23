@@ -21,7 +21,7 @@ export const runtime = "nodejs";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 const schema = z.object({ adId: z.string().uuid(), message: z.string().max(1000).optional() });
 
-/** Márka meghív egy tartalomgyártót a saját, aktív hirdetésére. */
+/** Márka meghív egy tartalomgyártót a saját, aktív kampányára. */
 export async function POST(req: Request, { params }: { params: Promise<{ username: string }> }) {
   const user = await getMobileUser(req);
   if (!user) return Response.json({ error: "unauthorized" }, { status: 401 });
@@ -56,8 +56,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ usernam
     .from(ads)
     .where(eq(ads.id, adId))
     .limit(1);
-  if (!ad || ad.brandId !== brand.id) return Response.json({ error: "A hirdetés nem található" }, { status: 404 });
-  if (ad.status !== "active") return Response.json({ error: "Csak aktív hirdetésre lehet meghívni" }, { status: 400 });
+  if (!ad || ad.brandId !== brand.id) return Response.json({ error: "A kampány nem található" }, { status: 404 });
+  if (ad.status !== "active") return Response.json({ error: "Csak aktív kampányra lehet meghívni" }, { status: 400 });
 
   const applied = await db
     .select({ id: adApplications.id })
@@ -71,12 +71,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ usernam
     .values({ adId, brandId: brand.id, creatorId: creator.id, message: message || null })
     .onConflictDoNothing({ target: [adInvitations.adId, adInvitations.creatorId] })
     .returning({ id: adInvitations.id });
-  if (!inserted[0]) return Response.json({ error: "Ezt a creatort már meghívtad erre a hirdetésre." }, { status: 409 });
+  if (!inserted[0]) return Response.json({ error: "Ezt a creatort már meghívtad erre a kampányra." }, { status: 409 });
 
   await db.insert(notifications).values({
     userId: creator.userId,
     type: "ad_invitation",
-    title: `Meghívás egy hirdetésre: ${brand.companyName}`,
+    title: `Meghívás egy kampányra: ${brand.companyName}`,
     body: `„${ad.title}" — a márka kifejezetten téged hívott meg.`,
     link: `/ads/${adId}`,
   });

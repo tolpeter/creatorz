@@ -63,7 +63,7 @@ export async function createApplication(input: z.input<typeof applySchema>) {
     };
   }
 
-  // Hirdetés léte + aktív státusz
+  // Kampány léte + aktív státusz
   const adRows = await db
     .select({
       id: ads.id,
@@ -77,8 +77,8 @@ export async function createApplication(input: z.input<typeof applySchema>) {
     .where(eq(ads.id, d.adId))
     .limit(1);
   const ad = adRows[0];
-  if (!ad) return { error: "A hirdetés nem található" };
-  if (ad.status !== "active") return { error: "Erre a hirdetésre nem lehet pályázni" };
+  if (!ad) return { error: "A kampány nem található" };
+  if (ad.status !== "active") return { error: "Erre a kampányra nem lehet pályázni" };
 
   // Beszúrás (egyediség: adId + creatorId)
   const inserted = await db
@@ -91,9 +91,9 @@ export async function createApplication(input: z.input<typeof applySchema>) {
     .onConflictDoNothing({ target: [adApplications.adId, adApplications.creatorId] })
     .returning({ id: adApplications.id });
 
-  if (!inserted[0]) return { error: "Erre a hirdetésre már pályáztál." };
+  if (!inserted[0]) return { error: "Erre a kampányra már pályáztál." };
 
-  // Ha a creatort meghívták erre a hirdetésre, a meghívást „teljesítettre"
+  // Ha a creatort meghívták erre a kampányra, a meghívást „teljesítettre"
   // állítjuk — így a márka látja, hogy a meghívás pályázattá vált.
   await db
     .update(adInvitations)
@@ -106,7 +106,7 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       ),
     );
 
-  // Brand user a hirdetéshez (értesítéshez)
+  // Brand user a kampányhoz (értesítéshez)
   const brandUser = await db
     .select({ userId: brandProfiles.userId })
     .from(ads)
@@ -124,7 +124,7 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       userId: brandUser[0].userId,
       type: "application",
       title: `Új pályázat: ${creator.profile.displayName}`,
-      body: `"${ad.title}" hirdetésedre érkezett egy pályázat.`,
+      body: `"${ad.title}" kampányodra érkezett egy pályázat.`,
       link: "/brand/ads",
     });
     await sendExpoPush([brandUser[0].userId], {
@@ -165,7 +165,7 @@ export async function withdrawApplication(applicationId: string) {
     )
     .returning({ adId: adApplications.adId });
 
-  // A hirdetés pályázat-számlálóját is csökkentjük (0 alá nem mehet).
+  // A kampány pályázat-számlálóját is csökkentjük (0 alá nem mehet).
   if (updated[0]) {
     await db
       .update(ads)
@@ -285,7 +285,7 @@ export async function rejectApplication(applicationId: string, reason?: string) 
     userId: row.creatorUserId,
     type: "application_rejected",
     title: "Pályázatod elbírálva",
-    body: `A(z) "${row.adTitle}" hirdetésre adott pályázatodat nem fogadták el.`,
+    body: `A(z) "${row.adTitle}" kampányra adott pályázatodat nem fogadták el.`,
     link: "/creator/applications",
   });
 
