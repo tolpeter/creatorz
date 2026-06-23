@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import {
   BadgeCheck,
+  Cake,
   Camera,
   Clock,
   Crown,
@@ -12,6 +13,7 @@ import {
   PlayCircle,
   ShieldCheck,
   Star,
+  UserRound,
   Users,
   Video,
   Zap,
@@ -31,7 +33,7 @@ import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { activityLabel, getResponseStats } from "@/lib/creator-stats";
 import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { CREATOR_CATEGORIES, LANGUAGES } from "@/lib/constants";
+import { CREATOR_CATEGORIES, GENDER_OPTIONS, LANGUAGES } from "@/lib/constants";
 import { supabaseOgImage } from "@/lib/utils/og-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
@@ -346,6 +348,22 @@ export default async function CreatorDetailPage({
   const photoCount = items.filter((item) => item.type === "photo").length;
   const bannerImage = safeImageUrl(profile.bannerUrl);
   const tiktokHandle = profile.tiktokUrl ? getTikTokHandle(profile.tiktokUrl) : null;
+  // Életkor: a születési dátumból számolva (megbízhatóbb), különben a tárolt age.
+  const displayAge = (() => {
+    if (profile.birthDate) {
+      const d = new Date(profile.birthDate as unknown as string);
+      if (!isNaN(d.getTime())) {
+        const ref = new Date();
+        let a = ref.getFullYear() - d.getFullYear();
+        const m = ref.getMonth() - d.getMonth();
+        if (m < 0 || (m === 0 && ref.getDate() < d.getDate())) a -= 1;
+        if (a > 0 && a < 120) return a;
+      }
+    }
+    return profile.age && profile.age > 0 ? profile.age : null;
+  })();
+  const genderLabel =
+    GENDER_OPTIONS.find((g) => g.value === profile.gender)?.label ?? null;
   const primaryFollowers =
     typeof profile.tiktokFollowers === "number" && profile.tiktokFollowers > 0
       ? profile.tiktokFollowers
@@ -421,6 +439,18 @@ export default async function CreatorDetailPage({
                       {profile.county && profile.county !== profile.city ? `, ${profile.county}` : ""}
                     </span>
                   </>
+                ) : null}
+                {displayAge ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Cake className="h-3.5 w-3.5 shrink-0 text-accent sm:h-4 sm:w-4" />
+                    {displayAge} éves
+                  </span>
+                ) : null}
+                {genderLabel ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <UserRound className="h-3.5 w-3.5 shrink-0 text-accent sm:h-4 sm:w-4" />
+                    {genderLabel}
+                  </span>
                 ) : null}
               </div>
 
