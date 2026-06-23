@@ -126,6 +126,7 @@ export async function signUpAction(input: SignUpInput) {
     role === "creator" && profileKind === "professional"
       ? "/onboarding/professional"
       : `/onboarding/${role}`;
+  await setDevNewsPending();
   return {
     success: true,
     needsConfirmation: false,
@@ -189,6 +190,7 @@ export async function signInAction(input: z.input<typeof signInSchema>) {
     const aal = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
     if (verifiedTotp && aal.data?.currentLevel !== "aal2") {
       await applyRememberMeCookieMode(Boolean(rememberMe));
+      await setDevNewsPending();
       return {
         success: true,
         mfaRequired: true,
@@ -204,7 +206,22 @@ export async function signInAction(input: z.input<typeof signInSchema>) {
   }
 
   await applyRememberMeCookieMode(Boolean(rememberMe));
+  await setDevNewsPending();
   return { success: true, redirectTo };
+}
+
+/** Egyszer-használatos jelző: belépés után a vezérlőpulton EGYSZER feljön a
+ *  „Fejlesztések" pop-up (a komponens törli). 1 óra alatt érvényes. */
+async function setDevNewsPending() {
+  try {
+    (await cookies()).set("cz_devnews_pending", "1", {
+      path: "/",
+      maxAge: 3600,
+      sameSite: "lax",
+    });
+  } catch {
+    /* best-effort */
+  }
 }
 
 const mfaVerifySchema = z.object({
@@ -378,7 +395,7 @@ export async function signOutAction() {
   try {
     const store = await cookies();
     store.delete("creatorz_photo_prompt");
-    store.delete("cz_devnews");
+    store.delete("cz_devnews_pending");
   } catch {
     /* best-effort */
   }

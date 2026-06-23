@@ -6,15 +6,17 @@ import { ArrowRight, Clock, Rocket, Smartphone, Sparkles, X } from "lucide-react
 import { SocialTile } from "@/components/creator/platform-icon";
 
 /**
- * Bejelentkezéskor egyszer felugró „Min dolgozunk a háttérben?" pop-up.
- * Munkamenet-cookie tartja számon (NEM localStorage); kijelentkezéskor törlődik,
- * így minden új belépésnél megjelenik. A /status oldalra irányít.
+ * Belépéskor EGYSZER felugró „Min dolgozunk a háttérben?" pop-up. A login egy
+ * egyszer-használatos `cz_devnews_pending` cookie-t állít be; ez a komponens
+ * azonnal „elfogyasztja" (törli), így a vezérlőpult későbbi megnyitásainál már
+ * NEM jelenik meg — csak a következő belépésnél. A /status oldalra irányít.
  */
 export function AnnouncementPopup() {
   const [open, setOpen] = useState(true);
 
   useEffect(() => {
-    document.cookie = "cz_devnews=1; path=/; samesite=lax";
+    // A belépéskor kapott egyszer-használatos jelző törlése (elfogyasztás).
+    document.cookie = "cz_devnews_pending=; path=/; max-age=0; samesite=lax";
   }, []);
 
   if (!open) return null;

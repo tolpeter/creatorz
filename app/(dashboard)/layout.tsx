@@ -72,7 +72,9 @@ export default async function DashboardLayout({
   // Felugró ablakok belépésenként egyszer (session cookie alapján). Egyszerre
   // csak EGY jelenik meg: előbb a „Fejlesztések" hír, utána a profilkép-kérő.
   const cookieStore = await cookies();
-  const devNewsSeen = cookieStore.get("cz_devnews")?.value === "1";
+  // A „Fejlesztések" pop-up CSAK belépéskor jelenik meg: a login egy egyszer-
+  // használatos jelzőt állít be, amit a pop-up elfogyaszt (lásd announcement-popup).
+  const showDevNews = cookieStore.get("cz_devnews_pending")?.value === "1";
   const promptSeen = cookieStore.get("creatorz_photo_prompt")?.value === "1";
   let needsPhoto = false;
   if (current.dbUser && !promptSeen) {
@@ -137,7 +139,7 @@ export default async function DashboardLayout({
         </div>
       </header>
       <main className="flex-1">{children}</main>
-      {!devNewsSeen ? (
+      {showDevNews ? (
         <AnnouncementPopup />
       ) : needsPhoto && (role === "brand" || role === "creator") ? (
         <ProfilePhotoPrompt role={role === "brand" ? "brand" : "creator"} />
