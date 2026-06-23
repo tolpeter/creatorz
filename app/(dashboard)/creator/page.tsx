@@ -22,10 +22,14 @@ import { db } from "@/lib/db";
 import { adApplications, messages, portfolioItems, profileViews } from "@/lib/db/schema";
 import { getCurrentCreator, getCurrentUser } from "@/lib/auth";
 import { resolveViewers } from "@/lib/viewers";
+import { getOrCreateReferralCode, referralStats } from "@/lib/referral";
 import { ViewersPanel, type ViewerRow } from "@/components/shared/viewers-panel";
+import { ReferralCard, ProfileShareCard } from "@/components/creator/referral-cards";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DashboardAvatarUpload } from "@/components/creator/dashboard-avatar-upload";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 
 export default async function CreatorOverviewPage() {
   const creator = await getCurrentCreator();
@@ -100,6 +104,14 @@ export default async function CreatorOverviewPage() {
   }
   const applicationCount = applicationRows[0]?.n ?? 0;
   const unreadCount = unreadRows[0]?.n ?? 0;
+
+  // Ajánlási program + megosztható profil-kártya
+  const [referralCode, refStats] = await Promise.all([
+    getOrCreateReferralCode(creator.appUserId),
+    referralStats(creator.appUserId),
+  ]);
+  const inviteUrl = `${APP_URL}/register?ref=${referralCode}`;
+  const profileUrl = `${APP_URL}/creators/${p.username}`;
 
   const hasSocial = Boolean(
     p.instagramUrl ||
@@ -387,6 +399,16 @@ export default async function CreatorOverviewPage() {
             </Link>
           </Button>
         </section>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <ReferralCard inviteUrl={inviteUrl} count={refStats.count} />
+        <ProfileShareCard
+          profileUrl={profileUrl}
+          displayName={p.displayName}
+          username={p.username}
+          avatarUrl={p.avatarUrl ?? null}
+        />
       </div>
 
       <section className="grid gap-4 md:grid-cols-3">

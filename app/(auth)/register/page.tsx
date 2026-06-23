@@ -21,6 +21,7 @@ import { PasswordInput } from "@/components/ui/password-input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signUpAction } from "@/app/actions/auth";
+import { ReferralCapture } from "@/components/auth/referral-capture";
 
 // UI-választás: a "professional" valójában creator role + professional profileKind
 type RoleChoice = "creator" | "professional" | "brand";
@@ -70,6 +71,7 @@ export default function RegisterPage() {
   if (step === 1) {
     return (
       <div className="relative w-full max-w-5xl rounded-3xl">
+        <ReferralCapture />
         <div className="relative space-y-8">
           <div className="space-y-3 text-center">
             <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-[#f0f4e5] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-[#3f6212]">

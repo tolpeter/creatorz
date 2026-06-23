@@ -116,6 +116,8 @@ export const users = pgTable("users", {
   // Jelszó-visszaállítás (saját Resend-es rendszer — branded email).
   passwordResetToken: text("password_reset_token"),
   passwordResetExpiresAt: timestamp("password_reset_expires_at"),
+  // Ajánlási (referral) kód — egyedi, megosztható meghívó-linkhez.
+  referralCode: varchar("referral_code", { length: 16 }).unique(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   lastLoginAt: timestamp("last_login_at"),
@@ -254,6 +256,17 @@ export const pageEvents = pgTable("page_events", {
 }, (t) => ({
   createdIdx: index("page_events_created_idx").on(t.createdAt),
   sessionIdx: index("page_events_session_idx").on(t.sessionId),
+}));
+
+// ============= REFERRALS (ajánlási program) =============
+// Ki kit hívott meg. Egy meghívott user csak egyszer számít (unique).
+export const referrals = pgTable("referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referrerUserId: uuid("referrer_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  referredUserId: uuid("referred_user_id").notNull().references(() => users.id, { onDelete: "cascade" }).unique(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  referrerIdx: index("referrals_referrer_idx").on(t.referrerUserId),
 }));
 
 // ============= BRAND PROFILES =============

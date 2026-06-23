@@ -12,6 +12,7 @@ import { dashboardPathForRole } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
 import { sendVerificationEmail } from "@/lib/email-verification";
 import { sendPasswordResetEmail } from "@/lib/password-reset";
+import { recordReferral } from "@/lib/referral";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -120,6 +121,18 @@ export async function signUpAction(input: SignUpInput) {
         companyName: emailLocalPart(email),
       })
       .onConflictDoNothing({ target: brandProfiles.userId });
+  }
+
+  // Ajánlás rögzítése, ha a regisztráló meghívó-linkről jött (cz_ref cookie).
+  try {
+    const cookieStore = await cookies();
+    const refCode = cookieStore.get("cz_ref")?.value;
+    if (refCode) {
+      await recordReferral(refCode, appUserId);
+      cookieStore.delete("cz_ref");
+    }
+  } catch {
+    /* best-effort — az ajánlás hiánya ne állítsa meg a regisztrációt */
   }
 
   const onboardingPath =
