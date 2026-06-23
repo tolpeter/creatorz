@@ -20,12 +20,21 @@ const optionalBudget = z
   .transform((v) => (v === "" || v === null || v === undefined ? null : v));
 
 const adObject = z.object({
-  title: z.string().min(5).max(80),
-  description: z.string().min(50).max(2000),
-  categories: z.array(z.string()).min(1).max(3),
+  title: z
+    .string()
+    .min(5, "A cím legalább 5 karakter legyen")
+    .max(80, "A cím legfeljebb 80 karakter lehet"),
+  description: z
+    .string()
+    .min(50, "A leírás legalább 50 karakter legyen")
+    .max(2000, "A leírás legfeljebb 2000 karakter lehet"),
+  categories: z
+    .array(z.string())
+    .min(1, "Válassz legalább egy kategóriát")
+    .max(3, "Legfeljebb 3 kategóriát választhatsz"),
   targetKinds: z
     .array(z.enum(["ugc", "editor", "photographer", "videographer"]))
-    .min(1)
+    .min(1, "Jelölj meg legalább egy keresett típust")
     .default(["ugc"]),
   contentType: z.enum(["video", "photo", "both"]),
   collaborationType: z.enum(["project", "longterm", "barter"]).default("project"),
@@ -80,9 +89,6 @@ export async function createAd(input: z.input<typeof adSchema>) {
   const brand = await getCurrentBrand();
   if (!brand) return { error: "Csak bejelentkezett márka adhat fel kampányt" };
 
-  const rl = checkRateLimit(`ad:${brand.profile.id}`, 3, HOUR);
-  if (!rl.allowed) return { error: "Túl sok kampány egy óra alatt. Próbáld később." };
-
   // (Adószám/székhely nem kötelező a kampányfeladáshoz.)
 
   const parsed = adSchema.safeParse(input);
@@ -97,6 +103,13 @@ export async function createAd(input: z.input<typeof adSchema>) {
     .where(and(eq(ads.brandId, brand.profile.id), inArray(ads.status, ["pending", "active"])));
   if ((activeRows[0]?.n ?? 0) >= MAX_ACTIVE_ADS) {
     return { error: `Egyszerre legfeljebb ${MAX_ACTIVE_ADS} aktív kampányod lehet.` };
+  }
+
+  // Rate limit CSAK a valós (érvényes) feladási kísérletnél számít — így a
+  // form-hibák (pl. túl rövid cím) miatti újrapróbálkozás nem fogyasztja el.
+  const rl = checkRateLimit(`ad:${brand.profile.id}`, 5, HOUR);
+  if (!rl.allowed) {
+    return { error: "Túl sok kampány egy óra alatt. Próbáld kicsit később." };
   }
 
   const inserted = await db
