@@ -24,6 +24,8 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
   const dragStartScroll = useRef(0);
   const draggedRef = useRef(false);
   const [dragging, setDragging] = useState(false);
+  // Ha egy thumbnail nem tölt be (pl. a proxy 404/502), play-placeholderre váltunk.
+  const [broken, setBroken] = useState<Set<string>>(new Set());
 
   if (!visible.length) return null;
 
@@ -109,13 +111,20 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
               title={video.title ?? "TikTok videó megtekintése"}
               className="group relative block w-[42vw] max-w-[200px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-lg sm:w-[180px]"
             >
-              {video.thumbnailUrl ? (
+              {video.thumbnailUrl && !broken.has(video.id) ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={video.thumbnailUrl}
                   alt={video.title ?? ""}
                   draggable={false}
                   loading="lazy"
+                  onError={() =>
+                    setBroken((prev) => {
+                      const next = new Set(prev);
+                      next.add(video.id);
+                      return next;
+                    })
+                  }
                   className="aspect-[9/16] w-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
               ) : (

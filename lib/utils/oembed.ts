@@ -10,7 +10,16 @@ export async function getTikTokEmbed(url: string): Promise<TikTokEmbed | null> {
   try {
     const res = await fetch(
       `https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`,
-      { next: { revalidate: 3600 } }
+      {
+        // Böngésző-szerű fejlécek: a TikTok az alap (node) UA-s, datacenter IP-ről
+        // jövő kéréseket gyakran elutasítja — ezzel jóval megbízhatóbb a válasz.
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+          Accept: "application/json,text/plain,*/*",
+        },
+        next: { revalidate: 3600 },
+      }
     );
     if (!res.ok) return null;
     return (await res.json()) as TikTokEmbed;

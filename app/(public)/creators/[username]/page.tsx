@@ -32,7 +32,6 @@ import { activityLabel, getResponseStats } from "@/lib/creator-stats";
 import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 import { CREATOR_CATEGORIES, LANGUAGES } from "@/lib/constants";
-import { getTikTokEmbed } from "@/lib/utils/oembed";
 import { supabaseOgImage } from "@/lib/utils/og-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
@@ -151,7 +150,7 @@ export default async function CreatorDetailPage({
     categories: item.categories ?? [],
   }));
 
-  const tiktokVideoEmbeds = await getTikTokVideoEmbeds(items);
+  const tiktokVideoEmbeds = getTikTokVideoEmbeds(items);
 
   let brand: Awaited<ReturnType<typeof getCurrentBrand>> = null;
   try {
@@ -480,15 +479,13 @@ export default async function CreatorDetailPage({
             </div>
           </div>
 
-          <div className={profile.introVideoUrl ? "grid gap-3 sm:grid-cols-[120px_minmax(0,1fr)]" : ""}>
+          <div className={profile.introVideoUrl ? "grid gap-4 sm:grid-cols-[170px_minmax(0,1fr)] sm:items-center" : ""}>
             {profile.introVideoUrl ? (
-              <div className="overflow-hidden rounded-[1.25rem] border border-white/14 bg-black shadow-2xl">
-                <div className="flex items-center justify-between border-b border-white/10 px-3 py-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-bold">
-                    <Video className="h-3.5 w-3.5 text-accent" />
-                    Intro
-                  </span>
-                </div>
+              <div className="group relative mx-auto w-full max-w-[200px] overflow-hidden rounded-[1.25rem] border border-white/14 bg-black shadow-2xl sm:mx-0 sm:max-w-none">
+                <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
+                  <Video className="h-3.5 w-3.5 text-accent" />
+                  Intro
+                </span>
                 {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
                 <video
                   src={profile.introVideoUrl}
@@ -498,7 +495,7 @@ export default async function CreatorDetailPage({
                   playsInline
                   controls
                   preload="metadata"
-                  className="h-[170px] w-full bg-black object-cover"
+                  className="aspect-[9/16] w-full bg-black object-cover"
                 />
               </div>
             ) : null}
@@ -678,27 +675,24 @@ export default async function CreatorDetailPage({
   );
 }
 
-async function getTikTokVideoEmbeds(items: typeof portfolioItems.$inferSelect[]) {
+function getTikTokVideoEmbeds(items: typeof portfolioItems.$inferSelect[]): TikTokSliderVideo[] {
   const tiktokItems = items
     .filter((item) => item.type === "video" && isTikTokVideoUrl(item.url))
     .slice(0, 5);
 
-  const embeds = await Promise.all(
-    tiktokItems.map(async (item): Promise<TikTokSliderVideo | null> => {
-      const embed = await getTikTokEmbed(item.url);
-      // Könnyű előkép (thumbnail) — nem a nehéz iframe-et töltjük, így mobilon is
-      // gyors, betölt és húzható. Ha nincs thumbnail, a kártya play-ikont mutat.
-      return {
-        id: item.id,
-        url: item.url,
-        thumbnailUrl: item.thumbnailUrl ?? embed?.thumbnail_url ?? null,
-        title: item.title ?? embed?.title ?? null,
-        author: embed?.author_name ?? null,
-      };
-    }),
-  );
-
-  return embeds.filter((item): item is TikTokSliderVideo => Boolean(item));
+  // Az előképet a /api/tiktok-thumb proxyn keresztül kérjük: friss (nem lejárt)
+  // oEmbed thumbnail, szerver-oldali letöltés referer-rel (nincs hotlink-gond),
+  // saját domainről, élen cache-elve. A render-idejű oEmbedet NEM hívjuk
+  // (gyors SSR + nincs Vercel-IP rate-limit); a címet a mentett adatból vesszük.
+  return tiktokItems.map((item) => ({
+    id: item.id,
+    url: item.url,
+    thumbnailUrl: `/api/tiktok-thumb?u=${encodeURIComponent(item.url)}${
+      item.thumbnailUrl ? `&fb=${encodeURIComponent(item.thumbnailUrl)}` : ""
+    }`,
+    title: item.title ?? null,
+    author: null,
+  }));
 }
 
 function ProfileSection({
