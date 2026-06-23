@@ -437,6 +437,23 @@ export const collaborations = pgTable("collaborations", {
   tokenIdx: uniqueIndex("collab_token_idx").on(table.reviewToken),
 }));
 
+// ============= COLLABORATION EVENTS (idővonal-események a chatben) =============
+// Minden leadás / változtatás-kérés / jóváhagyás dátumozott eseményként ide
+// kerül, hogy a beszélgetésben időrendben "box"-ként megjelenjen és visszakövethető legyen.
+export const collaborationEvents = pgTable("collaboration_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  collaborationId: uuid("collaboration_id")
+    .notNull()
+    .references(() => collaborations.id, { onDelete: "cascade" }),
+  // 'delivered' | 'changes_requested' | 'approved'
+  kind: varchar("kind", { length: 24 }).notNull(),
+  note: text("note"), // pl. a változtatás-kérés szövege
+  byUserId: uuid("by_user_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  collabIdx: index("collab_events_collab_idx").on(table.collaborationId),
+}));
+
 // ============= REVIEWS =============
 export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -1,15 +1,8 @@
-"use client";
-
-import { useTransition } from "react";
 import Link from "next/link";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { Check, Loader2, Package, CheckCircle2, MessageSquare, Clock } from "lucide-react";
+import { Check, CheckCircle2, Clock, PencilLine, Package, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { markDelivered, markCompleted, type CollabItem } from "@/app/actions/collaborations";
-import { BrandReviewModal } from "@/components/shared/brand-review-modal";
+import { type CollabItem } from "@/app/actions/collaborations";
 
 function fmt(d: Date | string | null) {
   if (!d) return null;
@@ -17,14 +10,10 @@ function fmt(d: Date | string | null) {
 }
 
 export function CollaborationCard({ c }: { c: CollabItem }) {
-  const [pending, start] = useTransition();
-  const router = useRouter();
-
-  // A korábbi review-folyamat státuszait is figyelembe vesszük:
-  // reviewed/closed = lezárt, review_pending = leadott.
   const completed = !!c.completedAt || c.status === "closed" || c.status === "reviewed";
   const delivered = !!c.deliveredAt || completed || c.status === "review_pending";
   const isCreator = c.viewerRole === "creator";
+  const href = `/${isCreator ? "creator" : "brand"}/collaborations/${c.id}`;
 
   const steps = [
     { label: "Elfogadva", date: fmt(c.acceptedAt), done: true },
@@ -32,19 +21,11 @@ export function CollaborationCard({ c }: { c: CollabItem }) {
     { label: "Lezárva", date: fmt(c.completedAt), done: completed },
   ];
 
-  function run(fn: () => Promise<{ error?: string; success?: boolean }>, ok: string) {
-    start(async () => {
-      const res = await fn();
-      if (res.error) toast.error(res.error);
-      else {
-        toast.success(ok);
-        router.refresh();
-      }
-    });
-  }
-
   return (
-    <div className="rounded-2xl border bg-card p-5 shadow-sm">
+    <Link
+      href={href}
+      className="group block rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md"
+    >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <Avatar className="h-10 w-10">
@@ -59,6 +40,10 @@ export function CollaborationCard({ c }: { c: CollabItem }) {
         {completed ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0f4e5] px-2.5 py-1 text-xs font-bold text-[#3f6212]">
             <CheckCircle2 className="h-3.5 w-3.5" /> Lezárva
+          </span>
+        ) : delivered ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/20 px-2.5 py-1 text-xs font-bold text-[#3f6212]">
+            <Package className="h-3.5 w-3.5" /> Jóváhagyásra vár
           </span>
         ) : (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-[#3f6212]">
@@ -97,53 +82,14 @@ export function CollaborationCard({ c }: { c: CollabItem }) {
         ))}
       </div>
 
-      {/* Akciók */}
-      <div className="mt-5 flex flex-wrap items-center gap-2 border-t pt-4">
-        <Button asChild variant="outline" size="sm">
-          <Link href={isCreator ? "/creator/messages" : "/brand/messages"}>
-            <MessageSquare className="h-4 w-4" /> Üzenetek
-          </Link>
-        </Button>
-
-        {!completed && isCreator && !delivered && (
-          <Button
-            size="sm"
-            className="bg-accent font-bold text-black hover:bg-black hover:text-accent"
-            disabled={pending}
-            onClick={() => run(() => markDelivered(c.id), "Munka leadva")}
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Package className="h-4 w-4" />}
-            Munka leadása
-          </Button>
-        )}
-        {!completed && isCreator && delivered && (
-          <span className="text-sm text-muted-foreground">Leadva — várakozás a márka lezárására.</span>
-        )}
-
-        {!completed && !isCreator && delivered && (
-          <Button
-            size="sm"
-            className="bg-accent font-bold text-black hover:bg-black hover:text-accent"
-            disabled={pending}
-            onClick={() => run(() => markCompleted(c.id), "Együttműködés lezárva")}
-          >
-            {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-            Együttműködés lezárása
-          </Button>
-        )}
-        {!completed && !isCreator && !delivered && (
-          <span className="text-sm text-muted-foreground">Várakozás a tartalomgyártó leadására.</span>
-        )}
-
-        {completed && isCreator && !c.brandReviewed && (
-          <BrandReviewModal collabId={c.id} brandName={c.partnerName} />
-        )}
-        {completed && isCreator && c.brandReviewed && (
-          <span className="inline-flex items-center gap-1 text-sm font-medium text-[#4d7c0f]">
-            <CheckCircle2 className="h-4 w-4" /> Értékelted a márkát
-          </span>
-        )}
+      <div className="mt-4 flex items-center justify-between border-t pt-3">
+        <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground">
+          <PencilLine className="h-4 w-4" /> Chat, leadás és jóváhagyás
+        </span>
+        <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#4d7c0f] group-hover:gap-1.5">
+          Megnyitás <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+        </span>
       </div>
-    </div>
+    </Link>
   );
 }

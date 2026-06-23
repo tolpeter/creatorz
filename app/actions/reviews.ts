@@ -13,7 +13,7 @@ import {
 } from "@/lib/db/schema";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { getCurrentCreator } from "@/lib/auth";
+import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -102,6 +102,86 @@ export async function submitReview(token: string, input: z.input<typeof reviewSc
     `,
   });
 
+  revalidatePath("/creator/reviews");
+  return { success: true };
+}
+
+/**
+ * Márka → tartalomgyártó értékelés KÖZVETLENÜL a workspace-ből (token nélkül),
+ * miután a márka jóváhagyta/lezárta az együttműködést.
+ */
+export async function submitCreatorReview(
+  collabId: string,
+  input: z.input<typeof reviewSchema>,
+) {
+  const brand = await getCurrentBrand();
+  if (!brand) return { error: "Csak márka értékelheti a tartalomgyártót." };
+
+  const parsed = reviewSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const d = parsed.data;
+
+  const [collab] = await db
+    .select({
+      id: collaborations.id,
+      status: collaborations.status,
+      completedAt: collaborations.completedAt,
+      brandId: collaborations.brandId,
+      creatorId: collaborations.creatorId,
+      creatorUserId: creatorProfiles.userId,
+      creatorName: creatorProfiles.displayName,
+      brandName: brandProfiles.companyName,
+    })
+    .from(collaborations)
+    .innerJoin(creatorProfiles, eq(creatorProfiles.id, collaborations.creatorId))
+    .innerJoin(brandProfiles, eq(brandProfiles.id, collaborations.brandId))
+    .where(and(eq(collaborations.id, collabId), eq(collaborations.brandId, brand.profile.id)))
+    .limit(1);
+  if (!collab) return { error: "Az együttműködés nem található." };
+
+  const completed =
+    !!collab.completedAt || collab.status === "closed" || collab.status === "reviewed";
+  if (!completed) {
+    return { error: "Előbb hagyd jóvá (zárd le) az együttműködést." };
+  }
+
+  const existing = await db
+    .select({ id: reviews.id })
+    .from(reviews)
+    .where(eq(reviews.collaborationId, collabId))
+    .limit(1);
+  if (existing.length > 0) return { error: "Ezt az együttműködést már értékelted." };
+
+  const editedUntil = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  await db
+    .insert(reviews)
+    .values({
+      collaborationId: collab.id,
+      brandId: collab.brandId,
+      creatorId: collab.creatorId,
+      overallRating: d.overallRating,
+      communicationRating: d.communicationRating,
+      qualityRating: d.qualityRating,
+      deadlineRating: d.deadlineRating,
+      text: d.text,
+      editedUntil,
+    })
+    .onConflictDoNothing({ target: reviews.collaborationId });
+
+  await db.update(collaborations).set({ status: "reviewed" }).where(eq(collaborations.id, collab.id));
+  await recalculateCreatorRating(collab.creatorId);
+
+  await db.insert(notifications).values({
+    userId: collab.creatorUserId,
+    type: "review",
+    title: "Új értékelést kaptál! ⭐",
+    body: `${collab.brandName} értékelt téged (${d.overallRating}/5).`,
+    link: "/creator/reviews",
+  });
+
+  revalidatePath(`/brand/collaborations/${collabId}`);
   revalidatePath("/creator/reviews");
   return { success: true };
 }
