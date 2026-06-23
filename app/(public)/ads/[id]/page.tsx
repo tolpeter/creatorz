@@ -12,6 +12,7 @@ import {
   MapPin,
   ShieldCheck,
   Star,
+  Users,
 } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, brandProfiles, adApplications, adInvitations, adViews } from "@/lib/db/schema";
@@ -245,6 +246,15 @@ export default async function AdDetailPage({
     { icon: Handshake, label: "Együttműködés", value: collabLabel },
     { icon: Film, label: "Tartalom", value: contentTypeLabel },
     { icon: ShieldCheck, label: "Felhasználás", value: usageRightsLabel },
+    ...(ad.seekingCount
+      ? [
+          {
+            icon: Users,
+            label: "Keresett alkotók",
+            value: ad.seekingCount === "multiple" ? "Több alkotó" : "1 alkotó",
+          },
+        ]
+      : []),
     ...(ad.location ? [{ icon: MapPin, label: "Lokáció", value: ad.location }] : []),
   ];
 

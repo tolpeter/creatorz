@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import { desc, eq, sql } from "drizzle-orm";
-import { Database, UserCheck, Sparkles, Building2 } from "lucide-react";
+import { Database } from "lucide-react";
 import { db } from "@/lib/db";
 import { creatorProfiles, brandProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { GENDER_OPTIONS, PROFESSIONAL_ROLES } from "@/lib/constants";
-import { ExportButton } from "@/components/admin/export-button";
+import { DatabaseSection } from "@/components/admin/database-section";
 import { formatHuDate, formatNumber } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Adatbázis" };
@@ -32,7 +32,7 @@ const roleLabels = (roles: string[] | null) =>
     .map((r) => PROFESSIONAL_ROLES.find((x) => x.value === r)?.label ?? r)
     .join(", ");
 
-const PREVIEW = 60;
+const PREVIEW = 300;
 
 export default async function AdminDatabasePage() {
   const current = await getCurrentUser();
@@ -40,7 +40,6 @@ export default async function AdminDatabasePage() {
 
   const creatorCols = {
     name: creatorProfiles.displayName,
-    username: creatorProfiles.username,
     email: users.email,
     birthDate: creatorProfiles.birthDate,
     age: creatorProfiles.age,
@@ -53,7 +52,7 @@ export default async function AdminDatabasePage() {
     createdAt: creatorProfiles.createdAt,
   };
 
-  const [ugc, pros, brands, counts] = await Promise.all([
+  const [ugc, pros, brands, counts, brandCountRows] = await Promise.all([
     db
       .select(creatorCols)
       .from(creatorProfiles)
@@ -87,14 +86,12 @@ export default async function AdminDatabasePage() {
         pro: sql<number>`count(*) filter (where ${creatorProfiles.profileKind} = 'professional')::int`,
       })
       .from(creatorProfiles),
+    db.select({ n: sql<number>`count(*)::int` }).from(brandProfiles),
   ]);
 
-  const brandCountRows = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(brandProfiles);
-  const brandCount = brandCountRows[0]?.n ?? 0;
   const ugcCount = counts[0]?.ugc ?? 0;
   const proCount = counts[0]?.pro ?? 0;
+  const brandCount = brandCountRows[0]?.n ?? 0;
 
   return (
     <div className="space-y-6">
@@ -106,16 +103,17 @@ export default async function AdminDatabasePage() {
           <h1 className="text-2xl font-bold">Adatbázis</h1>
           <p className="text-muted-foreground">
             Teljes, letölthető adatbázis külön a tartalomgyártókra, kreatív
-            szakemberekre és a márkákra.
+            szakemberekre és a márkákra. Nyisd le egy törzset, és szűrj bármely mezőre.
           </p>
         </div>
       </div>
 
-      <DbSection
-        icon={<UserCheck className="h-5 w-5" />}
+      <DatabaseSection
         title="UGC tartalomgyártók"
+        iconKey="ugc"
         count={ugcCount}
         exportType="creators-ugc"
+        previewLimit={PREVIEW}
         columns={["Név", "Email", "Kor", "Nem", "Város", "Instagram", "TikTok", "Weboldal", "Regisztrált"]}
         rows={ugc.map((c) => [
           c.name,
@@ -130,11 +128,12 @@ export default async function AdminDatabasePage() {
         ])}
       />
 
-      <DbSection
-        icon={<Sparkles className="h-5 w-5" />}
+      <DatabaseSection
         title="Kreatív szakemberek"
+        iconKey="pro"
         count={proCount}
         exportType="creators-pro"
+        previewLimit={PREVIEW}
         columns={["Név", "Email", "Kor", "Nem", "Város", "Szerepkörök", "Weboldal", "Regisztrált"]}
         rows={pros.map((c) => [
           c.name,
@@ -148,11 +147,12 @@ export default async function AdminDatabasePage() {
         ])}
       />
 
-      <DbSection
-        icon={<Building2 className="h-5 w-5" />}
+      <DatabaseSection
         title="Márkák"
+        iconKey="brand"
         count={brandCount}
         exportType="brands"
+        previewLimit={PREVIEW}
         columns={["Cégnév", "Email", "Iparág", "Weboldal", "Adószám", "Regisztrált"]}
         rows={brands.map((b) => [
           b.companyName,
@@ -164,75 +164,5 @@ export default async function AdminDatabasePage() {
         ])}
       />
     </div>
-  );
-}
-
-function DbSection({
-  icon,
-  title,
-  count,
-  exportType,
-  columns,
-  rows,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  count: number;
-  exportType: "creators-ugc" | "creators-pro" | "brands";
-  columns: string[];
-  rows: (string | number)[][];
-}) {
-  return (
-    <section className="overflow-hidden rounded-2xl border bg-card shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/40 px-4 py-3">
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent/15 text-[#3f6212]">
-            {icon}
-          </span>
-          <div>
-            <h2 className="font-bold leading-tight">{title}</h2>
-            <p className="text-xs text-muted-foreground">{count} rekord összesen</p>
-          </div>
-        </div>
-        <ExportButton type={exportType} label="Teljes CSV letöltése" />
-      </div>
-
-      {rows.length === 0 ? (
-        <p className="p-6 text-center text-sm text-muted-foreground">Nincs adat.</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b bg-muted/30 text-left">
-              <tr>
-                {columns.map((c) => (
-                  <th key={c} className="whitespace-nowrap px-3 py-2 font-semibold">
-                    {c}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r, i) => (
-                <tr key={i} className="border-b last:border-0 hover:bg-muted/30">
-                  {r.map((cellValue, j) => (
-                    <td key={j} className="whitespace-nowrap px-3 py-2">
-                      {typeof cellValue === "string" && cellValue.length > 40
-                        ? `${cellValue.slice(0, 40)}…`
-                        : cellValue}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {rows.length >= PREVIEW && (
-        <p className="border-t px-4 py-2 text-xs text-muted-foreground">
-          Az előnézet az első {PREVIEW} rekordot mutatja — a teljes lista a CSV-ben.
-        </p>
-      )}
-    </section>
   );
 }

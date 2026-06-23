@@ -38,6 +38,7 @@ export default async function EditAdPage({
     budgetMax: ad.budgetMaxHuf != null ? String(ad.budgetMaxHuf) : "",
     budgetPublic: ad.budgetPublic,
     anonymous: ad.anonymous,
+    seekingCount: ad.seekingCount ?? null,
     deadline: ad.deadline ? new Date(ad.deadline).toISOString().slice(0, 10) : "",
     location: ad.location ?? "",
     usageRights: ad.usageRights,

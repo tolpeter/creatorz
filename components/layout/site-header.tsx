@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
-const LINKS = [
-  { label: "Alkotók", href: "/creators" },
+const LINKS: { label: string; href: string; bold?: boolean }[] = [
+  { label: "Alkotók", href: "/creators", bold: true },
   { label: "Márkák", href: "/#markak" },
   { label: "Hogyan működik", href: "/#hogyan" },
-  { label: "Kampányok", href: "/ads" },
+  { label: "Kampányok", href: "/ads", bold: true },
   { label: "Aktuális fejlesztések", href: "/status" },
   { label: "Blog", href: "/blog" },
   { label: "Kapcsolat", href: "/kapcsolat" },
-] as const;
+];
 
 // Az "Alkotók" menüpont dropdown-elemei (típus-szűrt directory linkek)
 const CREATOR_TYPE_LINKS = [
@@ -45,7 +45,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <div key={link.label} className="group relative">
                 <Link
                   href={link.href}
-                  className="inline-flex items-center gap-1 py-4 transition-colors hover:text-accent"
+                  className="inline-flex items-center gap-1 py-4 font-bold text-white transition-colors hover:text-accent"
                 >
                   {link.label}
                   <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
@@ -78,7 +78,9 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
               <Link
                 key={link.label}
                 href={link.href}
-                className="transition-colors hover:text-accent"
+                className={`transition-colors hover:text-accent ${
+                  link.bold ? "font-bold text-white" : ""
+                }`}
               >
                 {link.label}
               </Link>
@@ -125,6 +127,7 @@ export function SiteHeader({ isLoggedIn }: { isLoggedIn: boolean }) {
             links={LINKS.map((link) => ({
               label: link.label,
               href: link.href,
+              bold: link.bold,
             }))}
             ctas={authCtas}
           />

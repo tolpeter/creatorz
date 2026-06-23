@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Plus, X } from "lucide-react";
+import { EyeOff, Loader2, Plus, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { NumberInput } from "@/components/ui/number-input";
@@ -48,6 +48,7 @@ export type AdFormInitial = {
   budgetMax: string;
   budgetPublic: boolean;
   anonymous: boolean;
+  seekingCount: string | null;
   deadline: string;
   location: string;
   usageRights: string;
@@ -80,6 +81,8 @@ export function AdForm({
   const [budgetMax, setBudgetMax] = useState(initial?.budgetMax ?? "");
   const [budgetPublic, setBudgetPublic] = useState(initial?.budgetPublic ?? false);
   const [anonymous, setAnonymous] = useState(initial?.anonymous ?? false);
+  // "none" = nem adom meg (nem jelenik meg a kampányban)
+  const [seekingCount, setSeekingCount] = useState(initial?.seekingCount ?? "none");
   const [deadline, setDeadline] = useState(initial?.deadline ?? "");
   const [location, setLocation] = useState(initial?.location ?? "");
   const [usageRights, setUsageRights] = useState(initial?.usageRights ?? "organic");
@@ -99,6 +102,8 @@ export function AdForm({
       budgetMaxHuf: budgetMax ? Number(budgetMax) : "",
       budgetPublic,
       anonymous,
+      seekingCount:
+        seekingCount === "none" ? null : (seekingCount as "one" | "multiple"),
       deadline: deadline as unknown as Date,
       location,
       usageRights: usageRights as "organic" | "paid_ads" | "perpetual",
@@ -170,6 +175,20 @@ export function AdForm({
             value={targetKinds}
             onChange={(next) => setTargetKinds(next.length ? next : ["ugc"])}
           />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="flex items-center gap-1.5">
+            <Users className="h-4 w-4 text-muted-foreground" />
+            Hány alkotót keresel?
+          </Label>
+          <Select value={seekingCount} onValueChange={setSeekingCount}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">Nem adom meg (nem jelenik meg)</SelectItem>
+              <SelectItem value="one">1 alkotót keresek</SelectItem>
+              <SelectItem value="multiple">Több alkotót keresek</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-2">
           <Label>Kategóriák (max 3) *</Label>
@@ -243,15 +262,18 @@ export function AdForm({
             <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="pl. Budapest vagy Online" />
           </div>
         </div>
-        <label className="flex items-start gap-2 rounded-lg border border-accent/30 bg-[#f0f4e5] p-3">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border-2 border-accent bg-accent/15 p-3.5 shadow-[0_2px_14px_rgba(163,230,53,0.25)] transition-colors hover:bg-accent/20">
           <Checkbox
             checked={anonymous}
             onCheckedChange={(v) => setAnonymous(v === true)}
-            className="mt-0.5"
+            className="mt-0.5 h-5 w-5 border-2 border-[#3f6212] data-[state=checked]:bg-[#3f6212] data-[state=checked]:text-white"
           />
           <span className="text-sm leading-snug">
-            <span className="font-medium text-[#3f6212]">Anonim kampány</span>
-            <span className="block text-xs text-muted-foreground">
+            <span className="flex items-center gap-1.5 text-[15px] font-extrabold text-[#2a3d09]">
+              <EyeOff className="h-4 w-4" />
+              Anonim kampány
+            </span>
+            <span className="mt-0.5 block text-xs text-[#3f6212]/90">
               A publikus kampányban NEM jelenik meg a cégnév, logó, weboldal.
               A részleteket csak az érdeklődő tartalomgyártókkal osztod meg az
               üzenetekben. (Az admin és a moderáció természetesen látja.)

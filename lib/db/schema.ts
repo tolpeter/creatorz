@@ -362,6 +362,9 @@ export const ads = pgTable("ads", {
   // a márka neve, logója, weboldala. Csak az adminok és a creator (aki pályázik)
   // látja a részleteket. A regisztrációhoz szükséges márka-adatok megmaradnak.
   anonymous: boolean("anonymous").notNull().default(false),
+  // Hány alkotót keres a kampány: "one" | "multiple". NULL = "nem adom meg"
+  // (ilyenkor nem jelenik meg a kampányban).
+  seekingCount: varchar("seeking_count", { length: 16 }),
   viewCount: integer("view_count").notNull().default(0),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   approvedAt: timestamp("approved_at"),

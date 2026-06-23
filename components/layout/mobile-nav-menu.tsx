@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
-type NavLink = { label: string; href: string };
+type NavLink = { label: string; href: string; bold?: boolean };
 type NavCta = { label: string; href: string; variant?: "primary" | "secondary" };
 
 /**
@@ -88,7 +88,11 @@ export function MobileNavMenu({
                     key={l.label}
                     href={l.href}
                     onClick={() => setOpen(false)}
-                    className={`rounded-xl px-4 py-3 text-sm font-medium transition-colors ${itemCls}`}
+                    className={`rounded-xl px-4 py-3 text-sm transition-colors ${itemCls} ${
+                      l.bold
+                        ? `font-extrabold ${dark ? "text-white" : "text-foreground"}`
+                        : "font-medium"
+                    }`}
                   >
                     {l.label}
                   </Link>
