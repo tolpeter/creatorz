@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
-import { ExternalLink, Megaphone } from "lucide-react";
+import { ChevronRight, ExternalLink, Megaphone } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, adApplications, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -60,9 +60,9 @@ export default async function AdminApplicationsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Jelentkezők hirdetésenként</h1>
+        <h1 className="text-2xl font-bold">Jelentkezők kampányonként</h1>
         <p className="text-muted-foreground">
-          {rows.length} jelentkezés · {groupList.length} hirdetésen
+          {rows.length} jelentkezés · {groupList.length} kampányon
         </p>
       </div>
 
@@ -73,25 +73,30 @@ export default async function AdminApplicationsPage() {
       ) : (
         <div className="space-y-5">
           {groupList.map(([adId, g]) => (
-            <section key={adId} className="overflow-hidden rounded-2xl border bg-card">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b bg-muted/40 px-4 py-3">
+            <details key={adId} className="group overflow-hidden rounded-2xl border bg-card">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 bg-muted/40 px-4 py-3 [&::-webkit-details-marker]:hidden">
                 <div className="flex min-w-0 items-center gap-2">
+                  <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-90" />
                   <Megaphone className="h-4 w-4 shrink-0 text-[#4d7c0f]" />
-                  <Link
-                    href={`/ads/${g.adSlug ?? adId}`}
-                    target="_blank"
-                    className="truncate font-bold hover:underline"
-                  >
-                    {g.adTitle}
-                  </Link>
+                  <span className="truncate font-bold">{g.adTitle}</span>
                   <span className="shrink-0 text-sm text-muted-foreground">· {g.brandName}</span>
                 </div>
                 <span className="shrink-0 rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-bold text-[#3f6212]">
                   {g.apps.length} jelentkező
                 </span>
+              </summary>
+
+              <div className="border-t px-4 py-2">
+                <Link
+                  href={`/ads/${g.adSlug ?? adId}`}
+                  target="_blank"
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#4d7c0f] hover:underline"
+                >
+                  Kampány megnyitása <ExternalLink className="h-3 w-3" />
+                </Link>
               </div>
 
-              <div className="divide-y">
+              <div className="divide-y border-t">
                 {g.apps.map((a) => (
                   <div key={a.appId} className="flex items-center gap-3 px-4 py-3">
                     <Avatar className="h-9 w-9">
@@ -120,7 +125,7 @@ export default async function AdminApplicationsPage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </details>
           ))}
         </div>
       )}

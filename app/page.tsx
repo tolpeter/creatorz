@@ -312,7 +312,7 @@ function HomeHero() {
               <span className="text-accent">{"tal\u00e1lkoz\u00f3helye."}</span>
             </h1>
 
-            <p className="mt-4 max-w-full text-balance text-base leading-7 text-white/70 sm:mt-5 sm:text-lg sm:leading-8 lg:max-w-[560px]">
+            <p className="mt-4 max-w-full text-balance text-[15px] leading-6 text-white/70 sm:mt-5 sm:text-lg sm:leading-8 lg:max-w-[560px]">
               {
                 "Hiteles UGC tartalomgy\u00e1rt\u00f3k, vide\u00f3v\u00e1g\u00f3k, fot\u00f3sok \u00e9s operat\u0151r\u00f6k egy helyen. Tal\u00e1ld meg a t\u00f6k\u00e9letes partnert, ind\u00edts kamp\u00e1nyt, \u00e9s \u00e9p\u00edts hossz\u00fa t\u00e1v\u00fa egy\u00fcttm\u0171k\u00f6d\u00e9seket."
               }
@@ -372,7 +372,7 @@ function HeroVisual() {
         height={372}
         priority
         sizes="(min-width: 1024px) 440px, 80vw"
-        className="absolute bottom-[2%] left-1/2 z-0 h-auto w-[78%] max-w-[300px] -translate-x-1/2 object-contain sm:max-w-[440px]"
+        className="absolute bottom-[-8%] left-1/2 z-0 h-auto w-[78%] max-w-[300px] -translate-x-1/2 object-contain sm:bottom-[2%] sm:max-w-[440px]"
       />
 
       {/* Telefon mockup (m\u00e1r k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
@@ -383,7 +383,7 @@ function HeroVisual() {
         height={1241}
         priority
         sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 170px"
-        className="animate-float relative z-10 h-auto w-[150px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
+        className="animate-float relative z-10 mb-8 h-auto w-[132px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:mb-0 sm:w-[270px] xl:w-[300px]"
       />
 
       {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
