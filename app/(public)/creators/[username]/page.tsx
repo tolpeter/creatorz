@@ -375,7 +375,13 @@ export default async function CreatorDetailPage({
           }}
         />
 
-        <div className="relative grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_minmax(430px,0.85fr)] lg:items-center lg:p-6">
+        <div
+          className={`relative grid gap-5 p-4 sm:p-5 lg:p-6 ${
+            profile.introVideoUrl
+              ? "lg:grid-cols-[minmax(0,1fr)_240px] lg:items-center"
+              : ""
+          }`}
+        >
           <div className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 sm:grid-cols-[130px_minmax(0,1fr)] sm:items-center sm:gap-4">
             <div className="relative">
               <AvatarLightbox src={profile.avatarUrl} alt={profile.displayName} />
@@ -438,6 +444,14 @@ export default async function CreatorDetailPage({
                 </div>
               ) : null}
 
+              {/* Statisztikák — a kategóriák és a Követés gomb között (asztali nézetben is itt). */}
+              <div className="-ml-[96px] mt-3 grid w-[calc(100%+96px)] grid-cols-4 gap-2 sm:ml-0 sm:mt-4 sm:w-auto sm:max-w-md">
+                <HeroMetric label="Követők" value={primaryFollowers ? formatCompact(primaryFollowers) : "0"} icon={<Users />} />
+                <HeroMetric label="Videók" value={videoCount} icon={<PlayCircle />} />
+                <HeroMetric label="Portfólió" value={items.length} icon={<Camera />} />
+                <HeroMetric label="Értékelés" value={profile.averageRating ?? "0"} icon={<Star />} />
+              </div>
+
               <div className="-ml-[96px] mt-4 flex w-[calc(100%+96px)] flex-wrap justify-center gap-2 sm:ml-0 sm:mt-5 sm:w-auto sm:justify-start sm:gap-3">
                 {brand ? (
                   <>
@@ -479,34 +493,25 @@ export default async function CreatorDetailPage({
             </div>
           </div>
 
-          <div className={profile.introVideoUrl ? "grid gap-4 sm:grid-cols-[170px_minmax(0,1fr)] sm:items-center" : ""}>
-            {profile.introVideoUrl ? (
-              <div className="group relative mx-auto w-full max-w-[200px] overflow-hidden rounded-[1.25rem] border border-white/14 bg-black shadow-2xl sm:mx-0 sm:max-w-none">
-                <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
-                  <Video className="h-3.5 w-3.5 text-accent" />
-                  Intro
-                </span>
-                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
-                <video
-                  src={profile.introVideoUrl}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  controls
-                  preload="metadata"
-                  className="aspect-[9/16] w-full bg-black object-cover"
-                />
-              </div>
-            ) : null}
-
-            <div className="grid grid-cols-2 overflow-hidden rounded-[1.25rem] border border-white/12 bg-accent/[0.08] shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] lg:grid-cols-4">
-              <HeroMetric label="Követők" value={primaryFollowers ? formatCompact(primaryFollowers) : "0"} icon={<Users />} />
-              <HeroMetric label="Videók" value={videoCount} icon={<PlayCircle />} />
-              <HeroMetric label="Portfólió" value={items.length} icon={<Camera />} />
-              <HeroMetric label="Értékelés" value={profile.averageRating ?? "0"} icon={<Star />} />
+          {profile.introVideoUrl ? (
+            <div className="group relative mx-auto w-full max-w-[200px] overflow-hidden rounded-[1.25rem] border border-white/14 bg-black shadow-2xl lg:max-w-[220px]">
+              <span className="absolute left-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-bold text-white backdrop-blur">
+                <Video className="h-3.5 w-3.5 text-accent" />
+                Intro
+              </span>
+              {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+              <video
+                src={profile.introVideoUrl}
+                autoPlay
+                muted
+                loop
+                playsInline
+                controls
+                preload="metadata"
+                className="aspect-[9/16] w-full bg-black object-cover"
+              />
             </div>
-          </div>
+          ) : null}
         </div>
       </section>
 
@@ -758,12 +763,12 @@ function HeroMetric({
   icon: React.ReactElement<{ className?: string }>;
 }) {
   return (
-    <div className="min-h-[86px] border-white/10 bg-white/[0.035] p-2.5 text-center backdrop-blur first:border-0 odd:border-r even:border-r-0 sm:min-h-[104px] sm:border-l sm:p-3.5 sm:odd:border-r-0 lg:min-h-[112px] lg:p-4">
-      <div className="mx-auto mb-2 flex h-7 w-7 items-center justify-center text-accent sm:h-8 sm:w-8 [&_svg]:h-7 [&_svg]:w-7 sm:[&_svg]:h-8 sm:[&_svg]:w-8">
+    <div className="flex min-h-[82px] flex-col items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] p-2 text-center backdrop-blur sm:min-h-[96px] sm:p-3">
+      <div className="mb-1.5 flex h-6 w-6 items-center justify-center text-accent sm:h-7 sm:w-7 [&_svg]:h-6 [&_svg]:w-6 sm:[&_svg]:h-7 sm:[&_svg]:w-7">
         {icon}
       </div>
-      <p className="text-xl font-black leading-none sm:text-2xl">{value}</p>
-      <p className="mt-1 text-xs font-medium text-white/72 sm:mt-1.5 sm:text-sm">
+      <p className="text-lg font-black leading-none sm:text-2xl">{value}</p>
+      <p className="mt-1 text-[11px] font-medium leading-tight text-white/72 sm:text-sm">
         {label}
       </p>
     </div>
