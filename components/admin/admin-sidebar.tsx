@@ -17,6 +17,7 @@ import {
   Mail,
   BarChart3,
   FileText,
+  Database,
   ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -35,6 +36,7 @@ const navItems = [
   { href: "/admin/users", label: "Felhasználók", icon: Users, key: "users" },
   { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },
   { href: "/admin/brands", label: "Márkák", icon: Building2, key: "brands" },
+  { href: "/admin/database", label: "Adatbázis", icon: Database, key: "database" },
   { href: "/admin/ads", label: "Kampányok", icon: Megaphone, key: "ads" },
   { href: "/admin/applications", label: "Jelentkezők", icon: FileText, key: "applications" },
   { href: "/admin/blog", label: "Blog", icon: Newspaper, key: "blog" },

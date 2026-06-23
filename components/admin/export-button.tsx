@@ -5,7 +5,15 @@ export function ExportButton({
   type,
   label = "CSV export",
 }: {
-  type: "users" | "creators" | "brands" | "ads" | "reviews";
+  type:
+    | "users"
+    | "creators"
+    | "creators-ugc"
+    | "creators-pro"
+    | "brands"
+    | "ads"
+    | "reviews"
+    | "newsletter";
   label?: string;
 }) {
   return (

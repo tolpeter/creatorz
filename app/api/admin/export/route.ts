@@ -9,6 +9,26 @@ import {
   newsletterSubscribers,
 } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
+import { GENDER_OPTIONS } from "@/lib/constants";
+
+/** Életkor a születési dátumból (fallback: tárolt age). */
+function ageOf(birthDate: unknown, storedAge: number | null): string {
+  if (birthDate) {
+    const d = new Date(birthDate as string);
+    if (!isNaN(d.getTime())) {
+      const ref = new Date();
+      let a = ref.getFullYear() - d.getFullYear();
+      const m = ref.getMonth() - d.getMonth();
+      if (m < 0 || (m === 0 && ref.getDate() < d.getDate())) a -= 1;
+      if (a > 0 && a < 120) return String(a);
+    }
+  }
+  return storedAge && storedAge > 0 ? String(storedAge) : "";
+}
+
+function genderLabel(g: string | null): string {
+  return GENDER_OPTIONS.find((o) => o.value === g)?.label ?? (g ?? "");
+}
 
 function cell(v: unknown): string {
   if (v == null) return "";
@@ -42,22 +62,51 @@ async function build(type: string): Promise<{ headers: string[]; rows: unknown[]
         rows: r.map((u) => [u.id, u.email, u.role, u.approved, u.suspended, u.createdAt]),
       };
     }
-    case "creators": {
+    case "creators":
+    case "creators-ugc":
+    case "creators-pro": {
+      const kind =
+        type === "creators-ugc" ? "ugc" : type === "creators-pro" ? "professional" : null;
       const r = await db
         .select({
           username: creatorProfiles.username, displayName: creatorProfiles.displayName,
-          email: users.email, city: creatorProfiles.city, county: creatorProfiles.county,
+          email: users.email,
+          birthDate: creatorProfiles.birthDate, age: creatorProfiles.age,
+          gender: creatorProfiles.gender,
+          city: creatorProfiles.city, county: creatorProfiles.county,
+          profileKind: creatorProfiles.profileKind,
           categories: creatorProfiles.categories,
-          ig: creatorProfiles.instagramFollowers, tt: creatorProfiles.tiktokFollowers,
-          verified: creatorProfiles.verified, rating: creatorProfiles.averageRating,
-          reviewCount: creatorProfiles.reviewCount, createdAt: creatorProfiles.createdAt,
+          roles: creatorProfiles.professionalRoles, specialties: creatorProfiles.specialties,
+          languages: creatorProfiles.languages,
+          website: creatorProfiles.websiteUrl,
+          igUrl: creatorProfiles.instagramUrl, ig: creatorProfiles.instagramFollowers,
+          ttUrl: creatorProfiles.tiktokUrl, tt: creatorProfiles.tiktokFollowers,
+          ytUrl: creatorProfiles.youtubeUrl, yt: creatorProfiles.youtubeSubscribers,
+          fbUrl: creatorProfiles.facebookUrl, fb: creatorProfiles.facebookFollowers,
+          verified: creatorProfiles.verified,
+          featured: creatorProfiles.isFeatured, adminFeatured: creatorProfiles.isAdminFeatured,
+          rating: creatorProfiles.averageRating, reviewCount: creatorProfiles.reviewCount,
+          createdAt: creatorProfiles.createdAt,
         })
         .from(creatorProfiles)
         .innerJoin(users, eq(users.id, creatorProfiles.userId))
+        .where(kind ? eq(creatorProfiles.profileKind, kind) : undefined)
         .orderBy(desc(creatorProfiles.createdAt));
       return {
-        headers: ["felhasznalonev", "nev", "email", "varos", "megye", "kategoriak", "instagram", "tiktok", "hitelesitett", "atlag_ertekeles", "ertekelesek", "regisztralt"],
-        rows: r.map((c) => [c.username, c.displayName, c.email, c.city, c.county, c.categories, c.ig, c.tt, c.verified, c.rating, c.reviewCount, c.createdAt]),
+        headers: [
+          "nev", "felhasznalonev", "email", "kor", "nem", "varos", "megye", "tipus",
+          "kategoriak", "szerepkorok", "szakteruletek", "nyelvek", "weboldal",
+          "instagram_url", "instagram_kovetok", "tiktok_url", "tiktok_kovetok",
+          "youtube_url", "youtube_feliratkozok", "facebook_url", "facebook_kovetok",
+          "hitelesitett", "kiemelt", "admin_kiemelt", "atlag_ertekeles", "ertekelesek", "regisztralt",
+        ],
+        rows: r.map((c) => [
+          c.displayName, c.username, c.email, ageOf(c.birthDate, c.age), genderLabel(c.gender),
+          c.city, c.county, c.profileKind === "professional" ? "Kreatív szakember" : "UGC",
+          c.categories, c.roles, c.specialties, c.languages, c.website,
+          c.igUrl, c.ig, c.ttUrl, c.tt, c.ytUrl, c.yt, c.fbUrl, c.fb,
+          c.verified, c.featured, c.adminFeatured, c.rating, c.reviewCount, c.createdAt,
+        ]),
       };
     }
     case "brands": {
