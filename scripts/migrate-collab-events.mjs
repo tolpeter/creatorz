@@ -14,7 +14,9 @@ try {
     created_at timestamp NOT NULL DEFAULT now()
   )`;
   await sql`CREATE INDEX IF NOT EXISTS collab_events_collab_idx ON collaboration_events(collaboration_id)`;
-  console.log("✓ collaboration_events tábla kész");
+  // RLS bekapcsolva (deny-all): csak a szerver service-role éri el, az anon API nem.
+  await sql`ALTER TABLE collaboration_events ENABLE ROW LEVEL SECURITY`;
+  console.log("✓ collaboration_events tábla kész (RLS bekapcsolva)");
 } catch (e) {
   console.error("DB hiba:", e.message);
 } finally {
