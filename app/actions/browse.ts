@@ -164,6 +164,7 @@ export async function loadFeaturedCreators(limit = 12): Promise<BrowseCard[]> {
     )
     .orderBy(
       desc(creatorProfiles.isAdminFeatured),
+      sql`(${creatorProfiles.avatarUrl} is not null and ${creatorProfiles.avatarUrl} <> '') desc`,
       sql`${creatorProfiles.averageRating} desc nulls last`,
       desc(creatorProfiles.createdAt),
     )
@@ -207,13 +208,17 @@ export async function loadMoreCreators(
 ): Promise<{ items: BrowseCard[]; hasMore: boolean }> {
   const conditions = buildConditions(filters);
 
+  // Profilkép-prioritás: akinek van beállított profilképe, az előrébb kerül;
+  // a profilkép nélküliek MINDEN rendezési módban leghátulra esnek.
+  const hasAvatar = sql`(${creatorProfiles.avatarUrl} is not null and ${creatorProfiles.avatarUrl} <> '') desc`;
   const orderBy =
     filters.sort === "newest"
-      ? [desc(creatorProfiles.createdAt)]
+      ? [hasAvatar, desc(creatorProfiles.createdAt)]
       : filters.sort === "rating"
-        ? [sql`${creatorProfiles.averageRating} desc nulls last`, desc(creatorProfiles.reviewCount)]
+        ? [hasAvatar, sql`${creatorProfiles.averageRating} desc nulls last`, desc(creatorProfiles.reviewCount)]
         : [
             sql`(${creatorProfiles.isFeatured} or ${creatorProfiles.isAdminFeatured}) desc`,
+            hasAvatar,
             sql`${creatorProfiles.averageRating} desc nulls last`,
             desc(creatorProfiles.createdAt),
           ];

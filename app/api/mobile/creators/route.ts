@@ -81,6 +81,7 @@ export async function GET(req: Request) {
     .where(and(...conditions))
     .orderBy(
       sql`(${creatorProfiles.isFeatured} or ${creatorProfiles.isAdminFeatured}) desc`,
+      sql`(${creatorProfiles.avatarUrl} is not null and ${creatorProfiles.avatarUrl} <> '') desc`,
       sql`${creatorProfiles.averageRating} desc nulls last`,
       desc(creatorProfiles.createdAt),
     )
