@@ -71,6 +71,9 @@ export function ProfessionalOnboardingWizard({
   const [v, setV] = useState<ProfessionalOnboardingInitial>(initial);
   const [portfolio, setPortfolio] = useState<PortfolioLink[]>([{ url: "", title: "" }]);
   const [customSpecialty, setCustomSpecialty] = useState("");
+  // Külön vezeték- és keresztnév (kötelező). A megjelenített név: "Vezetéknév Keresztnév".
+  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("");
 
   function set<K extends keyof ProfessionalOnboardingInitial>(
     key: K,
@@ -79,19 +82,20 @@ export function ProfessionalOnboardingWizard({
     setV((prev) => ({ ...prev, [key]: val }));
   }
 
-  function onDisplayNameChange(name: string) {
+  function applyName(last: string, first: string) {
+    const displayName = `${last} ${first}`.trim().replace(/\s+/g, " ");
     setV((prev) => ({
       ...prev,
-      displayName: name,
-      username: usernameEdited ? prev.username : generateUsername(name),
+      displayName,
+      username: usernameEdited ? prev.username : generateUsername(displayName),
     }));
   }
 
   function validateStep(): string | null {
     if (step === 0) {
       if (!v.avatarUrl) return "Tölts fel egy profilképet";
-      if (v.displayName.trim().length < 2)
-        return "Adj meg egy megjelenített nevet (min. 2 karakter)";
+      if (lastName.trim().length < 2) return "Add meg a vezetékneved (min. 2 karakter)";
+      if (firstName.trim().length < 2) return "Add meg a keresztneved (min. 2 karakter)";
       if (generateUsername(v.username).length < 3)
         return "A felhasználónév min. 3 karakter (ékezet nélkül)";
     }
@@ -203,14 +207,31 @@ export function ProfessionalOnboardingWizard({
               value={v.avatarUrl}
               onChange={(url) => set("avatarUrl", url)}
             />
-            <div className="space-y-1.5">
-              <Label htmlFor="displayName">Megjelenített név *</Label>
-              <Input
-                id="displayName"
-                value={v.displayName}
-                onChange={(e) => onDisplayNameChange(e.target.value)}
-                placeholder="pl. Nagy Péter"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="lastName">Vezetéknév *</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    applyName(e.target.value, firstName);
+                  }}
+                  placeholder="pl. Nagy"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="firstName">Keresztnév *</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    applyName(lastName, e.target.value);
+                  }}
+                  placeholder="pl. Péter"
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="username">Felhasználónév (profil link) *</Label>

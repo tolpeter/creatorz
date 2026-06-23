@@ -90,22 +90,28 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
   const [connecting, setConnecting] = useState<"tiktok" | "youtube" | null>(null);
   const [usernameEdited, setUsernameEdited] = useState(false);
   const [v, setV] = useState<OnboardingInitial>(initial);
+  // Külön vezeték- és keresztnév (kötelező). A megjelenített név ebből áll össze:
+  // "Vezetéknév Keresztnév" (magyar sorrend).
+  const [lastName, setLastName] = useState("");
+  const [firstName, setFirstName] = useState("");
 
   function set<K extends keyof OnboardingInitial>(key: K, val: OnboardingInitial[K]) {
     setV((prev) => ({ ...prev, [key]: val }));
   }
 
-  function onDisplayNameChange(name: string) {
+  function applyName(last: string, first: string) {
+    const displayName = `${last} ${first}`.trim().replace(/\s+/g, " ");
     setV((prev) => ({
       ...prev,
-      displayName: name,
-      username: usernameEdited ? prev.username : generateUsername(name),
+      displayName,
+      username: usernameEdited ? prev.username : generateUsername(displayName),
     }));
   }
 
   function validateStep(): string | null {
     if (step === 0) {
-      if (v.displayName.trim().length < 2) return "Adj meg egy megjelenített nevet (min. 2 karakter)";
+      if (lastName.trim().length < 2) return "Add meg a vezetékneved (min. 2 karakter)";
+      if (firstName.trim().length < 2) return "Add meg a keresztneved (min. 2 karakter)";
       if (generateUsername(v.username).length < 3) return "A felhasználónév min. 3 karakter (ékezet nélkül)";
       if (!v.birthDate) return "Add meg a születési dátumod";
       const age = ageFromIso(v.birthDate);
@@ -279,14 +285,31 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
                 Egy valódi arc akár <span className="font-semibold text-foreground">3× több</span> megkeresést hoz a márkáktól.
               </p>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="displayName">Megjelenített név *</Label>
-              <Input
-                id="displayName"
-                value={v.displayName}
-                onChange={(e) => onDisplayNameChange(e.target.value)}
-                placeholder="pl. Kovács Anna"
-              />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-1.5">
+                <Label htmlFor="lastName">Vezetéknév *</Label>
+                <Input
+                  id="lastName"
+                  value={lastName}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    applyName(e.target.value, firstName);
+                  }}
+                  placeholder="pl. Kovács"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="firstName">Keresztnév *</Label>
+                <Input
+                  id="firstName"
+                  value={firstName}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    applyName(lastName, e.target.value);
+                  }}
+                  placeholder="pl. Anna"
+                />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="username">Felhasználónév (profil link) *</Label>
