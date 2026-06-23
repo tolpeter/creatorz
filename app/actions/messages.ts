@@ -273,3 +273,73 @@ export async function adminMessageCreator(input: z.input<typeof adminMsgSchema>)
   revalidatePath("/creator/messages");
   return { success: true };
 }
+
+// ===========================================================================
+// Admin → BÁRMELY felhasználó (márka VAGY tartalomgyártó/kreatív) — user id alapján
+// ===========================================================================
+
+const adminMsgUserSchema = z.object({
+  toUserId: z.string().uuid(),
+  body: z.string().min(1, "Az üzenet nem lehet üres").max(5000),
+});
+
+export async function adminMessageUser(input: z.input<typeof adminMsgUserSchema>) {
+  const current = await getCurrentUser();
+  if (current?.dbUser?.role !== "admin") return { error: "Csak admin" };
+
+  const parsed = adminMsgUserSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  const d = parsed.data;
+  if (d.toUserId === current.dbUser.id) return { error: "Magadnak nem küldhetsz." };
+
+  const [recipient] = await db
+    .select({
+      email: users.email,
+      role: users.role,
+      creatorName: creatorProfiles.displayName,
+      brandName: brandProfiles.companyName,
+    })
+    .from(users)
+    .leftJoin(creatorProfiles, eq(creatorProfiles.userId, users.id))
+    .leftJoin(brandProfiles, eq(brandProfiles.userId, users.id))
+    .where(eq(users.id, d.toUserId))
+    .limit(1);
+  if (!recipient) return { error: "A címzett nem található" };
+
+  const link = recipient.role === "brand" ? "/brand/messages" : "/creator/messages";
+  const recipientName = recipient.creatorName ?? recipient.brandName ?? "Felhasználó";
+
+  await db.insert(messages).values({
+    fromUserId: current.dbUser.id,
+    toUserId: d.toUserId,
+    body: d.body,
+  });
+
+  await db.insert(notifications).values({
+    userId: d.toUserId,
+    type: "message",
+    title: "Új üzenet: Creatorz csapat",
+    body: d.body.slice(0, 120),
+    link,
+  });
+
+  await sendExpoPush([d.toUserId], {
+    title: "Creatorz csapat",
+    body: d.body.slice(0, 140),
+    data: { type: "message", partnerId: current.dbUser.id },
+  });
+
+  const email = renderNewMessageEmail({
+    recipientName,
+    senderName: "Creatorz csapat",
+    preview: d.body.slice(0, 220),
+    inboxUrl: `${APP_URL}${link}`,
+  });
+  await sendMessageEmailThrottled(d.toUserId, recipient.email, email);
+
+  revalidatePath("/admin/inbox");
+  revalidatePath(link);
+  return { success: true };
+}

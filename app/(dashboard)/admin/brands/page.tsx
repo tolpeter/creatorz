@@ -2,6 +2,7 @@ import { and, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { brandProfiles, ads } from "@/lib/db/schema";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { AdminMessageButton } from "@/components/admin/admin-message-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { formatHuDate } from "@/lib/utils/format";
 
@@ -29,6 +30,7 @@ export default async function AdminBrandsPage({
   const rows = await db
     .select({
       id: brandProfiles.id,
+      userId: brandProfiles.userId,
       companyName: brandProfiles.companyName,
       websiteUrl: brandProfiles.websiteUrl,
       industry: brandProfiles.industry,
@@ -63,6 +65,7 @@ export default async function AdminBrandsPage({
               <th className="p-3">Weboldal</th>
               <th className="p-3">Hirdetés</th>
               <th className="p-3">Regisztrált</th>
+              <th className="p-3 text-right">Művelet</th>
             </tr>
           </thead>
           <tbody>
@@ -86,6 +89,9 @@ export default async function AdminBrandsPage({
                 </td>
                 <td className="p-3">{b.adCount}</td>
                 <td className="p-3 whitespace-nowrap">{formatHuDate(b.createdAt)}</td>
+                <td className="p-3 text-right">
+                  <AdminMessageButton toUserId={b.userId} name={b.companyName} />
+                </td>
               </tr>
             ))}
           </tbody>

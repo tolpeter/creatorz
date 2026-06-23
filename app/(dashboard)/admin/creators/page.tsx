@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { and, desc, eq, ilike, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, isNull, or, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users } from "@/lib/db/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { CreatorAdminActions } from "@/components/admin/creator-admin-actions";
+import { AdminMessageButton } from "@/components/admin/admin-message-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { AdminSearch } from "@/components/admin/admin-search";
 
@@ -32,6 +33,20 @@ export default async function AdminCreatorsPage({
   }
   if (status === "pending") conditions.push(eq(users.approved, false));
   if (status === "approved") conditions.push(eq(users.approved, true));
+  if (status === "verified") conditions.push(eq(creatorProfiles.verified, true));
+  if (status === "featured")
+    conditions.push(
+      or(
+        eq(creatorProfiles.isAdminFeatured, true),
+        and(
+          eq(creatorProfiles.isFeatured, true),
+          or(
+            isNull(creatorProfiles.featuredUntil),
+            gt(creatorProfiles.featuredUntil, new Date()),
+          ),
+        ),
+      )!,
+    );
 
   const rows = await db
     .select({
@@ -43,6 +58,8 @@ export default async function AdminCreatorsPage({
       reviewCount: creatorProfiles.reviewCount,
       averageRating: creatorProfiles.averageRating,
       isAdminFeatured: creatorProfiles.isAdminFeatured,
+      isFeatured: creatorProfiles.isFeatured,
+      featuredUntil: creatorProfiles.featuredUntil,
       verified: creatorProfiles.verified,
       approved: users.approved,
       createdAt: creatorProfiles.createdAt,
@@ -54,6 +71,10 @@ export default async function AdminCreatorsPage({
     .limit(200);
 
   const pending = rows.filter((r) => !r.approved);
+  const now = new Date();
+  const isCurrentlyFeatured = (r: (typeof rows)[number]) =>
+    r.isAdminFeatured ||
+    (r.isFeatured && (!r.featuredUntil || r.featuredUntil > now));
 
   return (
     <div className="space-y-6">
@@ -77,6 +98,8 @@ export default async function AdminCreatorsPage({
           { label: "Mind", value: "" },
           { label: "Jóváhagyásra vár", value: "pending" },
           { label: "Jóváhagyott", value: "approved" },
+          { label: "Hitelesített", value: "verified" },
+          { label: "Kiemelt", value: "featured" },
         ]}
       />
 
@@ -100,23 +123,36 @@ export default async function AdminCreatorsPage({
                 <Link href={`/creators/${r.username}`} target="_blank" className="font-medium hover:underline">
                   {r.displayName}
                 </Link>
-                <p className="text-xs text-muted-foreground">
-                  @{r.username} · {r.reviewCount} értékelés · {r.averageRating ?? "—"}★
+                <p className="flex flex-wrap items-center gap-x-1 gap-y-1 text-xs text-muted-foreground">
+                  <span>
+                    @{r.username} · {r.reviewCount} értékelés · {r.averageRating ?? "—"}★
+                  </span>
                   {!r.approved && (
-                    <Badge className="ml-2 bg-yellow-500/15 text-yellow-700 dark:text-yellow-400">
+                    <Badge className="bg-yellow-500/15 text-yellow-700 dark:text-yellow-400">
                       Jóváhagyásra vár
                     </Badge>
+                  )}
+                  {r.verified && (
+                    <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400">
+                      Hitelesített
+                    </Badge>
+                  )}
+                  {isCurrentlyFeatured(r) && (
+                    <Badge className="bg-accent/20 text-[#3f6212]">Kiemelt</Badge>
                   )}
                 </p>
               </div>
             </div>
-            <CreatorAdminActions
-              userId={r.userId}
-              creatorId={r.creatorId}
-              approved={r.approved}
-              adminFeatured={r.isAdminFeatured}
-              verified={r.verified}
-            />
+            <div className="flex flex-wrap items-center gap-2">
+              <AdminMessageButton toUserId={r.userId} name={r.displayName} />
+              <CreatorAdminActions
+                userId={r.userId}
+                creatorId={r.creatorId}
+                approved={r.approved}
+                adminFeatured={r.isAdminFeatured}
+                verified={r.verified}
+              />
+            </div>
           </div>
         ))}
       </div>

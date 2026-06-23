@@ -262,7 +262,7 @@ export default async function LandingPage() {
 
 function HomeHero() {
   return (
-    <section className="relative isolate block overflow-hidden bg-[#0a0a0a] px-4 pb-10 pt-4 text-white sm:px-6 sm:pb-14 lg:min-h-[700px] lg:px-8 lg:pb-20">
+    <section className="relative isolate block overflow-hidden bg-[#0a0a0a] px-4 pb-16 pt-4 text-white sm:px-6 sm:pb-14 lg:min-h-[700px] lg:px-8 lg:pb-20">
       <Image
         src="/images/home-hero/hero-bg.webp"
         alt=""
@@ -307,12 +307,12 @@ function HomeHero() {
               {"Magyar UGC k\u00f6z\u00f6ss\u00e9g"}
             </div>
 
-            <h1 className="text-balance break-words text-[2rem] font-black leading-[1.04] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[62px]">
+            <h1 className="text-balance break-words text-[1.8rem] font-black leading-[1.05] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[62px]">
               {"Magyar tartalomgy\u00e1rt\u00f3k \u00e9s m\u00e1rk\u00e1k "}
               <span className="text-accent">{"tal\u00e1lkoz\u00f3helye."}</span>
             </h1>
 
-            <p className="mt-5 max-w-full text-balance text-base leading-7 text-white/70 sm:text-lg sm:leading-8 lg:max-w-[560px]">
+            <p className="mt-4 max-w-full text-balance text-base leading-7 text-white/70 sm:mt-5 sm:text-lg sm:leading-8 lg:max-w-[560px]">
               {
                 "Hiteles UGC tartalomgy\u00e1rt\u00f3k, vide\u00f3v\u00e1g\u00f3k, fot\u00f3sok \u00e9s operat\u0151r\u00f6k egy helyen. Tal\u00e1ld meg a t\u00f6k\u00e9letes partnert, ind\u00edts kamp\u00e1nyt, \u00e9s \u00e9p\u00edts hossz\u00fa t\u00e1v\u00fa egy\u00fcttm\u0171k\u00f6d\u00e9seket."
               }
@@ -384,34 +384,6 @@ function HeroVisual() {
         priority
         sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 170px"
         className="animate-float relative z-10 h-auto w-[150px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[270px] xl:w-[300px]"
-      />
-
-      {/* === Mobil-only lebego kartyak (2-3 db) — asztali nezetben a lenti kartyak === */}
-      <Image
-        src="/images/home-hero/card-followers.webp"
-        alt=""
-        width={1156}
-        height={910}
-        sizes="120px"
-        className="animate-float absolute left-[-2%] top-[6%] z-20 h-auto w-[120px] rotate-[-4deg] object-contain drop-shadow-2xl md:hidden"
-      />
-      <Image
-        src="/images/home-hero/card-views.webp"
-        alt=""
-        width={1197}
-        height={803}
-        sizes="116px"
-        className="animate-float absolute right-[-2%] top-[3%] z-20 h-auto w-[116px] rotate-[4deg] object-contain drop-shadow-2xl md:hidden"
-        style={{ animationDelay: "0.5s" }}
-      />
-      <Image
-        src="/images/home-hero/card-messages.webp"
-        alt=""
-        width={1049}
-        height={698}
-        sizes="124px"
-        className="animate-float absolute bottom-[14%] left-[-3%] z-20 h-auto w-[124px] rotate-[3deg] object-contain drop-shadow-2xl md:hidden"
-        style={{ animationDelay: "1s" }}
       />
 
       {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
