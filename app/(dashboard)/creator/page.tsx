@@ -105,12 +105,21 @@ export default async function CreatorOverviewPage() {
   const applicationCount = applicationRows[0]?.n ?? 0;
   const unreadCount = unreadRows[0]?.n ?? 0;
 
-  // Ajánlási program + megosztható profil-kártya
-  const [referralCode, refStats] = await Promise.all([
-    getOrCreateReferralCode(creator.appUserId),
-    referralStats(creator.appUserId),
-  ]);
-  const inviteUrl = `${APP_URL}/register?ref=${referralCode}`;
+  // Ajánlási program + megosztható profil-kártya.
+  // Fail-safe: ha a referral-migráció még nem futott le (deploy előz a migrációt),
+  // a meghívó-kártyát kihagyjuk, de a vezérlőpult tovább működik.
+  let inviteUrl: string | null = null;
+  let referralCount = 0;
+  try {
+    const [referralCode, refStats] = await Promise.all([
+      getOrCreateReferralCode(creator.appUserId),
+      referralStats(creator.appUserId),
+    ]);
+    inviteUrl = `${APP_URL}/register?ref=${referralCode}`;
+    referralCount = refStats.count;
+  } catch {
+    /* migráció még nem futott le */
+  }
   const profileUrl = `${APP_URL}/creators/${p.username}`;
 
   const hasSocial = Boolean(
@@ -402,7 +411,7 @@ export default async function CreatorOverviewPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <ReferralCard inviteUrl={inviteUrl} count={refStats.count} />
+        {inviteUrl && <ReferralCard inviteUrl={inviteUrl} count={referralCount} />}
         <ProfileShareCard
           profileUrl={profileUrl}
           displayName={p.displayName}
