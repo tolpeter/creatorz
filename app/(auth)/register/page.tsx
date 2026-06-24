@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signUpAction } from "@/app/actions/auth";
 import { ReferralCapture } from "@/components/auth/referral-capture";
+import { fbTrack } from "@/lib/analytics/fb";
 
 // UI-választás: a "professional" valójában creator role + professional profileKind
 type RoleChoice = "creator" | "professional" | "brand";
@@ -57,6 +58,13 @@ export default function RegisterPage() {
       toast.error(res.error);
       return;
     }
+    // Facebook/Meta konverziómérés: sikeres regisztráció (csak ha a felhasználó
+    // hozzájárult a marketing-sütikhez — egyébként a fbq csendben elnyeli).
+    fbTrack("CompleteRegistration", {
+      content_name: role,
+      status: true,
+    });
+
     // Sikeres signup → onboarding wizard. A megerősítő emailt az onboarding
     // VÉGÉN küldjük ki, és a /verify-email oldalra terelünk.
     toast.success("Sikeres regisztráció! Folytasd a profilod kitöltésével.");

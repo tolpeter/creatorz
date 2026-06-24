@@ -177,5 +177,5 @@ export const INDUSTRIES = [
 ] as const;
 
 export const MAX_PORTFOLIO_ITEMS = 15;
-export const MAX_CREATOR_CATEGORIES = 3;
+export const MAX_CREATOR_CATEGORIES = 5;
 export const BIO_MAX_LENGTH = 500;

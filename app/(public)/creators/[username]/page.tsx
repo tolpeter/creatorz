@@ -33,7 +33,7 @@ import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { activityLabel, getResponseStats } from "@/lib/creator-stats";
 import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { CREATOR_CATEGORIES, GENDER_OPTIONS, LANGUAGES } from "@/lib/constants";
+import { CREATOR_CATEGORIES, GENDER_OPTIONS, LANGUAGES, MAX_CREATOR_CATEGORIES } from "@/lib/constants";
 import { supabaseOgImage } from "@/lib/utils/og-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
@@ -456,7 +456,7 @@ export default async function CreatorDetailPage({
 
               {profile.categories?.length ? (
                 <div className="-ml-[96px] mt-3 flex w-[calc(100%+96px)] flex-wrap justify-center gap-2 sm:ml-0 sm:mt-4 sm:w-auto sm:justify-start">
-                  {profile.categories.slice(0, 3).map((category) => {
+                  {profile.categories.slice(0, MAX_CREATOR_CATEGORIES).map((category) => {
                     const Icon = CATEGORY_ICONS[category];
                     const label =
                       CREATOR_CATEGORIES.find((item) => item.value === category)?.label ??

@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CookieBanner } from "@/components/shared/cookie-banner";
 import { Analytics } from "@/components/analytics/analytics";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 import { PageTimeTracker } from "@/components/analytics/page-time-tracker";
 import "@/lib/env";
 
@@ -89,6 +90,7 @@ export default function RootLayout({
           }}
         />
         <Analytics />
+        <MetaPixel />
         <PageTimeTracker />
         <TooltipProvider>{children}</TooltipProvider>
         <CookieBanner />

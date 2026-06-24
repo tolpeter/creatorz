@@ -64,17 +64,30 @@ export function writeConsent(c: ConsentCategories) {
   applyConsent(c);
 }
 
-/** A választást átküldi a Google Consent Mode-nak (gtag consent update). */
+/** A választást átküldi a Google Consent Mode-nak és a Meta Pixelnek. */
 export function applyConsent(c: ConsentCategories) {
   if (typeof window === "undefined") return;
-  const w = window as unknown as { gtag?: (...args: unknown[]) => void };
-  if (typeof w.gtag !== "function") return;
-  w.gtag("consent", "update", {
-    analytics_storage: c.analytics ? "granted" : "denied",
-    ad_storage: c.marketing ? "granted" : "denied",
-    ad_user_data: c.marketing ? "granted" : "denied",
-    ad_personalization: c.marketing ? "granted" : "denied",
-  });
+  const w = window as unknown as {
+    gtag?: (...args: unknown[]) => void;
+    fbq?: (...args: unknown[]) => void;
+  };
+  if (typeof w.gtag === "function") {
+    w.gtag("consent", "update", {
+      analytics_storage: c.analytics ? "granted" : "denied",
+      ad_storage: c.marketing ? "granted" : "denied",
+      ad_user_data: c.marketing ? "granted" : "denied",
+      ad_personalization: c.marketing ? "granted" : "denied",
+    });
+  }
+  // Meta (Facebook) Pixel — a marketing-hozzájáruláshoz kötve. Csak ezután mér.
+  if (typeof w.fbq === "function") {
+    if (c.marketing) {
+      w.fbq("consent", "grant");
+      w.fbq("track", "PageView");
+    } else {
+      w.fbq("consent", "revoke");
+    }
+  }
 }
 
 /** Esemény, amivel bárhonnan újra megnyitható a cookie-beállítások panel. */

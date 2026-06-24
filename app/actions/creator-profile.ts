@@ -14,6 +14,7 @@ import { scrapeFacebookFollowers } from "@/lib/scrapers/facebook";
 import { fetchYouTubeSubscribers } from "@/lib/scrapers/youtube";
 import { refreshCreatorEmbedding } from "@/lib/ai/match";
 import { normalizeSocialUrl } from "@/lib/utils/social";
+import { MAX_CREATOR_CATEGORIES } from "@/lib/constants";
 
 async function requireCreator() {
   const creator = await getCurrentCreator();
@@ -39,7 +40,7 @@ const basicsSchema = z.object({
     }, "Az életkornak 13 és 100 év között kell lennie"),
   // Nem: kötelező.
   gender: z.string().min(1, "Válaszd ki a nemed").max(20),
-  categories: z.array(z.string()).max(3),
+  categories: z.array(z.string()).max(MAX_CREATOR_CATEGORIES, `Legfeljebb ${MAX_CREATOR_CATEGORIES} kategóriát választhatsz`),
   languages: z.array(z.string()).min(1),
 });
 
