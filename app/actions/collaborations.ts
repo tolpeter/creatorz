@@ -57,12 +57,39 @@ export type CollabItem = {
   partnerAvatar: string | null;
   viewerRole: "brand" | "creator";
   brandReviewed: boolean;
+  hasAlert: boolean; // van-e olvasatlan értesítés ehhez az együttműködéshez
 };
+
+/** Olvasatlan együttműködés-értesítések collab-id-jei a megadott userre. */
+async function unreadCollabAlertIds(userId: string): Promise<Set<string>> {
+  try {
+    const rows = await db
+      .select({ link: notifications.link })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, userId),
+          eq(notifications.read, false),
+          like(notifications.type, "collab%"),
+        ),
+      );
+    const ids = new Set<string>();
+    for (const r of rows) {
+      const m = r.link?.match(/\/collaborations\/([0-9a-f-]{36})/i);
+      if (m) ids.add(m[1]);
+    }
+    return ids;
+  } catch {
+    return new Set();
+  }
+}
 
 /** A bejelentkezett felhasználó együttműködései (szerepkör-érzékeny partnerrel). */
 export async function getMyCollaborations(): Promise<CollabItem[]> {
   const current = await getCurrentUser();
   if (!current?.dbUser) return [];
+
+  const alertIds = await unreadCollabAlertIds(current.dbUser.id);
 
   if (current.dbUser.role === "brand") {
     const brand = await getCurrentBrand();
@@ -84,7 +111,12 @@ export async function getMyCollaborations(): Promise<CollabItem[]> {
       .innerJoin(creatorProfiles, eq(creatorProfiles.id, collaborations.creatorId))
       .where(eq(collaborations.brandId, brand.profile.id))
       .orderBy(desc(collaborations.acceptedAt));
-    return rows.map((r) => ({ ...r, viewerRole: "brand" as const, brandReviewed: false }));
+    return rows.map((r) => ({
+      ...r,
+      viewerRole: "brand" as const,
+      brandReviewed: false,
+      hasAlert: alertIds.has(r.id),
+    }));
   }
 
   if (current.dbUser.role === "creator") {
@@ -113,6 +145,7 @@ export async function getMyCollaborations(): Promise<CollabItem[]> {
       ...r,
       viewerRole: "creator" as const,
       brandReviewed: reviewId != null,
+      hasAlert: alertIds.has(r.id),
     }));
   }
 

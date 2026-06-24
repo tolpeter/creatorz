@@ -76,6 +76,7 @@ export async function completeProfessionalOnboarding(input: ProfessionalOnboardi
       specialties: d.specialties,
       websiteUrl: d.websiteUrl || null,
       instagramUrl: d.instagramUrl || null,
+      onboardingCompleted: true,
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));

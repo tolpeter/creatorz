@@ -565,6 +565,7 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       facebookFollowers: d.facebookUrl ? d.facebookFollowers ?? null : null,
       youtubeUrl: d.youtubeUrl || null,
       youtubeSubscribers: d.youtubeUrl ? d.youtubeSubscribers ?? null : null,
+      onboardingCompleted: true,
       updatedAt: new Date(),
     })
     .where(eq(creatorProfiles.id, creator.profile.id));

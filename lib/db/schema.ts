@@ -229,6 +229,11 @@ export const creatorProfiles = pgTable("creator_profiles", {
   embedding: jsonb("embedding").$type<number[]>(),
   embeddingUpdatedAt: timestamp("embedding_updated_at"),
 
+  // Befejezte-e a kötelező onboardingot (név, kor, nem, kategóriák stb.).
+  // Regisztrációkor false; az onboarding wizard végén true. Amíg false, a
+  // dashboard az onboardingra irányít — így minden aktív profilnak van valódi neve.
+  onboardingCompleted: boolean("onboarding_completed").notNull().default(false),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 }, (table) => ({

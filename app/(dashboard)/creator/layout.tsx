@@ -46,6 +46,7 @@ export default async function CreatorLayout({
   // Profil kitöltöttség az oldalsáv-widgethez (ugyanaz a 7 ellenőrzés mint a szerkesztőben)
   const pf = await db
     .select({
+      onboardingCompleted: creatorProfiles.onboardingCompleted,
       displayName: creatorProfiles.displayName,
       username: creatorProfiles.username,
       bio: creatorProfiles.bio,
@@ -63,6 +64,13 @@ export default async function CreatorLayout({
     .where(eq(creatorProfiles.userId, current.dbUser.id))
     .limit(1);
   const p = pf[0];
+
+  // Kötelező onboarding: amíg nincs befejezve (név, kor, nem, kategóriák),
+  // nem engedjük a dashboardra — így minden aktív profilnak van valódi neve.
+  if (p && !p.onboardingCompleted) {
+    redirect("/onboarding/creator");
+  }
+
   let profileScore = 0;
   if (p) {
     const checks = [

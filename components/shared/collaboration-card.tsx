@@ -25,14 +25,25 @@ export function CollaborationCard({ c }: { c: CollabItem }) {
   return (
     <Link
       href={href}
-      className="group block rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md"
+      className={cn(
+        "group relative block rounded-2xl border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md",
+        c.hasAlert && "border-red-300 ring-2 ring-red-300/60",
+      )}
     >
       <div className="flex items-start justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <Avatar className="h-10 w-10">
-            <AvatarImage src={c.partnerAvatar ?? undefined} />
-            <AvatarFallback>{c.partnerName.charAt(0).toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="h-10 w-10">
+              <AvatarImage src={c.partnerAvatar ?? undefined} />
+              <AvatarFallback>{c.partnerName.charAt(0).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            {c.hasAlert && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500 ring-2 ring-card" />
+              </span>
+            )}
+          </div>
           <div className="min-w-0">
             <p className="truncate font-bold">{c.partnerName}</p>
             <p className="truncate text-sm text-muted-foreground">{c.adTitle}</p>
