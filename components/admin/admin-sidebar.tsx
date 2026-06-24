@@ -32,6 +32,7 @@ const navItems = [
   { href: "/admin/inbox", label: "Üzenetek (DM)", icon: MessageSquare, key: "inbox" },
   { href: "/admin/messages", label: "Kapcsolat-üzenetek", icon: Mail, key: "messages" },
   { href: "/admin/newsletter", label: "Hírlevél", icon: Newspaper, key: "newsletter" },
+  { href: "/admin/campaigns", label: "Email kampányok", icon: BarChart3, key: "campaigns" },
   { href: "/admin/settings", label: "Beállítások", icon: Settings, key: "settings" },
   { href: "/admin/users", label: "Felhasználók", icon: Users, key: "users" },
   { href: "/admin/creators", label: "Tartalomgyártók", icon: UserCheck, key: "creators" },

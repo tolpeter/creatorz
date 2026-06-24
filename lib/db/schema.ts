@@ -592,6 +592,28 @@ export const notifications = pgTable("notifications", {
   readIdx: index("notifications_read_idx").on(table.read),
 }));
 
+// ============= EMAIL CAMPAIGN RECIPIENTS (tömeges email + követés) ==========
+// Egy-egy marketing/onboarding email-kampány címzettjei. Címzettenként egyedi
+// token a megnyitás-pixelhez és a követett CTA-linkhez. A "konverziót" (pl.
+// feltöltött profilkép) a userId-hoz kötött profil aktuális állapotából
+// számoljuk — nem itt tároljuk.
+export const emailCampaignRecipients = pgTable("email_campaign_recipients", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  campaign: varchar("campaign", { length: 64 }).notNull(), // pl. "profile-photo-2026-06"
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  sentAt: timestamp("sent_at"),
+  openedAt: timestamp("opened_at"), // első megnyitás (tracking pixel)
+  clickedAt: timestamp("clicked_at"), // első CTA-kattintás
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  campaignIdx: index("email_campaign_recipients_campaign_idx").on(t.campaign),
+  tokenIdx: uniqueIndex("email_campaign_recipients_token_idx").on(t.token),
+  userIdx: index("email_campaign_recipients_user_idx").on(t.userId),
+  uniquePerCampaign: uniqueIndex("email_campaign_recipients_campaign_user_idx").on(t.campaign, t.userId),
+}));
+
 // ============= PUSH TOKENS (mobil app Expo push értesítésekhez) =============
 export const pushTokens = pgTable("push_tokens", {
   id: uuid("id").primaryKey().defaultRandom(),
