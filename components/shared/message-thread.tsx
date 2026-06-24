@@ -1,4 +1,4 @@
-import { Package, PencilLine, CheckCircle2 } from "lucide-react";
+import { Package, PencilLine, CheckCircle2, Handshake, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MessageAttachment } from "@/components/shared/message-attachment";
 import { formatHuf } from "@/lib/utils/format";
@@ -75,7 +75,11 @@ function EventBox({ kind, note, at }: { kind: string; note: string | null; at: n
       ? { icon: <CheckCircle2 className="h-4 w-4" />, label: "Jóváhagyva — az együttműködés lezárult", cls: "border-accent/40 bg-[#f0f4e5] text-[#3f6212]" }
       : kind === "changes_requested"
         ? { icon: <PencilLine className="h-4 w-4" />, label: "Változtatás kérve", cls: "border-amber-300 bg-amber-50 text-amber-800" }
-        : { icon: <Package className="h-4 w-4" />, label: "Anyag leadva", cls: "border-accent/40 bg-accent/10 text-[#3f6212]" };
+        : kind === "agreement_proposed"
+          ? { icon: <Handshake className="h-4 w-4" />, label: "Megállapodási javaslat", cls: "border-accent/40 bg-accent/10 text-[#3f6212]" }
+          : kind === "agreement_accepted"
+            ? { icon: <Check className="h-4 w-4" />, label: "Megállapodás elfogadva", cls: "border-accent/40 bg-[#f0f4e5] text-[#3f6212]" }
+            : { icon: <Package className="h-4 w-4" />, label: "Anyag leadva", cls: "border-accent/40 bg-accent/10 text-[#3f6212]" };
 
   return (
     <div className="flex justify-center py-1">

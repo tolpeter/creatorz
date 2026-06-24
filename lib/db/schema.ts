@@ -435,10 +435,34 @@ export const collaborations = pgTable("collaborations", {
   reviewToken: text("review_token").unique(),  // for token-based review submission
   status: varchar("status", { length: 30 }).notNull().default("active"),
   // status: active / review_pending / reviewed / closed
+  // Megállapodás (agreement) fázis: a márka rögzíti az elvárásokat + határidőt,
+  // a creator elfogadja (agreedAt). Csak ezután indul a "Munka".
+  agreedDeadline: timestamp("agreed_deadline"),
+  agreementNote: text("agreement_note"),
+  agreedAt: timestamp("agreed_at"),
+  // Aktuális revíziós kör (változtatás-kéréskor nő); a leadott anyagok ehhez kötődnek.
+  currentRound: integer("current_round").notNull().default(1),
 }, (table) => ({
   brandIdx: index("collab_brand_idx").on(table.brandId),
   creatorIdx: index("collab_creator_idx").on(table.creatorId),
   tokenIdx: uniqueIndex("collab_token_idx").on(table.reviewToken),
+}));
+
+// ============= COLLABORATION DELIVERABLES (leadott anyagok — linkek) =========
+// A tartalomgyártó megosztható linkeket ad át (Google Drive, YouTube, Vimeo,
+// Dropbox, WeTransfer, stb.). Revíziós körönként (round) csoportosítva.
+export const collaborationDeliverables = pgTable("collaboration_deliverables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  collaborationId: uuid("collaboration_id")
+    .notNull()
+    .references(() => collaborations.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  title: varchar("title", { length: 200 }),
+  note: text("note"),
+  round: integer("round").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (table) => ({
+  collabIdx: index("collab_deliverables_collab_idx").on(table.collaborationId),
 }));
 
 // ============= COLLABORATION EVENTS (idővonal-események a chatben) =============
