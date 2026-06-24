@@ -3,6 +3,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages } from "@/lib/db/schema";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 
 /**
  * Üzenet-értesítő email throttle: CSAK az első olvasatlan üzenetnél küldünk
@@ -17,6 +18,8 @@ export async function sendMessageEmailThrottled(
   to: string,
   email: { subject: string; html: string; replyTo?: string },
 ): Promise<void> {
+  // A felhasználó kikapcsolhatta az üzenet-emaileket.
+  if (!(await isEmailAllowed(toUserId, "messages"))) return;
   try {
     const [row] = await db
       .select({ n: sql<number>`count(*)::int` })

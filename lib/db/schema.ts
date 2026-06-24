@@ -118,6 +118,18 @@ export const users = pgTable("users", {
   passwordResetExpiresAt: timestamp("password_reset_expires_at"),
   // Ajánlási (referral) kód — egyedi, megosztható meghívó-linkhez.
   referralCode: varchar("referral_code", { length: 16 }).unique(),
+  // Email-értesítési beállítások. null/hiányzó mező = bekapcsolva (alapból
+  // mindenről kap emailt). `all: false` = MINDEN (nem tranzakciós) email kikapcsolva.
+  // A jelszó-visszaállítás és emailcím-megerősítés MINDIG kimegy (biztonsági).
+  emailPrefs: jsonb("email_prefs").$type<{
+    all?: boolean;
+    messages?: boolean;
+    applications?: boolean;
+    collaborations?: boolean;
+    campaigns?: boolean;
+    reviews?: boolean;
+    newsletter?: boolean;
+  }>(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   lastLoginAt: timestamp("last_login_at"),

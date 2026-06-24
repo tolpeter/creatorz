@@ -15,6 +15,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { closeCollabIfBothReviewed } from "@/lib/collab/close";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -88,18 +89,20 @@ export async function submitReview(token: string, input: z.input<typeof reviewSc
     link: "/creator/reviews",
   });
 
-  await sendEmailSafe({
-    to: collab.creatorEmail,
-    subject: "Új értékelést kaptál – Creatorz",
-    html: `
-      <h2>Új értékelést kaptál! ⭐</h2>
-      <p>Szia ${collab.creatorName}!</p>
-      <p>A(z) <strong>${collab.brandName}</strong> értékelt a közös munka után.</p>
-      <p><a href="${APP_URL}/creator/reviews">Értékelés megtekintése és válasz</a></p>
-      <hr />
-      <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
-    `,
-  });
+  if (await isEmailAllowed(collab.creatorUserId, "reviews")) {
+    await sendEmailSafe({
+      to: collab.creatorEmail,
+      subject: "Új értékelést kaptál – Creatorz",
+      html: `
+        <h2>Új értékelést kaptál! ⭐</h2>
+        <p>Szia ${collab.creatorName}!</p>
+        <p>A(z) <strong>${collab.brandName}</strong> értékelt a közös munka után.</p>
+        <p><a href="${APP_URL}/creator/reviews">Értékelés megtekintése és válasz</a></p>
+        <hr />
+        <p style="font-size:12px;color:#888">Creatorz – <a href="mailto:info@creatorz.hu">info@creatorz.hu</a></p>
+      `,
+    });
+  }
 
   revalidatePath("/creator/reviews");
   return { success: true };

@@ -10,6 +10,7 @@ import {
   users,
 } from "@/lib/db/schema";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { renderNewsletterEmail } from "@/lib/email/templates";
 import { creatorWeeklyTip, brandWeeklyTip } from "@/lib/ai/digest-tips";
 
@@ -39,6 +40,7 @@ export async function GET(req: Request) {
   const creators = await db
     .select({
       id: creatorProfiles.id,
+      userId: users.id,
       email: users.email,
       displayName: creatorProfiles.displayName,
       avatarUrl: creatorProfiles.avatarUrl,
@@ -123,6 +125,7 @@ export async function GET(req: Request) {
       cta: { label: "Profilom megnyitása", href: `${APP_URL}/creator/profile` },
     });
 
+    if (!(await isEmailAllowed(c.userId, "campaigns"))) continue;
     const res = await sendEmailSafe({ to: c.email, ...rendered });
     if (res.sent) creatorSent++;
     else if (res.error) errors.push(`creator ${c.email}: ${res.error}`);
@@ -132,6 +135,7 @@ export async function GET(req: Request) {
   const brands = await db
     .select({
       id: brandProfiles.id,
+      userId: users.id,
       email: users.email,
       companyName: brandProfiles.companyName,
     })
@@ -209,6 +213,7 @@ export async function GET(req: Request) {
       cta: { label: "Kampányaim megnyitása", href: `${APP_URL}/brand/ads` },
     });
 
+    if (!(await isEmailAllowed(b.userId, "campaigns"))) continue;
     const res = await sendEmailSafe({ to: b.email, ...rendered });
     if (res.sent) brandSent++;
     else if (res.error) errors.push(`brand ${b.email}: ${res.error}`);

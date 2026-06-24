@@ -2,6 +2,7 @@ import { and, eq, gte, desc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { notifications, users } from "@/lib/db/schema";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { renderNewsletterEmail } from "@/lib/email/templates";
 
 export const maxDuration = 120;
@@ -36,17 +37,18 @@ export async function GET(req: Request) {
     .orderBy(desc(notifications.createdAt));
 
   // Csoportosítás felhasználónként
-  const byUser = new Map<string, { email: string; items: typeof rows }>();
+  const byUser = new Map<string, { userId: string; email: string; items: typeof rows }>();
   for (const r of rows) {
     if (r.suspended) continue;
-    if (!byUser.has(r.userId)) byUser.set(r.userId, { email: r.email, items: [] });
+    if (!byUser.has(r.userId)) byUser.set(r.userId, { userId: r.userId, email: r.email, items: [] });
     byUser.get(r.userId)!.items.push(r);
   }
 
   let sent = 0;
   const errors: string[] = [];
 
-  for (const { email, items } of byUser.values()) {
+  for (const { userId, email, items } of byUser.values()) {
+    if (!(await isEmailAllowed(userId, "campaigns"))) continue;
     const top = items.slice(0, 10);
     const bodyHtml = `
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">

@@ -15,6 +15,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentBrand } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { renderAdInvitationEmail } from "@/lib/email/templates";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
@@ -152,7 +153,7 @@ export async function inviteCreatorToAd(input: z.input<typeof inviteSchema>) {
     link: `/ads/${d.adId}`,
   });
 
-  {
+  if (await isEmailAllowed(recipient.creatorUserId, "applications")) {
     const email = renderAdInvitationEmail({
       creatorName: recipient.displayName,
       brandName: brand.profile.companyName,

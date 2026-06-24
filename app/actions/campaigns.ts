@@ -77,6 +77,8 @@ export async function getProfilePhotoCampaignStatus(): Promise<CampaignSendStatu
         (SELECT count(*) FROM email_campaign_recipients WHERE campaign = ${CAMPAIGN})::int AS sent,
         (SELECT count(*) FROM creator_profiles cp JOIN users u ON u.id = cp.user_id
           WHERE (cp.avatar_url IS NULL OR cp.avatar_url = '') AND u.role = 'creator' AND u.suspended = false
+            AND coalesce(u.email_prefs->>'all','') <> 'false'
+            AND coalesce(u.email_prefs->>'newsletter','') <> 'false'
             AND NOT EXISTS (SELECT 1 FROM email_campaign_recipients r WHERE r.campaign = ${CAMPAIGN} AND r.user_id = cp.user_id))::int AS remaining
     `);
     const list = Array.isArray(rows) ? rows : (rows as { rows?: unknown[] }).rows ?? [];
@@ -128,6 +130,8 @@ export async function sendProfilePhotoBatch(limit = 20) {
       JOIN users u ON u.id = cp.user_id
       WHERE (cp.avatar_url IS NULL OR cp.avatar_url = '')
         AND u.role = 'creator' AND u.suspended = false
+        AND coalesce(u.email_prefs->>'all','') <> 'false'
+        AND coalesce(u.email_prefs->>'newsletter','') <> 'false'
         AND NOT EXISTS (
           SELECT 1 FROM email_campaign_recipients r
           WHERE r.campaign = ${CAMPAIGN} AND r.user_id = cp.user_id

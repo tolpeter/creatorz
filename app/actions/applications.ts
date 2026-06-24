@@ -20,6 +20,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { checkRateLimit, DAY } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { sendExpoPush } from "@/lib/push";
 import {
   renderNewApplicationEmail,
@@ -133,17 +134,17 @@ export async function createApplication(input: z.input<typeof applySchema>) {
       body: `${creator.profile.displayName} pályázott: „${ad.title}"`,
       data: { type: "application" },
     });
-  }
 
-  {
-    const email = renderNewApplicationEmail({
-      creatorName: creator.profile.displayName,
-      creatorUsername: creator.profile.username,
-      creatorAvatarUrl: creator.profile.avatarUrl,
-      adTitle: ad.title,
-      messagePreview: d.message.slice(0, 220),
-    });
-    await sendEmailSafe({ to: ad.brandUserEmail, ...email });
+    if (await isEmailAllowed(brandUser[0].userId, "applications")) {
+      const email = renderNewApplicationEmail({
+        creatorName: creator.profile.displayName,
+        creatorUsername: creator.profile.username,
+        creatorAvatarUrl: creator.profile.avatarUrl,
+        adTitle: ad.title,
+        messagePreview: d.message.slice(0, 220),
+      });
+      await sendEmailSafe({ to: ad.brandUserEmail, ...email });
+    }
   }
 
   revalidatePath("/creator/applications");
@@ -258,7 +259,7 @@ export async function acceptApplication(applicationId: string) {
     data: { type: "application_accepted" },
   });
 
-  {
+  if (await isEmailAllowed(row.creatorUserId, "applications")) {
     const email = renderApplicationAcceptedEmail({
       creatorName: row.creatorName,
       brandName: brand.profile.companyName,
@@ -298,7 +299,7 @@ export async function rejectApplication(applicationId: string, reason?: string) 
     link: "/creator/applications",
   });
 
-  {
+  if (await isEmailAllowed(row.creatorUserId, "applications")) {
     const email = renderApplicationRejectedEmail({
       creatorName: row.creatorName,
       adTitle: row.adTitle,

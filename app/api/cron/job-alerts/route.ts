@@ -2,6 +2,7 @@ import { and, eq, gte } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { ads, brandProfiles, creatorProfiles, users } from "@/lib/db/schema";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
 import { renderNewsletterEmail } from "@/lib/email/templates";
 import { getSetting } from "@/lib/settings";
 import { CREATOR_CATEGORIES } from "@/lib/constants";
@@ -52,6 +53,7 @@ export async function GET(req: Request) {
   // Jogosult creatorok (megerősített email, nem felfüggesztett)
   const creators = await db
     .select({
+      userId: users.id,
       email: users.email,
       displayName: creatorProfiles.displayName,
       categories: creatorProfiles.categories,
@@ -84,6 +86,8 @@ export async function GET(req: Request) {
     });
 
     if (matched.length === 0) continue;
+    // A creator kikapcsolhatta az új-kampány emaileket.
+    if (!(await isEmailAllowed(creator.userId, "campaigns"))) continue;
     recipients++;
 
     const top = matched.slice(0, 6);

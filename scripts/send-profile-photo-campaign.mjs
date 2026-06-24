@@ -143,6 +143,8 @@ async function main() {
     WHERE (cp.avatar_url IS NULL OR cp.avatar_url = '')
       AND u.role = 'creator'
       AND u.suspended = false
+      AND coalesce(u.email_prefs->>'all', '') <> 'false'
+      AND coalesce(u.email_prefs->>'newsletter', '') <> 'false'
     ORDER BY u.created_at ASC
   `;
 
