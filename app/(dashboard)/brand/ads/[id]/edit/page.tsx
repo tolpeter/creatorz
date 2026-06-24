@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import { ArrowLeft } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads } from "@/lib/db/schema";
@@ -22,7 +22,7 @@ export default async function EditAdPage({
   const [ad] = await db
     .select()
     .from(ads)
-    .where(and(eq(ads.id, id), eq(ads.brandId, brand.profile.id)))
+    .where(and(eq(ads.id, id), eq(ads.brandId, brand.profile.id), isNull(ads.deletedAt)))
     .limit(1);
   if (!ad) notFound();
 

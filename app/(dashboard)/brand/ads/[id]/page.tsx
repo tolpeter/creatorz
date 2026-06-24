@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
-import { and, eq, desc, sql } from "drizzle-orm";
+import { and, eq, desc, isNull, sql } from "drizzle-orm";
 import { Pencil, ExternalLink, Eye } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, adApplications, adViews, creatorProfiles } from "@/lib/db/schema";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
+import { AdLifecycleActions } from "@/components/shared/ad-lifecycle-actions";
 import { ApplicantsList } from "@/components/brand/applicants-list";
 import { RecommendedCreators } from "@/components/brand/recommended-creators";
 import { getRecommendedCreators } from "@/lib/ai/match";
@@ -29,7 +30,7 @@ export default async function BrandAdDetailPage({
   const adRows = await db
     .select()
     .from(ads)
-    .where(and(eq(ads.id, id), eq(ads.brandId, brand.profile.id)))
+    .where(and(eq(ads.id, id), eq(ads.brandId, brand.profile.id), isNull(ads.deletedAt)))
     .limit(1);
   const ad = adRows[0];
   if (!ad) notFound();
@@ -116,6 +117,9 @@ export default async function BrandAdDetailPage({
                 </Link>
               </Button>
             )}
+          </div>
+          <div className="mt-2 border-t pt-3">
+            <AdLifecycleActions adId={ad.id} status={ad.status} />
           </div>
         </CardHeader>
         <CardContent className="space-y-3 text-sm">

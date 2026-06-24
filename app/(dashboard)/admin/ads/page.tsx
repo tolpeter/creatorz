@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
+import { Archive, Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, brandProfiles } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
 import { AdModerationActions } from "@/components/admin/ad-moderation-actions";
+import { AdLifecycleActions } from "@/components/shared/ad-lifecycle-actions";
 import { ExportButton } from "@/components/admin/export-button";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Kampányok" };
@@ -25,15 +26,19 @@ export default async function AdminAdsPage() {
       budgetMaxHuf: ads.budgetMaxHuf,
       deadline: ads.deadline,
       createdAt: ads.createdAt,
+      deletedAt: ads.deletedAt,
+      deletedByRole: ads.deletedByRole,
       brandName: brandProfiles.companyName,
     })
     .from(ads)
     .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
     .orderBy(desc(ads.createdAt))
-    .limit(200);
+    .limit(400);
 
-  const pending = rows.filter((r) => r.status === "pending");
-  const others = rows.filter((r) => r.status !== "pending");
+  const archived = rows.filter((r) => r.deletedAt);
+  const live = rows.filter((r) => !r.deletedAt);
+  const pending = live.filter((r) => r.status === "pending");
+  const others = live.filter((r) => r.status !== "pending");
 
   return (
     <div className="space-y-6">
@@ -68,7 +73,10 @@ export default async function AdminAdsPage() {
                   {formatBudgetRange(a.budgetMinHuf, a.budgetMaxHuf)} · Határidő:{" "}
                   {formatHuDate(a.deadline)}
                 </p>
-                <AdModerationActions adId={a.id} status={a.status} featured={a.isFeatured} />
+                <div className="flex flex-wrap items-center gap-3">
+                  <AdModerationActions adId={a.id} status={a.status} featured={a.isFeatured} />
+                  <AdLifecycleActions adId={a.id} status={a.status} />
+                </div>
               </CardContent>
             </Card>
           ))
@@ -85,6 +93,7 @@ export default async function AdminAdsPage() {
                 <th className="p-3">Márka</th>
                 <th className="p-3">Státusz</th>
                 <th className="p-3">Létrehozva</th>
+                <th className="p-3">Kezelés</th>
               </tr>
             </thead>
             <tbody>
@@ -96,13 +105,63 @@ export default async function AdminAdsPage() {
                     </Link>
                   </td>
                   <td className="p-3">{a.brandName}</td>
-                  <td className="p-3"><AdStatusBadge status={a.status} /></td>
+                  <td className="p-3">
+                    <AdStatusBadge status={a.status} />
+                  </td>
                   <td className="p-3 whitespace-nowrap">{formatHuDate(a.createdAt)}</td>
+                  <td className="p-3">
+                    <AdLifecycleActions adId={a.id} status={a.status} />
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
+      </section>
+
+      {/* Archívum (törölt kampányok) — bármikor visszanézhető/visszaállítható */}
+      <section className="space-y-3">
+        <h2 className="flex items-center gap-2 font-semibold">
+          <Archive className="h-4 w-4" /> Archívum — törölt kampányok ({archived.length})
+        </h2>
+        {archived.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nincs törölt kampány.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border">
+            <table className="w-full text-sm">
+              <thead className="border-b bg-muted/50 text-left">
+                <tr>
+                  <th className="p-3">Cím</th>
+                  <th className="p-3">Márka</th>
+                  <th className="p-3">Törölte</th>
+                  <th className="p-3">Törölve</th>
+                  <th className="p-3">Visszaállítás</th>
+                </tr>
+              </thead>
+              <tbody>
+                {archived.map((a) => (
+                  <tr key={a.id} className="border-b last:border-0 hover:bg-muted/30">
+                    <td className="p-3 font-medium">{a.title}</td>
+                    <td className="p-3">{a.brandName}</td>
+                    <td className="p-3">
+                      {a.deletedByRole === "admin"
+                        ? "Admin"
+                        : a.deletedByRole === "brand"
+                          ? "Márka"
+                          : "—"}
+                    </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {a.deletedAt ? formatHuDate(a.deletedAt) : "—"}
+                    </td>
+                    <td className="p-3">
+                      <AdLifecycleActions adId={a.id} status={a.status} deleted />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
     </div>
   );

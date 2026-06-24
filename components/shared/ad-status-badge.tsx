@@ -3,6 +3,8 @@ import { cn } from "@/lib/utils";
 const MAP: Record<string, { label: string; cls: string }> = {
   pending: { label: "Moderálásra vár", cls: "bg-yellow-500/15 text-yellow-700 dark:text-yellow-400" },
   active: { label: "Aktív", cls: "bg-green-500/15 text-green-700 dark:text-green-400" },
+  suspended: { label: "Felfüggesztve", cls: "bg-amber-500/15 text-amber-700 dark:text-amber-400" },
+  expired: { label: "Lejárt", cls: "bg-orange-500/15 text-orange-700 dark:text-orange-400" },
   closed: { label: "Lezárva", cls: "bg-muted text-muted-foreground" },
   rejected: { label: "Elutasítva", cls: "bg-destructive/15 text-destructive" },
 };

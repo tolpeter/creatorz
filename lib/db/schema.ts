@@ -7,7 +7,7 @@ import type { BlogBlock, BlogFaq } from "@/lib/blog/types";
 
 // ============= ENUMS =============
 export const userRoleEnum = pgEnum("user_role", ["creator", "brand", "admin"]);
-export const adStatusEnum = pgEnum("ad_status", ["pending", "active", "closed", "rejected"]);
+export const adStatusEnum = pgEnum("ad_status", ["pending", "active", "closed", "rejected", "suspended", "expired"]);
 export const applicationStatusEnum = pgEnum("application_status", ["pending", "accepted", "rejected", "withdrawn"]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", ["active", "past_due", "canceled", "unpaid", "incomplete"]);
 export const featureTypeEnum = pgEnum("feature_type", ["7day", "30day"]);
@@ -369,6 +369,10 @@ export const ads = pgTable("ads", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   approvedAt: timestamp("approved_at"),
   closedAt: timestamp("closed_at"),
+  // Soft-delete / archívum: ha kitöltött, a kampány törölve van (NEM jelenik meg
+  // sehol), de az admin Archívumban bármikor visszanézhető/visszaállítható.
+  deletedAt: timestamp("deleted_at"),
+  deletedByRole: varchar("deleted_by_role", { length: 10 }), // 'brand' | 'admin'
 }, (table) => ({
   brandIdx: index("ads_brand_idx").on(table.brandId),
   statusIdx: index("ads_status_idx").on(table.status),

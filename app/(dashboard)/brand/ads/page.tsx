@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { eq, desc } from "drizzle-orm";
+import { and, eq, desc, isNull } from "drizzle-orm";
 import { Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { AdStatusBadge } from "@/components/shared/ad-status-badge";
+import { AdLifecycleActions } from "@/components/shared/ad-lifecycle-actions";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Kampányaim" };
@@ -18,7 +19,7 @@ export default async function BrandAdsPage() {
   const rows = await db
     .select()
     .from(ads)
-    .where(eq(ads.brandId, brand.profile.id))
+    .where(and(eq(ads.brandId, brand.profile.id), isNull(ads.deletedAt)))
     .orderBy(desc(ads.createdAt));
 
   return (
@@ -60,6 +61,7 @@ export default async function BrandAdsPage() {
                 <th className="p-3">Határidő</th>
                 <th className="p-3">Pályázat</th>
                 <th className="p-3">Státusz</th>
+                <th className="p-3">Kezelés</th>
               </tr>
             </thead>
             <tbody>
@@ -77,6 +79,9 @@ export default async function BrandAdsPage() {
                   <td className="p-3">{a.applicationCount}</td>
                   <td className="p-3">
                     <AdStatusBadge status={a.status} />
+                  </td>
+                  <td className="p-3">
+                    <AdLifecycleActions adId={a.id} status={a.status} />
                   </td>
                 </tr>
               ))}

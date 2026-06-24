@@ -274,6 +274,97 @@ export async function closeAd(adId: string) {
   return { success: true };
 }
 
+// ─────────────────── Kampány-életciklus (márka + admin) ────────────────────
+
+const MANAGEABLE_TARGETS = ["active", "suspended", "expired", "closed"];
+
+/**
+ * Kampány státuszának állítása: aktív / felfüggesztve / lejárt / lezárva.
+ * A márka a SAJÁT (már moderált) kampányát kezelheti, az admin BÁRMELYIKET.
+ */
+export async function setAdStatus(adId: string, status: string) {
+  const current = await getCurrentUser();
+  if (!current?.dbUser) return { error: "Nincs bejelentkezve" };
+  const isAdmin = current.dbUser.role === "admin";
+
+  if (!MANAGEABLE_TARGETS.includes(status)) return { error: "Érvénytelen státusz." };
+
+  const [ad] = await db
+    .select({ id: ads.id, status: ads.status, brandUserId: brandProfiles.userId })
+    .from(ads)
+    .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
+    .where(eq(ads.id, adId))
+    .limit(1);
+  if (!ad) return { error: "A kampány nem található." };
+
+  const isOwner = ad.brandUserId === current.dbUser.id;
+  if (!isAdmin && !isOwner) return { error: "Nincs jogosultságod ehhez a kampányhoz." };
+  // Márka csak a már jóváhagyott (élő) kampányát módosíthatja így — a
+  // pending/rejected → active az admin jóváhagyás dolga.
+  if (!isAdmin && !MANAGEABLE_TARGETS.includes(ad.status)) {
+    return { error: "Ez a kampány jóváhagyásra vár vagy elutasított — így nem módosítható." };
+  }
+
+  const set: Record<string, unknown> = { status };
+  if (status === "closed") set.closedAt = new Date();
+  if (status === "active") set.closedAt = null; // újraaktiválás
+
+  await db.update(ads).set(set).where(eq(ads.id, adId));
+
+  revalidatePath(`/brand/ads/${adId}`);
+  revalidatePath("/brand/ads");
+  revalidatePath("/admin/ads");
+  revalidatePath("/ads");
+  return { success: true };
+}
+
+/** Kampány törlése → ARCHÍVUM (soft-delete). Márka a sajátját, admin bármelyiket. */
+export async function deleteAd(adId: string) {
+  const current = await getCurrentUser();
+  if (!current?.dbUser) return { error: "Nincs bejelentkezve" };
+  const isAdmin = current.dbUser.role === "admin";
+
+  const [ad] = await db
+    .select({ id: ads.id, brandUserId: brandProfiles.userId })
+    .from(ads)
+    .innerJoin(brandProfiles, eq(brandProfiles.id, ads.brandId))
+    .where(eq(ads.id, adId))
+    .limit(1);
+  if (!ad) return { error: "A kampány nem található." };
+
+  const isOwner = ad.brandUserId === current.dbUser.id;
+  if (!isAdmin && !isOwner) return { error: "Nincs jogosultságod ehhez a kampányhoz." };
+
+  // deletedAt = archívum; a status "closed"-ra állítása miatt minden
+  // status='active' feed automatikusan kihagyja (nem kell mindenhol külön szűrni).
+  await db
+    .update(ads)
+    .set({
+      deletedAt: new Date(),
+      deletedByRole: isAdmin ? "admin" : "brand",
+      status: "closed",
+    })
+    .where(eq(ads.id, adId));
+
+  revalidatePath("/brand/ads");
+  revalidatePath("/admin/ads");
+  revalidatePath("/ads");
+  return { success: true };
+}
+
+/** Admin: archivált (törölt) kampány visszaállítása. */
+export async function restoreAd(adId: string) {
+  if (!(await requireAdmin())) return { error: "Csak admin" };
+  await db
+    .update(ads)
+    .set({ deletedAt: null, deletedByRole: null })
+    .where(eq(ads.id, adId));
+  revalidatePath("/admin/ads");
+  revalidatePath("/brand/ads");
+  revalidatePath("/ads");
+  return { success: true };
+}
+
 // --- Admin moderálás (8. fázisban kap UI-t; role-guard itt is) ---
 async function requireAdmin() {
   const current = await getCurrentUser();
