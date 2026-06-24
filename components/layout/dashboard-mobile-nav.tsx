@@ -22,10 +22,12 @@ export type DashboardNavItem = {
 export function DashboardMobileNav({
   items,
   unreadMessages = 0,
+  collabAlerts = 0,
   rootHref,
 }: {
   items: readonly DashboardNavItem[];
   unreadMessages?: number;
+  collabAlerts?: number;
   /** A „pontos egyezés" útvonal (pl. /creator), hogy ne legyen mindig aktív. */
   rootHref?: string;
 }) {
@@ -38,6 +40,14 @@ export function DashboardMobileNav({
   const current = items.find((i) => isActive(i.href)) ?? items[0];
   const CurrentIcon = current.icon;
 
+  const badgeFor = (key: string) =>
+    key === "messages" ? unreadMessages : key === "collaborations" ? collabAlerts : 0;
+
+  // Az összecsukott gombon csak a NEM aktuális oldalra eső jelzéseket mutatjuk.
+  const hiddenAlerts = items
+    .filter((i) => i.key !== current.key)
+    .reduce((sum, i) => sum + badgeFor(i.key), 0);
+
   return (
     <div className="relative md:hidden">
       <button
@@ -48,9 +58,9 @@ export function DashboardMobileNav({
       >
         <CurrentIcon className="h-4 w-4 text-accent" />
         <span className="flex-1 text-left">{current.label}</span>
-        {unreadMessages > 0 && current.key !== "messages" && (
+        {hiddenAlerts > 0 && (
           <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-            {unreadMessages}
+            {hiddenAlerts}
           </span>
         )}
         <ChevronDown
@@ -70,7 +80,7 @@ export function DashboardMobileNav({
             {items.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
-              const showBadge = item.key === "messages" && unreadMessages > 0;
+              const badge = badgeFor(item.key);
               return (
                 <Link
                   key={item.href}
@@ -85,9 +95,9 @@ export function DashboardMobileNav({
                 >
                   <Icon className="h-4 w-4" />
                   <span className="flex-1">{item.label}</span>
-                  {showBadge && (
+                  {badge > 0 && (
                     <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                      {unreadMessages}
+                      {badge}
                     </span>
                   )}
                 </Link>

@@ -15,6 +15,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
+import { closeCollabIfBothReviewed } from "@/lib/collab/close";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -74,12 +75,10 @@ export async function submitReview(token: string, input: z.input<typeof reviewSc
     })
     .onConflictDoNothing({ target: reviews.collaborationId });
 
-  await db
-    .update(collaborations)
-    .set({ status: "reviewed" })
-    .where(eq(collaborations.id, collab.id));
-
   await recalculateCreatorRating(collab.creatorId);
+
+  // Kötelező kölcsönös értékelés: csak akkor zárul le, ha a creator is értékelt.
+  await closeCollabIfBothReviewed(collab.id);
 
   await db.insert(notifications).values({
     userId: collab.creatorUserId,
@@ -141,10 +140,11 @@ export async function submitCreatorReview(
     .limit(1);
   if (!collab) return { error: "Az együttműködés nem található." };
 
-  const completed =
-    !!collab.completedAt || collab.status === "closed" || collab.status === "reviewed";
-  if (!completed) {
-    return { error: "Előbb hagyd jóvá (zárd le) az együttműködést." };
+  const approved =
+    !!collab.completedAt ||
+    ["review_pending", "reviewed", "closed"].includes(collab.status);
+  if (!approved) {
+    return { error: "Előbb hagyd jóvá a munkát (Jóváhagyás gomb), utána értékelhetsz." };
   }
 
   const existing = await db
@@ -170,8 +170,10 @@ export async function submitCreatorReview(
     })
     .onConflictDoNothing({ target: reviews.collaborationId });
 
-  await db.update(collaborations).set({ status: "reviewed" }).where(eq(collaborations.id, collab.id));
   await recalculateCreatorRating(collab.creatorId);
+
+  // Kötelező kölcsönös értékelés: csak akkor zárul le, ha a creator is értékelt.
+  const closed = await closeCollabIfBothReviewed(collab.id);
 
   await db.insert(notifications).values({
     userId: collab.creatorUserId,
@@ -182,8 +184,9 @@ export async function submitCreatorReview(
   });
 
   revalidatePath(`/brand/collaborations/${collabId}`);
+  revalidatePath(`/creator/collaborations/${collabId}`);
   revalidatePath("/creator/reviews");
-  return { success: true };
+  return { success: true, closed };
 }
 
 async function recalculateCreatorRating(creatorId: string) {

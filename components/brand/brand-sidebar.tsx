@@ -76,16 +76,22 @@ const navItems = [
 
 export function BrandSidebar({
   unreadMessages = 0,
+  collabAlerts = 0,
 }: {
   unreadMessages?: number;
+  collabAlerts?: number;
 }) {
   const pathname = usePathname();
+
+  const badgeFor = (key: string) =>
+    key === "messages" ? unreadMessages : key === "collaborations" ? collabAlerts : 0;
 
   return (
     <>
       <DashboardMobileNav
         items={navItems as readonly DashboardNavItem[]}
         unreadMessages={unreadMessages}
+        collabAlerts={collabAlerts}
         rootHref="/brand"
       />
       <nav className="hidden gap-2 rounded-lg border bg-card p-2 shadow-sm md:flex md:w-64 md:flex-col md:overflow-visible md:border-white/10 md:bg-[#0A0A0A] md:p-3 md:text-white">
@@ -101,7 +107,7 @@ export function BrandSidebar({
           ? pathname === item.href
           : pathname.startsWith(item.href);
         const Icon = item.icon;
-        const showBadge = item.key === "messages" && unreadMessages > 0;
+        const badge = badgeFor(item.key);
         return (
           <Link
             key={item.href}
@@ -115,9 +121,9 @@ export function BrandSidebar({
           >
             <Icon className="h-4 w-4" />
             <span className="flex-1">{item.label}</span>
-            {showBadge && (
+            {badge > 0 && (
               <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                {unreadMessages}
+                {badge}
               </span>
             )}
           </Link>

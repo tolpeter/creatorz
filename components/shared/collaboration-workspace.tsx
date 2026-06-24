@@ -32,7 +32,7 @@ import { BrandReviewModal } from "@/components/shared/brand-review-modal";
 import {
   acceptAgreement,
   addDeliverable,
-  markCompleted,
+  approveWork,
   proposeAgreement,
   removeDeliverable,
   requestChanges,
@@ -76,16 +76,25 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
   const isCreator = c.viewerRole === "creator";
   const isBrand = c.viewerRole === "brand";
 
-  const completed = !!c.completedAt || c.status === "closed" || c.status === "reviewed";
-  const delivered = !!c.deliveredAt || completed;
+  // Lezárt = a kölcsönös értékelés megtörtént (completedAt / status closed).
+  const closed = !!c.completedAt || c.status === "closed";
+  // Jóváhagyott = a márka elfogadta a munkát → értékelési fázis (review_pending).
+  const approved =
+    closed || !!c.approvedAt || c.status === "review_pending" || c.status === "reviewed";
+  const delivered = !!c.deliveredAt || approved;
   const agreed = !!c.agreedAt;
   const proposed = !!c.agreementNote;
   const round = c.currentRound || 1;
   const roundDeliverables = c.deliverables.filter((d) => d.round === round);
-  const hasWork = c.deliverables.length > 0 || delivered;
+
+  // Értékelések: ki kit értékelt már.
+  //   creatorReviewedByBrand = a MÁRKA értékelte a tartalomgyártót
+  //   brandReviewedByCreator = a TARTALOMGYÁRTÓ értékelte a márkát
+  const myReviewDone = isBrand ? c.creatorReviewedByBrand : c.brandReviewedByCreator;
+  const partnerReviewDone = isBrand ? c.brandReviewedByCreator : c.creatorReviewedByBrand;
 
   const lastEvent = c.events[c.events.length - 1];
-  const changesPending = agreed && !delivered && !completed && lastEvent?.kind === "changes_requested";
+  const changesPending = agreed && !delivered && !approved && lastEvent?.kind === "changes_requested";
   const messagesHref = isCreator ? "/creator/messages" : "/brand/messages";
 
   function run(fn: () => Promise<ActionRes>, ok: string, after?: () => void) {
@@ -104,15 +113,27 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
   const steps = [
     { label: "Indítás", date: fmtDate(c.acceptedAt), done: true },
     { label: "Megállapodás", date: fmtDate(c.agreedAt), done: agreed },
-    { label: "Munka", date: null, done: hasWork || agreed },
     { label: "Leadva", date: fmtDate(c.deliveredAt), done: delivered },
-    { label: "Lezárva", date: fmtDate(c.completedAt), done: completed },
+    { label: "Jóváhagyva", date: fmtDate(c.approvedAt), done: approved },
+    { label: "Lezárva", date: fmtDate(c.completedAt), done: closed },
   ];
 
   // ── "Te jössz" — a néző következő teendője ─────────────────────────────────
   let cta: { text: string; tone: "you" | "wait" | "done" } = { text: "", tone: "wait" };
-  if (completed) {
+  if (closed) {
     cta = { text: "Az együttműködés lezárult. 🎉", tone: "done" };
+  } else if (approved) {
+    // Értékelési fázis — a lezárás MINDKÉT fél értékeléséhez kötött.
+    if (!myReviewDone)
+      cta = {
+        text: "Te jössz: írj véleményt a közös munkáról — ez KÖTELEZŐ a lezáráshoz.",
+        tone: "you",
+      };
+    else
+      cta = {
+        text: "Megírtad az értékelést — várakozás a partner értékelésére a lezáráshoz.",
+        tone: "wait",
+      };
   } else if (!agreed) {
     if (isBrand)
       cta = proposed
@@ -138,7 +159,7 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
         tone: "wait",
       };
   } else {
-    // delivered, !completed
+    // delivered, !approved
     if (isBrand) cta = { text: "Te jössz: nézd át a leadott anyagot, hagyd jóvá vagy kérj változtatást.", tone: "you" };
     else cta = { text: "Leadva — várakozás a márka jóváhagyására.", tone: "wait" };
   }
@@ -157,9 +178,13 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
             <p className="truncate text-sm text-muted-foreground">{c.adTitle}</p>
           </div>
         </div>
-        {completed ? (
+        {closed ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0f4e5] px-2.5 py-1 text-xs font-bold text-[#3f6212]">
             <CheckCircle2 className="h-3.5 w-3.5" /> Lezárva
+          </span>
+        ) : approved ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
+            <Star className="h-3.5 w-3.5" /> Értékelésre vár
           </span>
         ) : changesPending ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
@@ -235,7 +260,6 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
         c={c}
         agreed={agreed}
         proposed={proposed}
-        completed={completed}
         isBrand={isBrand}
         isCreator={isCreator}
         pending={pending}
@@ -248,7 +272,8 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
           c={c}
           round={round}
           roundDeliverables={roundDeliverables}
-          completed={completed}
+          approved={approved}
+          closed={closed}
           delivered={delivered}
           changesPending={changesPending}
           isBrand={isBrand}
@@ -258,48 +283,16 @@ export function CollaborationWorkspace({ c }: { c: CollabDetail }) {
         />
       )}
 
-      {/* 3) Lezárás / értékelés */}
-      {(delivered || completed) && (
-        <div className="rounded-2xl border bg-card p-5 shadow-sm">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold">
-            <CheckCircle2 className="h-4 w-4 text-[#4d7c0f]" /> Lezárás és értékelés
-          </h3>
-          <div className="flex flex-wrap items-center gap-2">
-            {!completed && isBrand && (
-              <Button
-                size="sm"
-                className="bg-accent font-bold text-black hover:bg-black hover:text-accent"
-                disabled={pending}
-                onClick={() => run(() => markCompleted(c.id), "Jóváhagyva és lezárva")}
-              >
-                {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                Jóváhagyás és lezárás
-              </Button>
-            )}
-            {!completed && isCreator && (
-              <span className="text-sm text-muted-foreground">
-                A jóváhagyás és lezárás a márka feladata.
-              </span>
-            )}
-
-            {completed && isBrand && !c.creatorReviewedByBrand && (
-              <CreatorReviewModal collabId={c.id} creatorName={c.partnerName} />
-            )}
-            {completed && isBrand && c.creatorReviewedByBrand && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#4d7c0f]">
-                <Star className="h-4 w-4 fill-current" /> Értékelted a tartalomgyártót
-              </span>
-            )}
-            {completed && isCreator && !c.brandReviewedByCreator && (
-              <BrandReviewModal collabId={c.id} brandName={c.partnerName} />
-            )}
-            {completed && isCreator && c.brandReviewedByCreator && (
-              <span className="inline-flex items-center gap-1 text-sm font-medium text-[#4d7c0f]">
-                <Star className="h-4 w-4 fill-current" /> Értékelted a márkát
-              </span>
-            )}
-          </div>
-        </div>
+      {/* 3) Értékelés és lezárás — KÖTELEZŐ kölcsönös értékelés */}
+      {approved && (
+        <ReviewGateCard
+          c={c}
+          closed={closed}
+          isBrand={isBrand}
+          isCreator={isCreator}
+          myReviewDone={myReviewDone}
+          partnerReviewDone={partnerReviewDone}
+        />
       )}
 
       {/* 4) Beszélgetés (folyamatos kapcsolattartás) */}
@@ -313,7 +306,6 @@ function AgreementCard({
   c,
   agreed,
   proposed,
-  completed,
   isBrand,
   isCreator,
   pending,
@@ -322,7 +314,6 @@ function AgreementCard({
   c: CollabDetail;
   agreed: boolean;
   proposed: boolean;
-  completed: boolean;
   isBrand: boolean;
   isCreator: boolean;
   pending: boolean;
@@ -458,7 +449,8 @@ function DeliverablesCard({
   c,
   round,
   roundDeliverables,
-  completed,
+  approved,
+  closed,
   delivered,
   changesPending,
   isBrand,
@@ -469,7 +461,8 @@ function DeliverablesCard({
   c: CollabDetail;
   round: number;
   roundDeliverables: CollabDeliverable[];
-  completed: boolean;
+  approved: boolean;
+  closed: boolean;
   delivered: boolean;
   changesPending: boolean;
   isBrand: boolean;
@@ -487,7 +480,8 @@ function DeliverablesCard({
   const rounds = Array.from(new Set(c.deliverables.map((d) => d.round))).sort((a, b) => a - b);
   const multiRound = rounds.length > 1;
 
-  const canEdit = isCreator && !completed;
+  // A creator csak a jóváhagyás előtt szerkesztheti a leadott anyagot.
+  const canEdit = isCreator && !approved && !closed;
 
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
@@ -609,7 +603,7 @@ function DeliverablesCard({
 
       {/* Akciók: leadás / jóváhagyás / változtatás */}
       <div className="mt-4 flex flex-wrap items-center gap-2 border-t pt-4">
-        {isCreator && !completed && !delivered && (
+        {isCreator && !approved && !delivered && (
           <Button
             size="sm"
             className="bg-accent font-bold text-black hover:bg-black hover:text-accent"
@@ -620,17 +614,19 @@ function DeliverablesCard({
             {changesPending ? "Javított anyag leadása" : "Leadás jóváhagyásra"}
           </Button>
         )}
-        {isCreator && !completed && delivered && (
+        {isCreator && !approved && delivered && (
           <span className="text-sm text-muted-foreground">Leadva — várakozás a márka jóváhagyására.</span>
         )}
 
-        {isBrand && !completed && delivered && !showChange && (
+        {isBrand && !approved && delivered && !showChange && (
           <>
             <Button
               size="sm"
               className="bg-accent font-bold text-black hover:bg-black hover:text-accent"
               disabled={pending}
-              onClick={() => run(() => markCompleted(c.id), "Jóváhagyva és lezárva")}
+              onClick={() =>
+                run(() => approveWork(c.id), "Munka jóváhagyva — most értékeljétek egymást")
+              }
             >
               {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
               Jóváhagyás
@@ -640,17 +636,22 @@ function DeliverablesCard({
             </Button>
           </>
         )}
-        {isBrand && !completed && !delivered && (
+        {isBrand && !approved && !delivered && (
           <span className="text-sm text-muted-foreground">
             {changesPending
               ? "Változtatást kértél — várakozás az új leadásra."
               : "Várakozás a tartalomgyártó leadására."}
           </span>
         )}
+        {approved && (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-[#4d7c0f]">
+            <CheckCircle2 className="h-4 w-4" /> A munkát jóváhagyták. A lezáráshoz lásd lent az értékelést.
+          </span>
+        )}
       </div>
 
       {/* Változtatás-kérés doboz */}
-      {showChange && isBrand && !completed && (
+      {showChange && isBrand && !approved && (
         <div className="mt-3 space-y-2 rounded-xl border border-amber-300 bg-amber-50 p-3">
           <p className="text-sm font-semibold text-amber-800">Mit kérsz másképp?</p>
           <Textarea
@@ -680,6 +681,74 @@ function DeliverablesCard({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─────────────────────────── Értékelés és lezárás ──────────────────────────
+function ReviewGateCard({
+  c,
+  closed,
+  isBrand,
+  myReviewDone,
+  partnerReviewDone,
+}: {
+  c: CollabDetail;
+  closed: boolean;
+  isBrand: boolean;
+  isCreator: boolean;
+  myReviewDone: boolean;
+  partnerReviewDone: boolean;
+}) {
+  return (
+    <div className="rounded-2xl border bg-card p-5 shadow-sm">
+      <h3 className="mb-1 flex items-center gap-2 text-sm font-bold">
+        <Star className="h-4 w-4 text-[#4d7c0f]" /> Értékelés és lezárás
+      </h3>
+      <p className="mb-3 text-xs text-muted-foreground">
+        Az együttműködés akkor zárul le, ha <strong>mindketten</strong> értékelitek a közös munkát.
+        Az értékelés kötelező — addig az együttműködés nyitva marad.
+      </p>
+
+      <div className="mb-3 grid gap-2 sm:grid-cols-2">
+        <ReviewStatusPill label="A te értékelésed" done={myReviewDone} />
+        <ReviewStatusPill label="A partner értékelése" done={partnerReviewDone} />
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {!myReviewDone ? (
+          isBrand ? (
+            <CreatorReviewModal collabId={c.id} creatorName={c.partnerName} />
+          ) : (
+            <BrandReviewModal collabId={c.id} brandName={c.partnerName} />
+          )
+        ) : closed ? (
+          <span className="inline-flex items-center gap-1 text-sm font-medium text-[#4d7c0f]">
+            <CheckCircle2 className="h-4 w-4" /> Lezárva — mindketten értékeltetek. Köszönjük a közös munkát!
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-amber-700">
+            <Loader2 className="h-4 w-4" /> Megírtad az értékelést — várakozás a partner értékelésére a lezáráshoz.
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReviewStatusPill({ label, done }: { label: string; done: boolean }) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-2 rounded-xl border px-3 py-2 text-sm",
+        done
+          ? "border-[#cfe0a8] bg-[#f7faef] text-[#3f6212]"
+          : "border-muted bg-muted/40 text-muted-foreground",
+      )}
+    >
+      {done ? <CheckCircle2 className="h-4 w-4" /> : <Star className="h-4 w-4" />}
+      <span className="font-medium">{label}</span>
+      <span className="ml-auto text-xs font-semibold">{done ? "Kész" : "Hiányzik"}</span>
     </div>
   );
 }

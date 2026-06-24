@@ -12,6 +12,7 @@ import {
   notifications,
 } from "@/lib/db/schema";
 import { getCurrentCreator } from "@/lib/auth";
+import { closeCollabIfBothReviewed } from "@/lib/collab/close";
 
 const schema = z.object({
   overallRating: z.coerce.number().int().min(1).max(5),
@@ -65,10 +66,11 @@ export async function submitBrandReview(
 
   if (!collab) return { error: "Az együttműködés nem található." };
 
-  const completed =
-    !!collab.completedAt || collab.status === "closed" || collab.status === "reviewed";
-  if (!completed) {
-    return { error: "Csak lezárt együttműködést tudsz értékelni." };
+  const approved =
+    !!collab.completedAt ||
+    ["review_pending", "reviewed", "closed"].includes(collab.status);
+  if (!approved) {
+    return { error: "Akkor értékelhetsz, ha a márka már jóváhagyta a munkát." };
   }
 
   const existing = await db
@@ -91,6 +93,9 @@ export async function submitBrandReview(
 
   await recalcBrand(collab.brandId);
 
+  // Kötelező kölcsönös értékelés: csak akkor zárul le, ha a márka is értékelt.
+  const closed = await closeCollabIfBothReviewed(collabId);
+
   await db.insert(notifications).values({
     userId: collab.brandUserId,
     type: "brand_review",
@@ -100,6 +105,8 @@ export async function submitBrandReview(
   });
 
   revalidatePath("/creator/collaborations");
+  revalidatePath(`/creator/collaborations/${collabId}`);
+  revalidatePath(`/brand/collaborations/${collabId}`);
   revalidatePath("/brand/reviews");
-  return { success: true };
+  return { success: true, closed };
 }

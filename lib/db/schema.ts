@@ -434,7 +434,13 @@ export const collaborations = pgTable("collaborations", {
   reviewEmailSentAt: timestamp("review_email_sent_at"),
   reviewToken: text("review_token").unique(),  // for token-based review submission
   status: varchar("status", { length: 30 }).notNull().default("active"),
-  // status: active / review_pending / reviewed / closed
+  // status: active / review_pending / closed
+  //   active         = folyamatban (megállapodás / munka / leadva)
+  //   review_pending = a márka jóváhagyta a munkát; MINDKÉT félnek értékelnie kell
+  //   closed         = mindketten értékeltek → az együttműködés lezárult
+  // A márka jóváhagyásának időpontja (a munkát elfogadta). Csak ezután lehet
+  // értékelni, és a lezárás MINDKÉT fél értékeléséhez kötött.
+  approvedAt: timestamp("approved_at"),
   // Megállapodás (agreement) fázis: a márka rögzíti az elvárásokat + határidőt,
   // a creator elfogadja (agreedAt). Csak ezután indul a "Munka".
   agreedDeadline: timestamp("agreed_deadline"),

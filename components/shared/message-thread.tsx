@@ -71,8 +71,10 @@ function Bubble({
 
 function EventBox({ kind, note, at }: { kind: string; note: string | null; at: number }) {
   const cfg =
-    kind === "approved"
-      ? { icon: <CheckCircle2 className="h-4 w-4" />, label: "Jóváhagyva — az együttműködés lezárult", cls: "border-accent/40 bg-[#f0f4e5] text-[#3f6212]" }
+    kind === "completed"
+      ? { icon: <CheckCircle2 className="h-4 w-4" />, label: "Az együttműködés lezárult", cls: "border-accent/40 bg-[#f0f4e5] text-[#3f6212]" }
+      : kind === "approved"
+      ? { icon: <CheckCircle2 className="h-4 w-4" />, label: "A munkát jóváhagyták — értékelés következik", cls: "border-accent/40 bg-accent/10 text-[#3f6212]" }
       : kind === "changes_requested"
         ? { icon: <PencilLine className="h-4 w-4" />, label: "Változtatás kérve", cls: "border-amber-300 bg-amber-50 text-amber-800" }
         : kind === "agreement_proposed"

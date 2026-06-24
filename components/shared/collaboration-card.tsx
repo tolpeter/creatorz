@@ -10,8 +10,9 @@ function fmt(d: Date | string | null) {
 }
 
 export function CollaborationCard({ c }: { c: CollabItem }) {
-  const completed = !!c.completedAt || c.status === "closed" || c.status === "reviewed";
-  const delivered = !!c.deliveredAt || completed || c.status === "review_pending";
+  const completed = !!c.completedAt || c.status === "closed";
+  const inReview = !completed && c.status === "review_pending";
+  const delivered = !!c.deliveredAt || completed || inReview;
   const isCreator = c.viewerRole === "creator";
   const href = `/${isCreator ? "creator" : "brand"}/collaborations/${c.id}`;
 
@@ -40,6 +41,10 @@ export function CollaborationCard({ c }: { c: CollabItem }) {
         {completed ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#f0f4e5] px-2.5 py-1 text-xs font-bold text-[#3f6212]">
             <CheckCircle2 className="h-3.5 w-3.5" /> Lezárva
+          </span>
+        ) : inReview ? (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Értékelésre vár
           </span>
         ) : delivered ? (
           <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-accent/20 px-2.5 py-1 text-xs font-bold text-[#3f6212]">

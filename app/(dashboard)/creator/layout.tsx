@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, like, sql } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { db } from "@/lib/db";
-import { messages, creatorProfiles } from "@/lib/db/schema";
+import { messages, creatorProfiles, notifications } from "@/lib/db/schema";
 import { CreatorSidebar } from "@/components/creator/creator-sidebar";
 import { getSetting } from "@/lib/settings";
 
@@ -24,6 +24,24 @@ export default async function CreatorLayout({
       and(eq(messages.toUserId, current.dbUser.id), eq(messages.read, false)),
     );
   const unreadMessages = unreadRows[0]?.n ?? 0;
+
+  // Olvasatlan együttműködés-értesítések (bal oldali jelzéshez).
+  let collabAlerts = 0;
+  try {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, current.dbUser.id),
+          eq(notifications.read, false),
+          like(notifications.type, "collab%"),
+        ),
+      );
+    collabAlerts = row?.n ?? 0;
+  } catch {
+    collabAlerts = 0;
+  }
 
   // Profil kitöltöttség az oldalsáv-widgethez (ugyanaz a 7 ellenőrzés mint a szerkesztőben)
   const pf = await db
@@ -67,6 +85,7 @@ export default async function CreatorLayout({
       <aside className="sticky top-[60px] z-30 px-3 pb-2 pt-2 md:top-14 md:h-[calc(100vh-3.5rem)] md:w-64 md:shrink-0 md:px-0 md:pb-0 md:pt-0">
         <CreatorSidebar
           unreadMessages={unreadMessages}
+          collabAlerts={collabAlerts}
           profileScore={profileScore}
           subscriptionEnabled={subscriptionEnabled}
         />

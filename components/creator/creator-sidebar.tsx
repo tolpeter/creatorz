@@ -80,10 +80,12 @@ const navItems = [
 
 export function CreatorSidebar({
   unreadMessages = 0,
+  collabAlerts = 0,
   profileScore = 0,
   subscriptionEnabled = false,
 }: {
   unreadMessages?: number;
+  collabAlerts?: number;
   profileScore?: number;
   subscriptionEnabled?: boolean;
 }) {
@@ -94,12 +96,16 @@ export function CreatorSidebar({
     (item) => item.key !== "subscription" || subscriptionEnabled,
   );
 
+  const badgeFor = (key: string) =>
+    key === "messages" ? unreadMessages : key === "collaborations" ? collabAlerts : 0;
+
   return (
     <>
       {/* Mobil: lenyíló menü a vízszintesen húzható sor helyett */}
       <DashboardMobileNav
         items={visibleItems as readonly DashboardNavItem[]}
         unreadMessages={unreadMessages}
+        collabAlerts={collabAlerts}
         rootHref="/creator"
       />
 
@@ -119,7 +125,7 @@ export function CreatorSidebar({
             ? pathname === "/creator"
             : pathname.startsWith(item.href);
         const Icon = item.icon;
-        const showBadge = item.key === "messages" && unreadMessages > 0;
+        const badge = badgeFor(item.key);
         return (
           <Link
             key={item.href}
@@ -133,9 +139,9 @@ export function CreatorSidebar({
           >
             <Icon className="h-4 w-4" />
             <span className="flex-1">{item.label}</span>
-            {showBadge && (
+            {badge > 0 && (
               <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-xs font-bold text-white">
-                {unreadMessages}
+                {badge}
               </span>
             )}
           </Link>

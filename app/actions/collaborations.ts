@@ -1,6 +1,6 @@
 "use server";
 
-import { and, asc, desc, eq, or, sql } from "drizzle-orm";
+import { and, asc, desc, eq, like, or, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -242,6 +242,7 @@ export type CollabDetail = {
   status: string;
   acceptedAt: Date;
   deliveredAt: Date | null;
+  approvedAt: Date | null;
   completedAt: Date | null;
   adId: string;
   adTitle: string;
@@ -344,6 +345,19 @@ export async function getCollaborationDetail(collabId: string): Promise<CollabDe
     /* migráció még nem futott le */
   }
 
+  // Jóváhagyás időpontja (review-gate migráció) — külön, rezíliens lekérés.
+  let approvedAt: Date | null = null;
+  try {
+    const [ap] = await db
+      .select({ approvedAt: collaborations.approvedAt })
+      .from(collaborations)
+      .where(eq(collaborations.id, collabId))
+      .limit(1);
+    approvedAt = ap?.approvedAt ?? null;
+  } catch {
+    /* migráció még nem futott le — a státuszból következtetünk */
+  }
+
   let deliverables: CollabDeliverable[] = [];
   try {
     deliverables = await db
@@ -393,6 +407,24 @@ export async function getCollaborationDetail(collabId: string): Promise<CollabDe
       ),
     );
 
+  // Ehhez az együttműködéshez tartozó olvasatlan értesítéseket is olvasottra
+  // állítjuk (így a bal oldali jelzés eltűnik, amikor megnyitod a workspace-t).
+  try {
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(
+        and(
+          eq(notifications.userId, myUserId),
+          eq(notifications.read, false),
+          like(notifications.type, "collab%"),
+          like(notifications.link, `%/collaborations/${collabId}`),
+        ),
+      );
+  } catch {
+    /* best-effort */
+  }
+
   const [revByBrand] = await db
     .select({ id: reviews.id })
     .from(reviews)
@@ -409,6 +441,7 @@ export async function getCollaborationDetail(collabId: string): Promise<CollabDe
     status: c.status,
     acceptedAt: c.acceptedAt,
     deliveredAt: c.deliveredAt,
+    approvedAt,
     completedAt: c.completedAt,
     adId: c.adId,
     adTitle: c.adTitle,
@@ -478,16 +511,24 @@ export async function getMyCollabEvents(): Promise<CollabEventForThread[]> {
   }
 }
 
-/** Brand: lezárja az együttműködést. */
-export async function markCompleted(collabId: string) {
+/**
+ * Brand: JÓVÁHAGYJA a leadott munkát. Ez NEM zárja le az együttműködést — utána
+ * MINDKÉT félnek értékelnie kell, és csak a második értékeléskor zárul le
+ * (closeCollabIfBothReviewed). Kötelező kölcsönös értékelés.
+ */
+export async function approveWork(collabId: string) {
   const brand = await getCurrentBrand();
-  if (!brand) return { error: "Csak márka zárhatja le az együttműködést." };
+  if (!brand) return { error: "Csak márka hagyhatja jóvá a munkát." };
 
   const [c] = await db
     .select({
       adTitle: ads.title,
+      deliveredAt: collaborations.deliveredAt,
+      completedAt: collaborations.completedAt,
       creatorUserId: creatorProfiles.userId,
+      brandUserId: brandProfiles.userId,
       brandName: brandProfiles.companyName,
+      creatorName: creatorProfiles.displayName,
     })
     .from(collaborations)
     .innerJoin(ads, eq(ads.id, collaborations.adId))
@@ -496,10 +537,12 @@ export async function markCompleted(collabId: string) {
     .where(and(eq(collaborations.id, collabId), eq(collaborations.brandId, brand.profile.id)))
     .limit(1);
   if (!c) return { error: "Az együttműködés nem található." };
+  if (c.completedAt) return { error: "Az együttműködés már lezárult." };
+  if (!c.deliveredAt) return { error: "Előbb a tartalomgyártónak le kell adnia a munkát." };
 
   await db
     .update(collaborations)
-    .set({ completedAt: new Date(), status: "closed" })
+    .set({ approvedAt: new Date(), status: "review_pending" })
     .where(eq(collaborations.id, collabId));
 
   try {
@@ -512,13 +555,23 @@ export async function markCompleted(collabId: string) {
     /* migráció még nem futott le */
   }
 
-  await db.insert(notifications).values({
-    userId: c.creatorUserId,
-    type: "collab_completed",
-    title: "Jóváhagyva és lezárva ✅",
-    body: `${c.brandName} jóváhagyta és lezárta: „${c.adTitle}". Köszönjük a közös munkát!`,
-    link: `/creator/collaborations/${collabId}`,
-  });
+  // Mindkét felet értesítjük: most KÖTELEZŐ értékelni a lezáráshoz.
+  await db.insert(notifications).values([
+    {
+      userId: c.creatorUserId,
+      type: "collab_approved",
+      title: "A munkát jóváhagyták 🎉",
+      body: `${c.brandName} jóváhagyta a munkát: „${c.adTitle}". Írj véleményt a közös munkáról — ez kell a lezáráshoz.`,
+      link: `/creator/collaborations/${collabId}`,
+    },
+    {
+      userId: c.brandUserId,
+      type: "collab_approved",
+      title: "Jóváhagytad a munkát — értékelj 📝",
+      body: `Hátravan a véleményed „${c.adTitle}" projektről. Az együttműködés a kölcsönös értékeléssel zárul le.`,
+      link: `/brand/collaborations/${collabId}`,
+    },
+  ]);
 
   revalidatePath(`/creator/collaborations/${collabId}`);
   revalidatePath(`/brand/collaborations/${collabId}`);
@@ -535,6 +588,7 @@ async function loadCollab(collabId: string) {
     .select({
       id: collaborations.id,
       status: collaborations.status,
+      deliveredAt: collaborations.deliveredAt,
       completedAt: collaborations.completedAt,
       adTitle: ads.title,
       brandUserId: brandProfiles.userId,
