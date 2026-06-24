@@ -12,6 +12,7 @@ import {
   brandProfiles,
   portfolioItems,
   notifications,
+  messages,
   users,
 } from "@/lib/db/schema";
 import { and, eq, sql } from "drizzle-orm";
@@ -235,12 +236,20 @@ export async function acceptApplication(applicationId: string) {
     })
     .onConflictDoNothing();
 
+  // A márka ezzel "felveszi a kapcsolatot" → megnyílik a beszélgetés, így a
+  // tartalomgyártó tud válaszolni. (Creator magától nem írhat előbb.)
+  await db.insert(messages).values({
+    fromUserId: brand.appUserId,
+    toUserId: row.creatorUserId,
+    body: `Elfogadtam a pályázatodat a(z) „${row.adTitle}" kampányra! 🎉 Beszéljük meg itt a részleteket — anyagok, határidők, leadás.`,
+  });
+
   await db.insert(notifications).values({
     userId: row.creatorUserId,
     type: "application_accepted",
     title: "Elfogadták a pályázatodat! 🎉",
-    body: `${brand.profile.companyName} elfogadta a pályázatodat: „${row.adTitle}".`,
-    link: "/creator/applications",
+    body: `${brand.profile.companyName} elfogadta a pályázatodat: „${row.adTitle}". Írhatsz neki az Üzeneteknél.`,
+    link: "/creator/messages",
   });
 
   await sendExpoPush([row.creatorUserId], {

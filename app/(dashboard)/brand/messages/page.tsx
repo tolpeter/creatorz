@@ -3,13 +3,11 @@ import { and, eq, or, asc, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { messages, users, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentBrand } from "@/lib/auth";
+import { getMyCollabEvents } from "@/app/actions/collaborations";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReplyForm } from "@/components/shared/reply-form";
-import { MessageAttachment } from "@/components/shared/message-attachment";
-import { formatHuf } from "@/lib/utils/format";
-import { relativeTime } from "@/lib/utils/relative-time";
-import { cn } from "@/lib/utils";
+import { MessageThread, type ThreadItem } from "@/components/shared/message-thread";
 
 export const metadata = { title: "Üzenetek" };
 
@@ -39,8 +37,16 @@ export default async function BrandMessagesPage() {
     .where(or(eq(messages.fromUserId, myId), eq(messages.toUserId, myId)))
     .orderBy(asc(messages.createdAt));
 
+  const collabEvents = await getMyCollabEvents();
+  const eventsByPartner = new Map<string, typeof collabEvents>();
+  for (const e of collabEvents) {
+    const arr = eventsByPartner.get(e.partnerUserId) ?? [];
+    arr.push(e);
+    eventsByPartner.set(e.partnerUserId, arr);
+  }
+
   const otherIds = Array.from(
-    new Set(all.map((m) => (m.fromUserId === myId ? m.toUserId : m.fromUserId)))
+    new Set(all.map((m) => (m.fromUserId === myId ? m.toUserId : m.fromUserId))),
   );
 
   const partners = otherIds.length
@@ -55,33 +61,51 @@ export default async function BrandMessagesPage() {
         .leftJoin(creatorProfiles, eq(creatorProfiles.userId, users.id))
         .where(sql`${users.id} in ${otherIds}`)
     : [];
-
   const partnerMap = new Map(partners.map((p) => [p.userId, p]));
 
-  const conversations = otherIds.map((otherId) => ({
-    other: partnerMap.get(otherId),
-    msgs: all.filter((m) => m.fromUserId === otherId || m.toUserId === otherId),
-  }));
-
-  conversations.sort((a, b) => {
-    const aLast = a.msgs[a.msgs.length - 1]?.createdAt ?? new Date(0);
-    const bLast = b.msgs[b.msgs.length - 1]?.createdAt ?? new Date(0);
-    return bLast.getTime() - aLast.getTime();
-  });
+  const conversations = otherIds
+    .map((otherId) => {
+      const msgs = all.filter((m) => m.fromUserId === otherId || m.toUserId === otherId);
+      const evs = eventsByPartner.get(otherId) ?? [];
+      const items: ThreadItem[] = [
+        ...msgs.map((m) => ({
+          type: "msg" as const,
+          id: `m-${m.id}`,
+          at: new Date(m.createdAt).getTime(),
+          fromUserId: m.fromUserId,
+          subject: m.subject,
+          body: m.body,
+          attachmentUrl: m.attachmentUrl,
+          attachmentName: m.attachmentName,
+          budgetHint: m.budgetHint,
+        })),
+        ...evs.map((e) => ({
+          type: "event" as const,
+          id: `e-${e.id}`,
+          at: new Date(e.createdAt).getTime(),
+          kind: e.kind,
+          note: e.note,
+        })),
+      ].sort((a, b) => a.at - b.at);
+      return {
+        other: partnerMap.get(otherId),
+        items,
+        lastAt: items[items.length - 1]?.at ?? 0,
+      };
+    })
+    .sort((a, b) => b.lastAt - a.lastAt);
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Üzenetek</h1>
-        <p className="text-muted-foreground">
-          Beszélgetéseid a tartalomgyártókkal
-        </p>
+        <p className="text-muted-foreground">Beszélgetéseid a tartalomgyártókkal</p>
       </div>
 
       {conversations.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
-          Még nem küldtél üzenetet. Egy tartalomgyártó profilján a „Üzenetet
-          küldök" gombbal indíthatsz beszélgetést.
+          Még nem küldtél üzenetet. Egy tartalomgyártó profilján a „Üzenetet küldök"
+          gombbal indíthatsz beszélgetést.
         </div>
       ) : (
         <div className="space-y-6">
@@ -94,59 +118,13 @@ export default async function BrandMessagesPage() {
                   <CardTitle className="flex items-center gap-3">
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={c.other.creatorAvatar ?? undefined} />
-                      <AvatarFallback>
-                        {displayName.charAt(0).toUpperCase()}
-                      </AvatarFallback>
+                      <AvatarFallback>{displayName.charAt(0).toUpperCase()}</AvatarFallback>
                     </Avatar>
                     <span className="text-base">{displayName}</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <div className="space-y-2">
-                    {c.msgs.map((m) => {
-                      const mine = m.fromUserId === myId;
-                      return (
-                        <div
-                          key={m.id}
-                          className={cn(
-                            "flex flex-col gap-1",
-                            mine ? "items-end" : "items-start"
-                          )}
-                        >
-                          <div
-                            className={cn(
-                              "max-w-[80%] rounded-2xl px-3 py-2 text-sm",
-                              mine
-                                ? "rounded-br-sm bg-accent text-accent-foreground"
-                                : "rounded-bl-sm bg-muted"
-                            )}
-                          >
-                            {m.subject && (
-                              <p className="mb-1 text-xs font-semibold opacity-80">
-                                {m.subject}
-                              </p>
-                            )}
-                            {m.body && <p className="whitespace-pre-wrap">{m.body}</p>}
-                            {m.attachmentUrl && (
-                              <MessageAttachment
-                                url={m.attachmentUrl}
-                                name={m.attachmentName}
-                                mine={mine}
-                              />
-                            )}
-                            {m.budgetHint != null && (
-                              <p className="mt-1 text-xs opacity-80">
-                                Becsült bérezés: {formatHuf(m.budgetHint)}
-                              </p>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground">
-                            {relativeTime(m.createdAt)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  <MessageThread items={c.items} myId={myId} />
                   <ReplyForm toUserId={c.other.userId} />
                 </CardContent>
               </Card>

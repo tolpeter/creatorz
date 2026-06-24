@@ -11,16 +11,9 @@ import {
   brandProfiles,
   brandReviews,
   reviews,
-  messages,
-  users,
   notifications,
 } from "@/lib/db/schema";
 import { getCurrentUser, getCurrentBrand, getCurrentCreator } from "@/lib/auth";
-import { sendExpoPush } from "@/lib/push";
-import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
-import { renderNewMessageEmail } from "@/lib/email/templates";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
 export type CollabItem = {
   id: string;
@@ -208,15 +201,6 @@ export type CollabEvent = {
   createdAt: Date;
 };
 
-export type CollabMessage = {
-  id: string;
-  fromUserId: string;
-  body: string;
-  attachmentUrl: string | null;
-  attachmentName: string | null;
-  createdAt: Date;
-};
-
 export type CollabDetail = {
   id: string;
   status: string;
@@ -232,7 +216,6 @@ export type CollabDetail = {
   partnerAvatar: string | null;
   creatorReviewedByBrand: boolean; // a márka már értékelte a creatort (reviews)
   brandReviewedByCreator: boolean; // a creator már értékelte a márkát (brandReviews)
-  messages: CollabMessage[];
   events: CollabEvent[];
 };
 
@@ -273,36 +256,6 @@ export async function getCollaborationDetail(collabId: string): Promise<CollabDe
   const otherUserId = viewerRole === "brand" ? c.creatorUserId : c.brandUserId;
   const partnerName = viewerRole === "brand" ? c.creatorName : c.brandName;
   const partnerAvatar = viewerRole === "brand" ? c.creatorAvatar : c.brandLogo;
-
-  const msgs = await db
-    .select({
-      id: messages.id,
-      fromUserId: messages.fromUserId,
-      body: messages.body,
-      attachmentUrl: messages.attachmentUrl,
-      attachmentName: messages.attachmentName,
-      createdAt: messages.createdAt,
-    })
-    .from(messages)
-    .where(
-      or(
-        and(eq(messages.fromUserId, c.brandUserId), eq(messages.toUserId, c.creatorUserId)),
-        and(eq(messages.fromUserId, c.creatorUserId), eq(messages.toUserId, c.brandUserId)),
-      ),
-    )
-    .orderBy(asc(messages.createdAt));
-
-  // A nekem szóló, partnertől jövő olvasatlanokat olvasottra állítjuk.
-  await db
-    .update(messages)
-    .set({ read: true })
-    .where(
-      and(
-        eq(messages.toUserId, myUserId),
-        eq(messages.fromUserId, otherUserId),
-        eq(messages.read, false),
-      ),
-    );
 
   let events: CollabEvent[] = [];
   try {
@@ -347,106 +300,57 @@ export async function getCollaborationDetail(collabId: string): Promise<CollabDe
     partnerAvatar,
     creatorReviewedByBrand: !!revByBrand,
     brandReviewedByCreator: !!revByCreator,
-    messages: msgs,
     events,
   };
 }
 
-/** Üzenetküldés egy együttműködésen belül (a spam-védelem nélkül — partnerek). */
-export async function sendCollabMessage(
-  collabId: string,
-  input: { body?: string; attachmentUrl?: string | null; attachmentName?: string | null },
-) {
+export type CollabEventForThread = {
+  id: string;
+  kind: string;
+  note: string | null;
+  createdAt: Date;
+  partnerUserId: string; // a beszélgetőpartner user-id-ja (a chat-szálhoz kötéshez)
+  adTitle: string;
+};
+
+/**
+ * Az aktuális user együttműködéseinek idővonal-eseményei, a beszélgetőpartner
+ * szerint — hogy az "Üzenetek" beszélgetésében időrendben megjelenhessenek.
+ */
+export async function getMyCollabEvents(): Promise<CollabEventForThread[]> {
   const current = await getCurrentUser();
-  if (!current?.dbUser) return { error: "Nincs bejelentkezve" };
-
-  const bodyText = (input.body ?? "").trim();
-  if (!bodyText && !input.attachmentUrl) {
-    return { error: "Üres üzenet — írj szöveget vagy csatolj képet." };
-  }
-
-  const [c] = await db
-    .select({
-      brandUserId: brandProfiles.userId,
-      creatorUserId: creatorProfiles.userId,
-      brandName: brandProfiles.companyName,
-      creatorName: creatorProfiles.displayName,
-    })
-    .from(collaborations)
-    .innerJoin(brandProfiles, eq(brandProfiles.id, collaborations.brandId))
-    .innerJoin(creatorProfiles, eq(creatorProfiles.id, collaborations.creatorId))
-    .where(eq(collaborations.id, collabId))
-    .limit(1);
-  if (!c) return { error: "Az együttműködés nem található." };
-
+  if (!current?.dbUser) return [];
   const myId = current.dbUser.id;
-  let toUserId: string;
-  let myName: string;
-  let toName: string;
-  let recipientPath: string;
-  if (myId === c.brandUserId) {
-    toUserId = c.creatorUserId;
-    myName = c.brandName;
-    toName = c.creatorName;
-    recipientPath = "/creator/collaborations";
-  } else if (myId === c.creatorUserId) {
-    toUserId = c.brandUserId;
-    myName = c.creatorName;
-    toName = c.brandName;
-    recipientPath = "/brand/collaborations";
-  } else {
-    return { error: "Nincs jogosultságod ehhez az együttműködéshez." };
+
+  try {
+    const rows = await db
+      .select({
+        id: collaborationEvents.id,
+        kind: collaborationEvents.kind,
+        note: collaborationEvents.note,
+        createdAt: collaborationEvents.createdAt,
+        adTitle: ads.title,
+        brandUserId: brandProfiles.userId,
+        creatorUserId: creatorProfiles.userId,
+      })
+      .from(collaborationEvents)
+      .innerJoin(collaborations, eq(collaborations.id, collaborationEvents.collaborationId))
+      .innerJoin(brandProfiles, eq(brandProfiles.id, collaborations.brandId))
+      .innerJoin(creatorProfiles, eq(creatorProfiles.id, collaborations.creatorId))
+      .innerJoin(ads, eq(ads.id, collaborations.adId))
+      .where(or(eq(brandProfiles.userId, myId), eq(creatorProfiles.userId, myId)));
+
+    return rows.map((r) => ({
+      id: r.id,
+      kind: r.kind,
+      note: r.note,
+      createdAt: r.createdAt,
+      adTitle: r.adTitle,
+      partnerUserId: r.brandUserId === myId ? r.creatorUserId : r.brandUserId,
+    }));
+  } catch {
+    return []; // a collaboration_events migráció még nem futott le
   }
-
-  await db.insert(messages).values({
-    fromUserId: myId,
-    toUserId,
-    body: bodyText,
-    attachmentUrl: input.attachmentUrl ?? null,
-    attachmentName: input.attachmentName ?? null,
-  });
-
-  const preview = bodyText
-    ? bodyText.slice(0, 120)
-    : `📎 ${input.attachmentName ?? "Csatolmányt küldött"}`;
-  const link = `${recipientPath}/${collabId}`;
-
-  await db.insert(notifications).values({
-    userId: toUserId,
-    type: "message",
-    title: `Új üzenet: ${myName}`,
-    body: preview,
-    link,
-  });
-
-  await sendExpoPush([toUserId], {
-    title: myName,
-    body: preview,
-    data: { type: "message", partnerId: myId },
-  });
-
-  const [recip] = await db
-    .select({ email: users.email })
-    .from(users)
-    .where(eq(users.id, toUserId))
-    .limit(1);
-  if (recip) {
-    const email = renderNewMessageEmail({
-      recipientName: toName,
-      senderName: myName,
-      preview: bodyText
-        ? bodyText.slice(0, 220)
-        : input.attachmentName
-          ? `📎 ${input.attachmentName}`
-          : undefined,
-      inboxUrl: `${APP_URL}${link}`,
-    });
-    await sendMessageEmailThrottled(toUserId, recip.email, email);
-  }
-
-  revalidatePath(`/brand/collaborations/${collabId}`);
-  revalidatePath(`/creator/collaborations/${collabId}`);
-  return { success: true };
 }
 
 /** Brand: lezárja az együttműködést. */
