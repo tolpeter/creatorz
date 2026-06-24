@@ -321,6 +321,30 @@ export function renderProfilePhotoNudgeEmail(input: {
   };
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// EGYÜTTMŰKÖDÉS-FRISSÍTÉS (leadás / jóváhagyás / változtatás / megállapodás / lezárás)
+// ──────────────────────────────────────────────────────────────────────────
+export function renderCollabUpdateEmail(input: {
+  recipientName?: string | null;
+  subject: string;
+  heading: string;
+  intro: string; // HTML megengedett
+  ctaLabel: string;
+  ctaUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: input.subject,
+    html: renderBrandedEmail({
+      preheader: input.subject,
+      heading: input.heading,
+      greeting: input.recipientName ? `Szia ${input.recipientName}!` : undefined,
+      intro: input.intro,
+      cta: { label: input.ctaLabel, href: input.ctaUrl },
+      footnote: "Ezt az értesítést az együttműködés frissítése miatt kaptad. A beállításokban bármikor kikapcsolhatod.",
+    }),
+  };
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")

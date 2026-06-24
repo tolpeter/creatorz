@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   collaborations,
@@ -8,8 +8,14 @@ import {
   notifications,
   creatorProfiles,
   brandProfiles,
+  users,
   ads,
 } from "@/lib/db/schema";
+import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
+import { renderCollabUpdateEmail } from "@/lib/email/templates";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
 
 /**
  * Lezárja az együttműködést, DE CSAK akkor, ha MINDKÉT fél értékelt
@@ -40,6 +46,8 @@ export async function closeCollabIfBothReviewed(collabId: string): Promise<boole
       adTitle: ads.title,
       brandUserId: brandProfiles.userId,
       creatorUserId: creatorProfiles.userId,
+      brandName: brandProfiles.companyName,
+      creatorName: creatorProfiles.displayName,
     })
     .from(collaborations)
     .innerJoin(ads, eq(ads.id, collaborations.adId))
@@ -80,6 +88,35 @@ export async function closeCollabIfBothReviewed(collabId: string): Promise<boole
       link: `/creator/collaborations/${collabId}`,
     },
   ]);
+
+  // Email mindkét félnek (ha nem kapcsolták ki az "Együttműködések" kategóriát).
+  try {
+    const emails = await db
+      .select({ id: users.id, email: users.email })
+      .from(users)
+      .where(inArray(users.id, [c.brandUserId, c.creatorUserId]));
+    const emailOf = new Map(emails.map((u) => [u.id, u.email]));
+    const targets = [
+      { userId: c.brandUserId, name: c.brandName, path: "brand" },
+      { userId: c.creatorUserId, name: c.creatorName, path: "creator" },
+    ];
+    for (const t of targets) {
+      const email = emailOf.get(t.userId);
+      if (!email) continue;
+      if (!(await isEmailAllowed(t.userId, "collaborations"))) continue;
+      const { subject, html } = renderCollabUpdateEmail({
+        recipientName: t.name,
+        subject: "Együttműködés lezárva — Creatorz",
+        heading: "Együttműködés lezárva ✅",
+        intro: `Mindketten értékeltétek a közös munkát a(z) „${c.adTitle}" projektnél — az együttműködés lezárult. Köszönjük!`,
+        ctaLabel: "Megnyitás",
+        ctaUrl: `${APP_URL}/${t.path}/collaborations/${collabId}`,
+      });
+      await sendEmailSafe({ to: email, subject, html });
+    }
+  } catch {
+    /* best-effort */
+  }
 
   return true;
 }

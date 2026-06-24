@@ -19,9 +19,31 @@ import {
 import { getCurrentUser, getCurrentBrand, getCurrentCreator } from "@/lib/auth";
 import { sendExpoPush } from "@/lib/push";
 import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
-import { renderNewMessageEmail } from "@/lib/email/templates";
+import { sendEmailSafe } from "@/lib/resend/client";
+import { isEmailAllowed } from "@/lib/email/prefs";
+import { renderNewMessageEmail, renderCollabUpdateEmail } from "@/lib/email/templates";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+/**
+ * Együttműködés-frissítés email — CSAK ha a címzett nem kapcsolta ki az
+ * "Együttműködések" email-kategóriát. Best-effort (sosem dob hibát).
+ */
+async function notifyCollabEmail(
+  userId: string,
+  recipientName: string | null,
+  opts: { subject: string; heading: string; intro: string; ctaLabel: string; ctaUrl: string },
+) {
+  try {
+    if (!(await isEmailAllowed(userId, "collaborations"))) return;
+    const [u] = await db.select({ email: users.email }).from(users).where(eq(users.id, userId)).limit(1);
+    if (!u?.email) return;
+    const { subject, html } = renderCollabUpdateEmail({ recipientName, ...opts });
+    await sendEmailSafe({ to: u.email, subject, html });
+  } catch {
+    /* best-effort */
+  }
+}
 
 export type CollabItem = {
   id: string;
@@ -200,6 +222,14 @@ export async function requestChanges(collabId: string, note: string) {
     title: "Változtatást kértek 📝",
     body: `${c.brandName} változtatást kért: „${c.adTitle}".`,
     link: `/creator/collaborations/${collabId}`,
+  });
+
+  await notifyCollabEmail(c.creatorUserId, null, {
+    subject: "Változtatást kértek — Creatorz",
+    heading: "Változtatást kértek 📝",
+    intro: `<strong>${c.brandName}</strong> változtatást kért a(z) „${c.adTitle}" projektnél. Nézd meg a részleteket, javítsd az anyagot, és add le újra.`,
+    ctaLabel: "Megnyitás",
+    ctaUrl: `${APP_URL}/creator/collaborations/${collabId}`,
   });
 
   revalidatePath(`/creator/collaborations/${collabId}`);
@@ -573,6 +603,21 @@ export async function approveWork(collabId: string) {
     },
   ]);
 
+  await notifyCollabEmail(c.creatorUserId, c.creatorName, {
+    subject: "A munkát jóváhagyták — értékelj — Creatorz",
+    heading: "A munkát jóváhagyták 🎉",
+    intro: `<strong>${c.brandName}</strong> jóváhagyta a(z) „${c.adTitle}" munkát. Írj véleményt a közös munkáról — ez kell az együttműködés lezárásához.`,
+    ctaLabel: "Értékelés és lezárás",
+    ctaUrl: `${APP_URL}/creator/collaborations/${collabId}`,
+  });
+  await notifyCollabEmail(c.brandUserId, c.brandName, {
+    subject: "Értékeld a közös munkát — Creatorz",
+    heading: "Hátravan az értékelésed 📝",
+    intro: `Jóváhagytad a(z) „${c.adTitle}" munkát. Az együttműködés a <strong>kölcsönös értékeléssel</strong> zárul le — írd meg a véleményed.`,
+    ctaLabel: "Értékelés és lezárás",
+    ctaUrl: `${APP_URL}/brand/collaborations/${collabId}`,
+  });
+
   revalidatePath(`/creator/collaborations/${collabId}`);
   revalidatePath(`/brand/collaborations/${collabId}`);
   revalidatePath("/creator/collaborations");
@@ -668,6 +713,14 @@ export async function proposeAgreement(
     link: `/creator/collaborations/${collabId}`,
   });
 
+  await notifyCollabEmail(c.creatorUserId, c.creatorName, {
+    subject: "Megállapodási javaslat — Creatorz",
+    heading: "Megállapodási javaslat 📋",
+    intro: `<strong>${c.brandName}</strong> feltételeket javasolt a(z) „${c.adTitle}" együttműködéshez. Nézd át, és ha rendben, fogadd el.`,
+    ctaLabel: "Megnyitás",
+    ctaUrl: `${APP_URL}/creator/collaborations/${collabId}`,
+  });
+
   revalidatePath(`/creator/collaborations/${collabId}`);
   revalidatePath(`/brand/collaborations/${collabId}`);
   return { success: true };
@@ -715,6 +768,14 @@ export async function acceptAgreement(collabId: string) {
     title: "Megállapodás elfogadva 🤝",
     body: `${c.creatorName} elfogadta a megállapodást: „${c.adTitle}". Kezdődhet a munka!`,
     link: `/brand/collaborations/${collabId}`,
+  });
+
+  await notifyCollabEmail(c.brandUserId, c.brandName, {
+    subject: "Elfogadták a megállapodást — Creatorz",
+    heading: "Megállapodás elfogadva 🤝",
+    intro: `<strong>${c.creatorName}</strong> elfogadta a megállapodást a(z) „${c.adTitle}" projektnél. Kezdődhet a munka!`,
+    ctaLabel: "Megnyitás",
+    ctaUrl: `${APP_URL}/brand/collaborations/${collabId}`,
   });
 
   revalidatePath(`/creator/collaborations/${collabId}`);
@@ -834,6 +895,14 @@ export async function submitDelivery(collabId: string) {
     title: "A tartalomgyártó leadta a munkát 📦",
     body: `${c.creatorName} leadta: „${c.adTitle}". Nézd át a linkeket, és hagyd jóvá vagy kérj változtatást.`,
     link: `/brand/collaborations/${collabId}`,
+  });
+
+  await notifyCollabEmail(c.brandUserId, c.brandName, {
+    subject: "Leadták a munkát — Creatorz",
+    heading: "Leadták a munkát 📦",
+    intro: `<strong>${c.creatorName}</strong> leadta a(z) „${c.adTitle}" projektet. Nézd át a linkeket, és hagyd jóvá vagy kérj változtatást.`,
+    ctaLabel: "Megnyitás",
+    ctaUrl: `${APP_URL}/brand/collaborations/${collabId}`,
   });
 
   revalidatePath(`/creator/collaborations/${collabId}`);
