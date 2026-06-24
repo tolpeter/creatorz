@@ -9,7 +9,7 @@ export const metadata = {
 
 export default function PrivacyPage() {
   return (
-    <LegalPage title="Adatkezelési tájékoztató" updated="2026.06.14.">
+    <LegalPage title="Adatkezelési tájékoztató" updated="2026.06.25.">
       <p className="rounded-lg border border-black/10 bg-[#f6f7f2] p-4 text-sm text-muted-foreground">
         Az alábbi tájékoztató a természetes személyek személyes adatainak kezeléséről
         szóló <strong>(EU) 2016/679 (GDPR)</strong> rendelet, valamint a magyar
@@ -96,6 +96,23 @@ export default function PrivacyPage() {
         (Consent Mode v2).
       </p>
 
+      <h3>2.8. Hirdetés-konverziók mérése (Meta Pixel)</h3>
+      <ul>
+        <li>Ha Facebook- vagy Instagram-hirdetésen keresztül érkezel, a <strong>Meta
+          (Facebook) Pixel</strong> segítségével mérjük a hirdetések eredményességét,
+          pl. a sikeres regisztrációt (konverzió). Ehhez a Meta sütiket helyezhet el
+          és technikai azonosítókat (pl. eszköz-/böngészőadat, IP-cím) dolgozhat fel.</li>
+        <li><strong>Cél:</strong> a hirdetési kampányok hatékonyságának mérése és
+          optimalizálása.</li>
+        <li><strong>Jogalap:</strong> a <strong>hozzájárulásod</strong> (GDPR 6. cikk
+          (1) a)). A Pixel <strong>csak akkor</strong> aktiválódik, ha a cookie-bannerben
+          elfogadod a marketing-sütiket; a hozzájárulás bármikor visszavonható a
+          cookie-beállításokban.</li>
+        <li><strong>Megjegyzés:</strong> a Meta a saját rendszerében önálló
+          adatkezelőként is felhasználhatja az adatokat — erről a Meta saját
+          adatkezelési tájékoztatója rendelkezik.</li>
+      </ul>
+
       <h2>3. Adatfeldolgozók (akiknek továbbítjuk az adatokat)</h2>
       <p>A szolgáltatás működéséhez az alábbi adatfeldolgozókat vesszük igénybe:</p>
       <ul>
@@ -104,6 +121,7 @@ export default function PrivacyPage() {
         <li><strong>Stripe Payments Europe Ltd.</strong> (Írország) — fizetésfeldolgozás.</li>
         <li><strong>Resend Inc.</strong> (USA) — tranzakciós emailek küldése.</li>
         <li><strong>Google LLC</strong> (Google Analytics 4) — látogatottság-mérés (csak hozzájárulással, anonimizált IP-vel).</li>
+        <li><strong>Meta Platforms Ireland Ltd.</strong> (Írország) — Facebook/Instagram hirdetés-konverziók mérése (Meta Pixel), csak marketing-hozzájárulás esetén.</li>
         <li><strong>Replicate</strong> / <strong>OpenAI</strong> — opcionális AI-funkciók (avatar generálás, követőszám-becslés). A személyazonosító adatokat nem küldjük át.</li>
       </ul>
       <p>

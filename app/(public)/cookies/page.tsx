@@ -5,7 +5,7 @@ export const metadata = { title: "Cookie szabályzat" };
 
 export default function CookiesPage() {
   return (
-    <LegalPage title="Cookie szabályzat" updated="2026.06.08.">
+    <LegalPage title="Cookie szabályzat" updated="2026.06.25.">
       <h2>Mi a süti?</h2>
       <p>
         A süti (cookie) egy kis adatfájl, amit a böngésződ tárol. Segítségükkel
@@ -36,9 +36,13 @@ export default function CookiesPage() {
           használhat, miután hozzájárultál.
         </li>
         <li>
-          <strong>Marketing sütik (engedélyhez kötött):</strong> kampányok
-          személyre szabásához. Jelenleg nincs aktív kampány rendszer, ezért
-          ezek alapból kikapcsoltak.
+          <strong>Marketing sütik (engedélyhez kötött):</strong> hirdetés-konverziók
+          mérése és optimalizálása. Ehhez a <strong>Meta (Facebook) Pixel</strong>t
+          használjuk, amely a Facebook/Instagram hirdetésekből érkező látogatók
+          eredményeit (pl. sikeres regisztráció) méri, és ehhez a Meta
+          <code>_fbp</code> kezdetű sütit helyezhet el. Ezek a sütik
+          <strong>alapból kikapcsoltak</strong>, és csak akkor lépnek működésbe, ha
+          a marketing-sütiket kifejezetten engedélyezed.
         </li>
       </ul>
 
