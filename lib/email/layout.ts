@@ -29,6 +29,8 @@ export type EmailLayoutInput = {
   bodyHtml?: string;
   /** Lábléci kiegészítő szöveg (pl. "Ez a link 24 órán át érvényes.") */
   footnote?: string;
+  /** Opcionális megnyitás-követő pixel URL (kampány-emailekhez). */
+  pixelUrl?: string;
 };
 
 export function renderBrandedEmail(input: EmailLayoutInput): string {
@@ -40,6 +42,7 @@ export function renderBrandedEmail(input: EmailLayoutInput): string {
     cta,
     bodyHtml,
     footnote,
+    pixelUrl,
   } = input;
 
   const safePreheader = preheader
@@ -136,6 +139,7 @@ ${safePreheader}
     </td>
   </tr>
 </table>
+${pixelUrl ? `<img src="${escapeAttr(pixelUrl)}" width="1" height="1" alt="" style="display:none;width:1px;height:1px;" />` : ""}
 </body>
 </html>`;
 }

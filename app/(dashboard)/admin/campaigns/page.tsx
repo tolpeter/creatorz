@@ -1,8 +1,11 @@
 import { Mail, Eye, MousePointerClick, ImageIcon, Send } from "lucide-react";
-import { getCampaignStats } from "@/app/actions/campaigns";
+import { getCampaignStats, getProfilePhotoCampaignStatus } from "@/app/actions/campaigns";
+import { CampaignSender } from "@/components/admin/campaign-sender";
 
 export const metadata = { title: "Admin — Email kampányok" };
 export const dynamic = "force-dynamic";
+// A kiküldés szerveren fut és több emailt küld egymás után — adjunk neki időt.
+export const maxDuration = 60;
 
 const LABELS: Record<string, string> = {
   "profile-photo-2026-06": "Profilkép-ösztönző",
@@ -14,7 +17,10 @@ function pct(part: number, whole: number) {
 }
 
 export default async function AdminCampaignsPage() {
-  const stats = await getCampaignStats();
+  const [stats, sendStatus] = await Promise.all([
+    getCampaignStats(),
+    getProfilePhotoCampaignStatus(),
+  ]);
 
   return (
     <div className="space-y-6">
@@ -24,6 +30,12 @@ export default async function AdminCampaignsPage() {
           Megnyitás, kattintás és konverzió (feltöltött profilkép) kampányonként.
         </p>
       </div>
+
+      <CampaignSender
+        eligible={sendStatus.eligible}
+        sent={sendStatus.sent}
+        remaining={sendStatus.remaining}
+      />
 
       {stats.length === 0 ? (
         <div className="rounded-2xl border border-dashed bg-card p-12 text-center text-muted-foreground">

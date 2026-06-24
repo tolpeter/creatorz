@@ -265,6 +265,62 @@ export function renderNewsletterEmail(input: {
   };
 }
 
+// ──────────────────────────────────────────────────────────────────────────
+// PROFILKÉP-ÖSZTÖNZŐ KAMPÁNY (tartalomgyártóknak, akiknek nincs profilképük)
+// ──────────────────────────────────────────────────────────────────────────
+export function renderProfilePhotoNudgeEmail(input: {
+  name: string;
+  ctaUrl: string; // követett CTA-link
+  pixelUrl?: string; // megnyitás-követő pixel
+  stats?: { creators: number; brands: number; collaborations: number };
+}): { subject: string; html: string } {
+  const s = input.stats ?? { creators: 567, brands: 28, collaborations: 3 };
+  const statTile = (value: number, label: string) => `
+    <td align="center" style="padding:10px;background:#f6f7f2;border-radius:12px;">
+      <div style="font-size:24px;font-weight:900;color:#3f6212;">${value}</div>
+      <div style="font-size:12px;color:#52525b;">${label}</div>
+    </td>`;
+
+  const body = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#3f3f46;">
+      Még <strong>kevesebb mint egy hete</strong> indult a Creatorz, és máris pörög a közösség:
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 18px;width:100%;">
+      <tr>
+        ${statTile(s.creators, "tartalomgyártó")}
+        <td style="width:10px;"></td>
+        ${statTile(s.brands, "márka")}
+        <td style="width:10px;"></td>
+        ${statTile(s.collaborations, "együttműködés")}
+      </tr>
+    </table>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#3f3f46;">
+      A márkák először a <strong>profilképet</strong> nézik — akinek van, <strong>sokkal több
+      megkeresést</strong> kap. Tölts fel egy jó képet magadról, és <strong>töltsd ki a profilod
+      minél részletesebben</strong> (kategóriák, bemutatkozás, közösségi linkek), hogy a megfelelő
+      márkák megtaláljanak.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px;">
+      <tr>
+        <td align="center" bgcolor="#84cc16" style="border-radius:9999px;background:#84cc16;">
+          <a href="${escapeHtml(input.ctaUrl)}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:800;color:#0a0a0a;text-decoration:none;border-radius:9999px;">Profilkép feltöltése →</a>
+        </td>
+      </tr>
+    </table>`;
+
+  return {
+    subject: "Egy profilkép = sokkal több megkeresés 📸",
+    html: renderBrandedEmail({
+      preheader: "Tölts fel egy profilképet — sokkal több márka keres meg.",
+      heading: "Ne maradj le — egy kép nagy különbség",
+      greeting: `Szia ${input.name}!`,
+      bodyHtml: body,
+      footnote: "Ne maradj le senki mögött — pár perc az egész, és kész a profilod.",
+      pixelUrl: input.pixelUrl,
+    }),
+  };
+}
+
 function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
