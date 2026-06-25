@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, ads, blogPosts } from "@/lib/db/schema";
+import { CREATOR_CATEGORIES } from "@/lib/constants";
+import { COUNTY_SLUGS } from "@/lib/seo/regions";
 
 // Runtime-os: nem build-időben generálódik (DB kapcsolat kell hozzá).
 export const dynamic = "force-dynamic";
@@ -57,5 +59,26 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "monthly",
   }));
 
-  return [...staticPages, ...creatorPages, ...adPages, ...blogPages];
+  // SEO landing oldalak: kategóriánként + megyénként.
+  const categoryPages: MetadataRoute.Sitemap = CREATOR_CATEGORIES.map((c) => ({
+    url: `${baseUrl}/ugc/${c.value}`,
+    lastModified: new Date(),
+    priority: 0.8,
+    changeFrequency: "weekly",
+  }));
+  const countyPages: MetadataRoute.Sitemap = COUNTY_SLUGS.map((c) => ({
+    url: `${baseUrl}/ugc/megye/${c.slug}`,
+    lastModified: new Date(),
+    priority: 0.7,
+    changeFrequency: "weekly",
+  }));
+
+  return [
+    ...staticPages,
+    ...categoryPages,
+    ...countyPages,
+    ...creatorPages,
+    ...adPages,
+    ...blogPages,
+  ];
 }
