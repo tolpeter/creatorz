@@ -23,6 +23,10 @@ import {
 } from "@/lib/constants";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
 
+// Alapból megjelenő nyelvek; a többit a "Többi nyelv" gombbal lehet előhozni.
+const PRIMARY_LANG_CODES = ["hu", "en", "de"];
+const PRIMARY_LANGUAGES = LANGUAGES.filter((l) => PRIMARY_LANG_CODES.includes(l.value));
+
 export function BrowseFilters() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -33,6 +37,13 @@ export function BrowseFilters() {
   );
   const [languages, setLanguages] = useState<string[]>(
     sp.get("languages") ? sp.get("languages")!.split(",").filter(Boolean) : []
+  );
+  // Ha már van kiválasztva nem-elsődleges nyelv, eleve nyitva mutatjuk a többit.
+  const [showOtherLangs, setShowOtherLangs] = useState<boolean>(
+    (sp.get("languages") ?? "")
+      .split(",")
+      .filter(Boolean)
+      .some((l) => !PRIMARY_LANG_CODES.includes(l))
   );
   const [county, setCounty] = useState(sp.get("county") ?? "");
   const [city, setCity] = useState(sp.get("city") ?? "");
@@ -110,10 +121,22 @@ export function BrowseFilters() {
         />
       </div>
 
-      {/* Nyelvek */}
+      {/* Nyelvek — alapból csak Magyar/Angol/Német, a többi a "Többi nyelv"-vel */}
       <div className="space-y-1">
         <label className="text-xs font-semibold text-muted-foreground">Nyelvek</label>
-        <ChipMultiSelect compact options={LANGUAGES} value={languages} onChange={setLanguages} />
+        <ChipMultiSelect
+          compact
+          options={showOtherLangs ? LANGUAGES : PRIMARY_LANGUAGES}
+          value={languages}
+          onChange={setLanguages}
+        />
+        <button
+          type="button"
+          onClick={() => setShowOtherLangs((v) => !v)}
+          className="text-xs font-semibold text-[#4d7c0f] hover:underline"
+        >
+          {showOtherLangs ? "Kevesebb nyelv" : "Többi nyelv…"}
+        </button>
       </div>
 
       {/* Megye */}

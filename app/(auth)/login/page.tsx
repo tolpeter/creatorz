@@ -114,7 +114,7 @@ export default function LoginPage() {
       {/* BAL: brandelt, animált vizuál panel */}
       <div className="relative hidden min-h-[600px] overflow-hidden bg-[#0a0a0a] lg:block">
         <Image
-          src="/images/generated/login-hero.webp"
+          src="/images/generated/login-hero.webp?v=2"
           alt=""
           fill
           priority

@@ -8,19 +8,32 @@ import { CreatorAdminActions } from "@/components/admin/creator-admin-actions";
 import { AdminMessageButton } from "@/components/admin/admin-message-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { CREATOR_TYPE_LABELS } from "@/lib/constants";
 
-export const metadata = { title: "Admin — Tartalomgyártók" };
+export const metadata = { title: "Admin — Alkotók" };
 
 export default async function AdminCreatorsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; status?: string }>;
+  searchParams: Promise<{ q?: string; status?: string; type?: string }>;
 }) {
   const sp = await searchParams;
   const q = (sp.q ?? "").trim();
   const status = sp.status ?? "";
+  const type = sp.type ?? "";
 
   const conditions: SQL[] = [];
+
+  // Típus-szűrő: tartalomgyártó / influenszer / modell / kreatív szakember
+  if (type === "ugc") {
+    conditions.push(eq(creatorProfiles.profileKind, "ugc"));
+    conditions.push(eq(creatorProfiles.creatorType, "ugc"));
+  } else if (type === "influencer" || type === "model") {
+    conditions.push(eq(creatorProfiles.profileKind, "ugc"));
+    conditions.push(eq(creatorProfiles.creatorType, type));
+  } else if (type === "professional") {
+    conditions.push(eq(creatorProfiles.profileKind, "professional"));
+  }
   if (q) {
     const like = `%${q}%`;
     conditions.push(
@@ -65,6 +78,8 @@ export default async function AdminCreatorsPage({
       featuredUntil: creatorProfiles.featuredUntil,
       verified: creatorProfiles.verified,
       approved: users.approved,
+      profileKind: creatorProfiles.profileKind,
+      creatorType: creatorProfiles.creatorType,
       createdAt: creatorProfiles.createdAt,
     })
     .from(creatorProfiles)
@@ -94,7 +109,7 @@ export default async function AdminCreatorsPage({
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Tartalomgyártók</h1>
+          <h1 className="text-2xl font-bold">Alkotók</h1>
           <p className="text-muted-foreground">
             {total} találat · {pendingTotal} jóváhagyásra vár
             {total > rows.length ? ` · első ${rows.length} látható` : ""}
@@ -116,11 +131,20 @@ export default async function AdminCreatorsPage({
           { label: "Hitelesített", value: "verified" },
           { label: "Kiemelt", value: "featured" },
         ]}
+        filterParam2="type"
+        activeFilter2={type}
+        filters2={[
+          { label: "Összes típus", value: "" },
+          { label: "Tartalomgyártó", value: "ugc" },
+          { label: "Influenszer", value: "influencer" },
+          { label: "Modell", value: "model" },
+          { label: "Kreatív szakember", value: "professional" },
+        ]}
       />
 
       {rows.length === 0 ? (
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Nincs a keresésnek megfelelő tartalomgyártó.
+          Nincs a keresésnek megfelelő alkotó.
         </p>
       ) : (
       <div className="space-y-3">
@@ -142,6 +166,11 @@ export default async function AdminCreatorsPage({
                   <span>
                     @{r.username} · {r.reviewCount} értékelés · {r.averageRating ?? "—"}★
                   </span>
+                  <Badge className="bg-foreground/10 text-foreground">
+                    {r.profileKind === "professional"
+                      ? "Kreatív szakember"
+                      : CREATOR_TYPE_LABELS[r.creatorType] ?? "Tartalomgyártó"}
+                  </Badge>
                   {!r.approved && (
                     <Badge className="bg-yellow-500/15 text-yellow-700 dark:text-yellow-400">
                       Jóváhagyásra vár
