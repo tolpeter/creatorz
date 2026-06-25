@@ -497,18 +497,56 @@ export const collaborations = pgTable("collaborations", {
 // márkás együttműködéstől; egyszerű: felkérés + beszélgetés + lezárás.
 export const creatorProjects = pgTable("creator_projects", {
   id: uuid("id").primaryKey().defaultRandom(),
+  // Szerepek (a márkás együttműködéssel azonos folyamat): a felkérő = "márka" szerep
+  // (megállapodást javasol, jóváhagy), a partner = "alkotó" szerep (megállapodást
+  // elfogad, anyagot ad le). A lezárás KÖTELEZŐ kölcsönös értékeléshez kötött.
   requesterId: uuid("requester_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
   partnerId: uuid("partner_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
   requesterUserId: uuid("requester_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   partnerUserId: uuid("partner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
   title: varchar("title", { length: 160 }).notNull(),
   note: text("note"),
-  status: varchar("status", { length: 20 }).notNull().default("active"), // active | closed
+  // status: active / review_pending / closed
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  // Megállapodás (a felkérő javasolja, a partner elfogadja)
+  agreementNote: text("agreement_note"),
+  agreedDeadline: timestamp("agreed_deadline"),
+  agreedAt: timestamp("agreed_at"),
+  // Leadás (partner), jóváhagyás (felkérő), revíziós kör
+  deliveredAt: timestamp("delivered_at"),
+  approvedAt: timestamp("approved_at"),
+  currentRound: integer("current_round").notNull().default(1),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   completedAt: timestamp("completed_at"),
 }, (t) => ({
   requesterIdx: index("creator_projects_requester_idx").on(t.requesterUserId),
   partnerIdx: index("creator_projects_partner_idx").on(t.partnerUserId),
+}));
+
+// Közös projekt leadott anyagai (linkek), revíziós körönként.
+export const creatorProjectDeliverables = pgTable("creator_project_deliverables", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").notNull().references(() => creatorProjects.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  title: varchar("title", { length: 200 }),
+  note: text("note"),
+  round: integer("round").notNull().default(1),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  projectIdx: index("creator_project_deliverables_project_idx").on(t.projectId),
+}));
+
+// Közös projekt kölcsönös értékelései (alkotó↔alkotó). Mindkét irány KELL a lezáráshoz.
+export const creatorProjectReviews = pgTable("creator_project_reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  projectId: uuid("project_id").notNull().references(() => creatorProjects.id, { onDelete: "cascade" }),
+  reviewerUserId: uuid("reviewer_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  overallRating: integer("overall_rating").notNull(),
+  text: text("text").notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+}, (t) => ({
+  projectIdx: index("creator_project_reviews_project_idx").on(t.projectId),
+  uniquePerReviewer: uniqueIndex("creator_project_reviews_unique_idx").on(t.projectId, t.reviewerUserId),
 }));
 
 // ============= COLLABORATION DELIVERABLES (leadott anyagok — linkek) =========

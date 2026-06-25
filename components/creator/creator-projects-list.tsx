@@ -1,32 +1,15 @@
 "use client";
 
-import { useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Handshake, MessageSquare, CheckCircle2, Loader2 } from "lucide-react";
+import { Handshake, ArrowRight, CheckCircle2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { closeCreatorProject, type CreatorProjectItem } from "@/app/actions/creator-projects";
+import { type CreatorProjectItem } from "@/app/actions/creator-projects";
 
 const fmt = (d: Date | string) =>
   new Intl.DateTimeFormat("hu-HU", { dateStyle: "medium" }).format(new Date(d));
 
 export function CreatorProjectsList({ items }: { items: CreatorProjectItem[] }) {
-  const router = useRouter();
-  const [pending, start] = useTransition();
-
-  function close(id: string) {
-    start(async () => {
-      const res = await closeCreatorProject(id);
-      if (res.error) toast.error(res.error);
-      else {
-        toast.success("Projekt lezárva");
-        router.refresh();
-      }
-    });
-  }
-
   if (items.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed bg-card p-12 text-center text-muted-foreground">
@@ -41,10 +24,12 @@ export function CreatorProjectsList({ items }: { items: CreatorProjectItem[] }) 
     <div className="space-y-3">
       {items.map((p) => {
         const closed = p.status === "closed";
+        const inReview = !closed && p.status === "review_pending";
         return (
-          <div
+          <Link
             key={p.id}
-            className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
+            href={`/creator/projects/${p.id}`}
+            className="flex flex-col gap-3 rounded-2xl border bg-card p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent/50 hover:shadow-md sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex min-w-0 items-center gap-3">
               <Avatar className="h-11 w-11">
@@ -55,10 +40,7 @@ export function CreatorProjectsList({ items }: { items: CreatorProjectItem[] }) 
                 <p className="truncate font-bold">{p.title}</p>
                 <p className="truncate text-sm text-muted-foreground">
                   {p.iAmRequester ? "Te hívtad: " : "Téged hívott: "}
-                  <Link href={`/creators/${p.partnerUsername}`} className="hover:underline">
-                    {p.partnerName}
-                  </Link>{" "}
-                  · {fmt(p.createdAt)}
+                  {p.partnerName} · {fmt(p.createdAt)}
                 </p>
               </div>
             </div>
@@ -67,24 +49,20 @@ export function CreatorProjectsList({ items }: { items: CreatorProjectItem[] }) 
                 <span className="inline-flex items-center gap-1 rounded-full bg-[#f0f4e5] px-2.5 py-1 text-xs font-bold text-[#3f6212]">
                   <CheckCircle2 className="h-3.5 w-3.5" /> Lezárva
                 </span>
+              ) : inReview ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-bold text-amber-700">
+                  <Star className="h-3.5 w-3.5" /> Értékelésre vár
+                </span>
               ) : (
                 <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2.5 py-1 text-xs font-bold text-[#3f6212]">
                   Aktív
                 </span>
               )}
-              <Button asChild size="sm" variant="outline">
-                <Link href="/creator/messages">
-                  <MessageSquare className="h-4 w-4" /> Beszélgetés
-                </Link>
-              </Button>
-              {!closed && (
-                <Button size="sm" variant="ghost" disabled={pending} onClick={() => close(p.id)}>
-                  {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                  Lezárás
-                </Button>
-              )}
+              <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#4d7c0f]">
+                Megnyitás <ArrowRight className="h-4 w-4" />
+              </span>
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>
