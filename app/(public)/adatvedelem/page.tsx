@@ -113,6 +113,30 @@ export default function PrivacyPage() {
           adatkezelési tájékoztatója rendelkezik.</li>
       </ul>
 
+      <h3>2.9. TikTok-fiók összekötése (TikTok Login Kit / Display API)</h3>
+      <ul>
+        <li>Ha a profilodon <strong>önként összekötöd a TikTok-fiókodat</strong>, a TikTok
+          hivatalos API-ján (Login Kit / Display API) keresztül a következő adatokhoz
+          férünk hozzá: nyilvános <strong>felhasználónév, megjelenített név, profilkép,
+          profil-link</strong>, valamint <strong>követőszám, kedvelések száma és
+          videószám</strong> (a <code>user.info.basic</code>, <code>user.info.profile</code> és
+          <code>user.info.stats</code> engedélyekkel). Tárolunk továbbá technikai
+          azonosítókat (<code>open_id</code>, <code>union_id</code>) és a hozzáférési /
+          frissítő tokeneket, kizárólag szerveroldalon.</li>
+        <li><strong>Cél:</strong> a hiteles (TikTok által igazolt) statisztikák
+          megjelenítése a profilodon, hogy a márkák valós adatokat lássanak.</li>
+        <li><strong>Jogalap:</strong> a <strong>hozzájárulásod</strong> (GDPR 6. cikk
+          (1) a)) — te indítod az összekötést, és bármikor le is választhatod.</li>
+        <li><strong>Tárolás és törlés:</strong> a tokeneket titkosított kapcsolaton,
+          szerveroldalon tároljuk; a statisztikákat időnként frissítjük. A profilodon
+          bármikor <strong>leválaszthatod</strong> a TikTok-fiókot — ekkor visszavonjuk
+          a tokent a TikToknál és töröljük a tárolt TikTok-adatokat. A fiók törlésekor
+          ezek is törlődnek.</li>
+        <li><strong>Megosztás:</strong> a TikTok-adatokat nem adjuk tovább harmadik
+          félnek; kizárólag a saját profilod megjelenítésére használjuk. Az adatkezelés
+          megfelel a TikTok fejlesztői feltételeinek.</li>
+      </ul>
+
       <h2>3. Adatfeldolgozók (akiknek továbbítjuk az adatokat)</h2>
       <p>A szolgáltatás működéséhez az alábbi adatfeldolgozókat vesszük igénybe:</p>
       <ul>
@@ -122,6 +146,7 @@ export default function PrivacyPage() {
         <li><strong>Resend Inc.</strong> (USA) — tranzakciós emailek küldése.</li>
         <li><strong>Google LLC</strong> (Google Analytics 4) — látogatottság-mérés (csak hozzájárulással, anonimizált IP-vel).</li>
         <li><strong>Meta Platforms Ireland Ltd.</strong> (Írország) — Facebook/Instagram hirdetés-konverziók mérése (Meta Pixel), csak marketing-hozzájárulás esetén.</li>
+        <li><strong>TikTok Technology Limited</strong> (Írország) / <strong>TikTok Pte. Ltd.</strong> — a TikTok-fiók összekötése esetén a hivatalos TikTok API (Login Kit / Display API), a profil-statisztikák lekéréséhez (lásd 2.9. pont).</li>
         <li><strong>Replicate</strong> / <strong>OpenAI</strong> — opcionális AI-funkciók (avatar generálás, követőszám-becslés). A személyazonosító adatokat nem küldjük át.</li>
       </ul>
       <p>
