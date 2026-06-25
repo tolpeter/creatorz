@@ -2,7 +2,7 @@ import "server-only";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, tiktokConnections } from "@/lib/db/schema";
-import { fetchUserInfo, refreshAccessToken } from "@/lib/tiktok/oauth";
+import { fetchUserInfo, fetchUserVideos, refreshAccessToken } from "@/lib/tiktok/oauth";
 
 /**
  * A hivatalosan összekötött TikTok-fiók statjainak frissítése: access token
@@ -52,6 +52,10 @@ export async function syncOfficialTikTok(userId: string): Promise<boolean> {
   if (info.followerCount != null) set.tiktokFollowers = info.followerCount;
   if (info.likesCount != null) set.tiktokLikes = info.likesCount;
   if (info.videoCount != null) set.tiktokVideoCount = info.videoCount;
+
+  // Publikus videók frissítése (video.list). Ha üres (nincs scope/videó), nem írjuk felül.
+  const videos = await fetchUserVideos(accessToken);
+  if (videos.length) set.tiktokVideos = videos;
 
   await db.update(creatorProfiles).set(set).where(eq(creatorProfiles.userId, userId));
   return true;

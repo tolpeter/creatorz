@@ -191,6 +191,15 @@ export const creatorProfiles = pgTable("creator_profiles", {
   // hivatalos Display API-jából jönnek (nem scrape/AI). A tokenek külön
   // táblában (tiktok_connections), nem itt.
   tiktokOfficial: boolean("tiktok_official").notNull().default(false),
+  // A felhasználó legutóbbi publikus TikTok-videói (video.list scope, hivatalos API).
+  tiktokVideos: jsonb("tiktok_videos").$type<Array<{
+    id: string;
+    title: string | null;
+    coverUrl: string | null;
+    shareUrl: string | null;
+    viewCount: number | null;
+    createTime: number | null;
+  }>>(),
   facebookUrl: text("facebook_url"),
   facebookFollowers: integer("facebook_followers"),
   facebookVerified: boolean("facebook_verified").notNull().default(false),

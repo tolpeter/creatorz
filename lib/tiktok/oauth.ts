@@ -16,9 +16,13 @@ import "server-only";
 const AUTH_URL = "https://www.tiktok.com/v2/auth/authorize/";
 const TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
 const USERINFO_URL = "https://open.tiktokapis.com/v2/user/info/";
+const VIDEO_LIST_URL = "https://open.tiktokapis.com/v2/video/list/";
 
-// A statokhoz szükséges scope-ok (a TikTok app review során kell engedélyezni).
-export const TIKTOK_SCOPES = "user.info.basic,user.info.profile,user.info.stats";
+// A scope-ok (a TikTok app review során kell engedélyezni):
+//  - user.info.basic/profile/stats → profil + követő/like/videószám
+//  - video.list → a felhasználó publikus videói (borítókép, cím, link, megtekintés)
+export const TIKTOK_SCOPES =
+  "user.info.basic,user.info.profile,user.info.stats,video.list";
 
 export function tiktokConfigured(): boolean {
   return Boolean(process.env.TIKTOK_CLIENT_KEY && process.env.TIKTOK_CLIENT_SECRET);
@@ -173,5 +177,61 @@ export async function fetchUserInfo(accessToken: string): Promise<TikTokUserInfo
   } catch (err) {
     console.error("[tiktok] userinfo failed:", (err as Error).message);
     return null;
+  }
+}
+
+export type TikTokVideo = {
+  id: string;
+  title: string | null;
+  coverUrl: string | null;
+  shareUrl: string | null;
+  viewCount: number | null;
+  createTime: number | null; // unix másodperc
+};
+
+/**
+ * A felhasználó publikus TikTok-videói (video.list scope). A borítóképet
+ * (cover_image_url) a hivatalos API adja — így nem kell proxy/scrape a
+ * thumbnailhez. Best-effort: ha a scope nincs engedélyezve, üres tömb.
+ */
+export async function fetchUserVideos(
+  accessToken: string,
+  maxCount = 9,
+): Promise<TikTokVideo[]> {
+  const fields = ["id", "title", "cover_image_url", "share_url", "view_count", "create_time"].join(",");
+  try {
+    const res = await fetch(`${VIDEO_LIST_URL}?fields=${encodeURIComponent(fields)}`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ max_count: Math.min(Math.max(1, maxCount), 20) }),
+      cache: "no-store",
+    });
+    const json = (await res.json()) as {
+      data?: { videos?: Array<Record<string, unknown>> };
+      error?: { code?: string; message?: string };
+    };
+    if (!res.ok || (json.error && json.error.code && json.error.code !== "ok")) {
+      console.error("[tiktok] video.list error:", json.error?.code, json.error?.message);
+      return [];
+    }
+    const num = (v: unknown): number | null =>
+      typeof v === "number" && Number.isFinite(v) ? v : null;
+    const str = (v: unknown): string | null => (typeof v === "string" && v ? v : null);
+    return (json.data?.videos ?? [])
+      .map((v) => ({
+        id: str(v.id) ?? "",
+        title: str(v.title),
+        coverUrl: str(v.cover_image_url),
+        shareUrl: str(v.share_url),
+        viewCount: num(v.view_count),
+        createTime: num(v.create_time),
+      }))
+      .filter((v) => v.id);
+  } catch (err) {
+    console.error("[tiktok] video.list failed:", (err as Error).message);
+    return [];
   }
 }

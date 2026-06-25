@@ -118,13 +118,16 @@ export default function PrivacyPage() {
         <li>Ha a profilodon <strong>önként összekötöd a TikTok-fiókodat</strong>, a TikTok
           hivatalos API-ján (Login Kit / Display API) keresztül a következő adatokhoz
           férünk hozzá: nyilvános <strong>felhasználónév, megjelenített név, profilkép,
-          profil-link</strong>, valamint <strong>követőszám, kedvelések száma és
-          videószám</strong> (a <code>user.info.basic</code>, <code>user.info.profile</code> és
-          <code>user.info.stats</code> engedélyekkel). Tárolunk továbbá technikai
+          profil-link</strong>, <strong>követőszám, kedvelések száma és
+          videószám</strong>, valamint a <strong>publikus videóid</strong> adatai
+          (videó-azonosító, cím, borítókép, megosztási link, megtekintésszám, közzététel
+          ideje). Engedélyek: <code>user.info.basic</code>, <code>user.info.profile</code>,
+          <code>user.info.stats</code> és <code>video.list</code>. Tárolunk továbbá technikai
           azonosítókat (<code>open_id</code>, <code>union_id</code>) és a hozzáférési /
           frissítő tokeneket, kizárólag szerveroldalon.</li>
-        <li><strong>Cél:</strong> a hiteles (TikTok által igazolt) statisztikák
-          megjelenítése a profilodon, hogy a márkák valós adatokat lássanak.</li>
+        <li><strong>Cél:</strong> a hiteles (TikTok által igazolt) statisztikák és a
+          legutóbbi publikus videóid megjelenítése a profilodon, hogy a márkák valós
+          adatokat és tényleges munkáidat lássák.</li>
         <li><strong>Jogalap:</strong> a <strong>hozzájárulásod</strong> (GDPR 6. cikk
           (1) a)) — te indítod az összekötést, és bármikor le is választhatod.</li>
         <li><strong>Tárolás és törlés:</strong> a tokeneket titkosított kapcsolaton,

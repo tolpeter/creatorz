@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, tiktokConnections } from "@/lib/db/schema";
 import { getCurrentCreator } from "@/lib/auth";
-import { exchangeCode, fetchUserInfo } from "@/lib/tiktok/oauth";
+import { exchangeCode, fetchUserInfo, fetchUserVideos } from "@/lib/tiktok/oauth";
 import { env } from "@/lib/env";
 
 export const dynamic = "force-dynamic";
@@ -84,6 +84,10 @@ export async function GET(req: Request) {
   if (info.videoCount != null) set.tiktokVideoCount = info.videoCount;
   const profileUrl = info.profileDeepLink || (info.username ? `https://www.tiktok.com/@${info.username}` : null);
   if (profileUrl) set.tiktokUrl = profileUrl;
+
+  // Publikus videók (video.list scope) — borítóképpel együtt a hivatalos API-ból.
+  const videos = await fetchUserVideos(token.access_token);
+  if (videos.length) set.tiktokVideos = videos;
 
   await db.update(creatorProfiles).set(set).where(eq(creatorProfiles.id, creator.profile.id));
 
