@@ -159,6 +159,43 @@ export async function updateCreatorEquipment(input: z.input<typeof equipmentSche
   return { success: true };
 }
 
+// ---------- Modell-adatlap ----------
+const modelSchema = z.object({
+  heightCm: z.coerce.number().int().min(50).max(250).optional().nullable(),
+  weightKg: z.coerce.number().int().min(20).max(300).optional().nullable(),
+  hairColor: z.string().max(20).optional().or(z.literal("")),
+  eyeColor: z.string().max(20).optional().or(z.literal("")),
+  bodyArt: z.string().max(300).optional().or(z.literal("")),
+  modelTypes: z.array(z.string().max(30)).max(8).optional().default([]),
+});
+
+export async function updateModelAttributes(input: z.input<typeof modelSchema>) {
+  const creator = await requireCreator();
+  if (!creator) return { error: "Nincs bejelentkezve" };
+
+  const parsed = modelSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen adatok" };
+  const d = parsed.data;
+
+  await db
+    .update(creatorProfiles)
+    .set({
+      modelAttributes: {
+        heightCm: d.heightCm ?? undefined,
+        weightKg: d.weightKg ?? undefined,
+        hairColor: d.hairColor || undefined,
+        eyeColor: d.eyeColor || undefined,
+        bodyArt: d.bodyArt || undefined,
+        modelTypes: d.modelTypes ?? [],
+      },
+      updatedAt: new Date(),
+    })
+    .where(eq(creatorProfiles.id, creator.profile.id));
+
+  revalidatePath("/creator/profile");
+  return { success: true };
+}
+
 // ---------- Social fiókok ----------
 /**
  * Best-effort: a TikTok bővített statisztikák (összes like, videószám, átlag

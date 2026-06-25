@@ -4,6 +4,7 @@ import {
   ProfileEditor,
   type ProfileEditorInitial,
 } from "@/components/creator/profile-editor";
+import { ModelAttributesCard } from "@/components/creator/model-attributes-card";
 
 export const metadata = { title: "Profil szerkesztése" };
 
@@ -46,6 +47,18 @@ export default async function CreatorProfilePage() {
         </p>
       </div>
       <ProfileEditor initial={initial} verified={verified} />
+      {p.creatorType === "model" && (
+        <ModelAttributesCard
+          initial={{
+            heightCm: p.modelAttributes?.heightCm,
+            weightKg: p.modelAttributes?.weightKg,
+            hairColor: p.modelAttributes?.hairColor,
+            eyeColor: p.modelAttributes?.eyeColor,
+            bodyArt: p.modelAttributes?.bodyArt,
+            modelTypes: p.modelAttributes?.modelTypes,
+          }}
+        />
+      )}
     </div>
   );
 }

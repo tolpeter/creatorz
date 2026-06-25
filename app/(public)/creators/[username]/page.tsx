@@ -43,6 +43,7 @@ import { SocialTile } from "@/components/creator/platform-icon";
 import { Logo } from "@/components/layout/logo";
 import { SocialStats } from "@/components/creator/social-stats";
 import { TikTokOfficialVideos } from "@/components/creator/tiktok-official-videos";
+import { ModelAttributesBlock } from "@/components/creator/model-attributes-block";
 import { PortfolioGallery, type GalleryItem } from "@/components/creator/portfolio-gallery";
 import {
   TikTokVideoSlider,
@@ -563,6 +564,10 @@ export default async function CreatorDetailPage({
                 <SocialStats profile={profile} />
               </SidePanel>
             </div>
+          ) : null}
+
+          {profile.creatorType === "model" && profile.modelAttributes ? (
+            <ModelAttributesBlock attrs={profile.modelAttributes} />
           ) : null}
 
           {profile.tiktokVideos?.length ? (

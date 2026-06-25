@@ -35,6 +35,46 @@ export const CREATOR_TYPE_LABELS: Record<string, string> = {
   model: "Modell",
 };
 
+// Modell-adatlap opciók
+export const HAIR_COLORS = [
+  { value: "fekete", label: "Fekete" },
+  { value: "barna", label: "Barna" },
+  { value: "szoke", label: "Szőke" },
+  { value: "voros", label: "Vörös" },
+  { value: "osz", label: "Ősz / szürke" },
+  { value: "festett", label: "Festett / egyéb" },
+] as const;
+
+export const EYE_COLORS = [
+  { value: "barna", label: "Barna" },
+  { value: "kek", label: "Kék" },
+  { value: "zold", label: "Zöld" },
+  { value: "szurke", label: "Szürke" },
+  { value: "mogyoro", label: "Mogyoró" },
+  { value: "egyeb", label: "Egyéb" },
+] as const;
+
+export const MODEL_TYPES = [
+  { value: "divat", label: "Divat" },
+  { value: "fitness", label: "Fitness" },
+  { value: "kez-lab", label: "Kéz-láb modell" },
+  { value: "plus-size", label: "Plus-size" },
+  { value: "glamour", label: "Glamour" },
+  { value: "hirdetesi", label: "Hirdetési / kereskedelmi" },
+  { value: "szepseg", label: "Szépség" },
+  { value: "egyeb", label: "Egyéb" },
+] as const;
+
+export const HAIR_COLOR_LABELS: Record<string, string> = Object.fromEntries(
+  HAIR_COLORS.map((h) => [h.value, h.label]),
+);
+export const EYE_COLOR_LABELS: Record<string, string> = Object.fromEntries(
+  EYE_COLORS.map((e) => [e.value, e.label]),
+);
+export const MODEL_TYPE_LABELS: Record<string, string> = Object.fromEntries(
+  MODEL_TYPES.map((m) => [m.value, m.label]),
+);
+
 // A directory típus-szűrő opciói
 export const DIRECTORY_TYPES = [
   { value: "all", label: "Összes alkotó" },
