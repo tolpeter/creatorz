@@ -88,11 +88,13 @@ const navItems = [
 export function CreatorSidebar({
   unreadMessages = 0,
   collabAlerts = 0,
+  projectAlerts = 0,
   profileScore = 0,
   subscriptionEnabled = false,
 }: {
   unreadMessages?: number;
   collabAlerts?: number;
+  projectAlerts?: number;
   profileScore?: number;
   subscriptionEnabled?: boolean;
 }) {
@@ -104,7 +106,13 @@ export function CreatorSidebar({
   );
 
   const badgeFor = (key: string) =>
-    key === "messages" ? unreadMessages : key === "collaborations" ? collabAlerts : 0;
+    key === "messages"
+      ? unreadMessages
+      : key === "collaborations"
+        ? collabAlerts
+        : key === "projects"
+          ? projectAlerts
+          : 0;
 
   return (
     <>
@@ -113,6 +121,7 @@ export function CreatorSidebar({
         items={visibleItems as readonly DashboardNavItem[]}
         unreadMessages={unreadMessages}
         collabAlerts={collabAlerts}
+        projectAlerts={projectAlerts}
         rootHref="/creator"
       />
 

@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { desc, eq, inArray, or } from "drizzle-orm";
+import { and, desc, eq, inArray, or } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
 import { creatorProjects, creatorProfiles, users, messages, notifications } from "@/lib/db/schema";
@@ -63,7 +63,7 @@ export async function requestCreatorProject(input: z.input<typeof schema>) {
     type: "creator_project",
     title: "Közös munkára hívtak 🤝",
     body: `${me.profile.displayName} közös munkára hívott: „${d.title}".`,
-    link: "/creator/messages",
+    link: "/creator/projects",
   });
 
   await sendExpoPush([partner.userId], {
@@ -145,6 +145,22 @@ export async function getMyCreatorProjects(): Promise<CreatorProjectItem[]> {
   const current = await getCurrentUser();
   if (!current?.dbUser) return [];
   const myId = current.dbUser.id;
+
+  // A projekt-értesítéseket olvasottra állítjuk (a bal oldali jelzés eltűnik).
+  try {
+    await db
+      .update(notifications)
+      .set({ read: true })
+      .where(
+        and(
+          eq(notifications.userId, myId),
+          eq(notifications.read, false),
+          eq(notifications.type, "creator_project"),
+        ),
+      );
+  } catch {
+    /* best-effort */
+  }
 
   const requesterCp = creatorProfiles;
   try {

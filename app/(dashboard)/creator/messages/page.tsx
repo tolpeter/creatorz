@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
 import { and, eq, or, asc, sql } from "drizzle-orm";
-import { Info } from "lucide-react";
 import { db } from "@/lib/db";
 import { messages, users, brandProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -101,15 +100,6 @@ export default async function CreatorMessagesPage() {
       <div>
         <h1 className="text-2xl font-bold">Üzenetek</h1>
         <p className="text-muted-foreground">Márkáktól érkezett üzenetek és beszélgetéseid</p>
-      </div>
-
-      <div className="flex items-start gap-2 rounded-xl border border-accent/30 bg-accent/[0.06] p-3 text-sm">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-[#4d7c0f]" />
-        <p className="text-[#3f6212]">
-          A márkák keresnek meg téged — itt tudsz nekik <strong>válaszolni</strong>. Saját
-          magadtól nem indíthatsz beszélgetést egy márkával; amint egy márka megír vagy
-          elfogadja a pályázatodat, itt megnyílik a beszélgetés és válaszolhatsz.
-        </p>
       </div>
 
       {conversations.length === 0 ? (

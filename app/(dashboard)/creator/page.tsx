@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { and, eq, sql, gte } from "drizzle-orm";
+import { and, eq, sql, gte, isNull, or } from "drizzle-orm";
 import {
   ArrowRight,
   BadgeCheck,
@@ -19,7 +19,7 @@ import {
   Zap,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { adApplications, messages, portfolioItems, profileViews } from "@/lib/db/schema";
+import { adApplications, messages, portfolioItems, profileViews, collaborations, creatorProjects } from "@/lib/db/schema";
 import { getCurrentCreator, getCurrentUser } from "@/lib/auth";
 import { resolveViewers } from "@/lib/viewers";
 import { getOrCreateReferralCode, referralStats } from "@/lib/referral";
@@ -104,6 +104,36 @@ export default async function CreatorOverviewPage() {
   }
   const applicationCount = applicationRows[0]?.n ?? 0;
   const unreadCount = unreadRows[0]?.n ?? 0;
+
+  // Nyitott munkák a vezérlőpulton: aktív együttműködések + közös projektek.
+  let openCollabs = 0;
+  let openProjects = 0;
+  try {
+    const [c] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(collaborations)
+      .where(and(eq(collaborations.creatorId, p.id), isNull(collaborations.completedAt)));
+    openCollabs = c?.n ?? 0;
+  } catch {
+    openCollabs = 0;
+  }
+  try {
+    const [pr] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(creatorProjects)
+      .where(
+        and(
+          or(
+            eq(creatorProjects.requesterUserId, creator.appUserId),
+            eq(creatorProjects.partnerUserId, creator.appUserId),
+          ),
+          eq(creatorProjects.status, "active"),
+        ),
+      );
+    openProjects = pr?.n ?? 0;
+  } catch {
+    openProjects = 0;
+  }
 
   // Ajánlási program + megosztható profil-kártya.
   // Fail-safe: ha a referral-migráció még nem futott le (deploy előz a migrációt),
@@ -354,6 +384,36 @@ export default async function CreatorOverviewPage() {
           detail="olvasatlan megkeresés"
         />
       </div>
+
+      {/* Nyitott munkák — mindig látszik a vezérlőpulton */}
+      <section className="rounded-lg border bg-card p-5 shadow-sm">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h2 className="text-lg font-bold">Nyitott munkáid</h2>
+          <span className="text-sm text-muted-foreground">{openCollabs + openProjects} aktív</span>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Link
+            href="/creator/collaborations"
+            className="flex items-center justify-between rounded-xl border bg-background p-4 transition-colors hover:border-accent/50"
+          >
+            <span>
+              <span className="block text-2xl font-black text-[#3f6212]">{openCollabs}</span>
+              <span className="text-sm text-muted-foreground">nyitott együttműködés (márkával)</span>
+            </span>
+            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+          <Link
+            href="/creator/projects"
+            className="flex items-center justify-between rounded-xl border bg-background p-4 transition-colors hover:border-accent/50"
+          >
+            <span>
+              <span className="block text-2xl font-black text-[#3f6212]">{openProjects}</span>
+              <span className="text-sm text-muted-foreground">nyitott közös projekt (alkotóval)</span>
+            </span>
+            <ArrowRight className="h-5 w-5 text-muted-foreground" />
+          </Link>
+        </div>
+      </section>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
         <section className="rounded-lg border bg-card p-5 shadow-sm">

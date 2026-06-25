@@ -23,11 +23,13 @@ export function DashboardMobileNav({
   items,
   unreadMessages = 0,
   collabAlerts = 0,
+  projectAlerts = 0,
   rootHref,
 }: {
   items: readonly DashboardNavItem[];
   unreadMessages?: number;
   collabAlerts?: number;
+  projectAlerts?: number;
   /** A „pontos egyezés" útvonal (pl. /creator), hogy ne legyen mindig aktív. */
   rootHref?: string;
 }) {
@@ -41,7 +43,13 @@ export function DashboardMobileNav({
   const CurrentIcon = current.icon;
 
   const badgeFor = (key: string) =>
-    key === "messages" ? unreadMessages : key === "collaborations" ? collabAlerts : 0;
+    key === "messages"
+      ? unreadMessages
+      : key === "collaborations"
+        ? collabAlerts
+        : key === "projects"
+          ? projectAlerts
+          : 0;
 
   // Az összecsukott gombon csak a NEM aktuális oldalra eső jelzéseket mutatjuk.
   const hiddenAlerts = items

@@ -43,6 +43,24 @@ export default async function CreatorLayout({
     collabAlerts = 0;
   }
 
+  // Olvasatlan közös-projekt értesítések (bal oldali jelzéshez).
+  let projectAlerts = 0;
+  try {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(notifications)
+      .where(
+        and(
+          eq(notifications.userId, current.dbUser.id),
+          eq(notifications.read, false),
+          eq(notifications.type, "creator_project"),
+        ),
+      );
+    projectAlerts = row?.n ?? 0;
+  } catch {
+    projectAlerts = 0;
+  }
+
   // Profil kitöltöttség az oldalsáv-widgethez (ugyanaz a 7 ellenőrzés mint a szerkesztőben)
   const pf = await db
     .select({
@@ -94,6 +112,7 @@ export default async function CreatorLayout({
         <CreatorSidebar
           unreadMessages={unreadMessages}
           collabAlerts={collabAlerts}
+          projectAlerts={projectAlerts}
           profileScore={profileScore}
           subscriptionEnabled={subscriptionEnabled}
         />
