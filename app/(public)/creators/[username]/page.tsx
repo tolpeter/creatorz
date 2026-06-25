@@ -44,6 +44,7 @@ import { Logo } from "@/components/layout/logo";
 import { SocialStats } from "@/components/creator/social-stats";
 import { TikTokOfficialVideos } from "@/components/creator/tiktok-official-videos";
 import { ModelAttributesBlock } from "@/components/creator/model-attributes-block";
+import { CreatorProjectButton } from "@/components/creator/creator-project-button";
 import { PortfolioGallery, type GalleryItem } from "@/components/creator/portfolio-gallery";
 import {
   TikTokVideoSlider,
@@ -175,6 +176,15 @@ export default async function CreatorDetailPage({
     ]);
     initialSaved = saved.length > 0;
     invitableAds = ads;
+  }
+
+  // Másik alkotó nézi a profilt? (közös munkára felkérés gomb)
+  let isCreatorViewer = false;
+  try {
+    const v = await getCurrentUser();
+    isCreatorViewer = v?.dbUser?.role === "creator" && v.dbUser.id !== profile.userId;
+  } catch {
+    isCreatorViewer = false;
   }
 
   // Profil-megtekintés rögzítése — MINDEN látogatótól (bejelentkezett vagy
@@ -509,6 +519,11 @@ export default async function CreatorDetailPage({
                       className="h-10 rounded-xl border-white/20 bg-white/8 px-5 text-sm font-black text-white hover:bg-white hover:text-black sm:h-12 sm:px-7 sm:text-base"
                     />
                   </>
+                ) : isCreatorViewer ? (
+                  <CreatorProjectButton
+                    partnerUsername={profile.username}
+                    partnerName={profile.displayName}
+                  />
                 ) : (
                   <Button asChild className="h-10 rounded-xl bg-accent px-5 text-sm font-black text-black hover:bg-accent/90 sm:h-12 sm:px-7 sm:text-base">
                     <Link href="/login">

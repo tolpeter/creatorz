@@ -492,6 +492,25 @@ export const collaborations = pgTable("collaborations", {
   tokenIdx: uniqueIndex("collab_token_idx").on(table.reviewToken),
 }));
 
+// ============= CREATOR PROJECTS (alkotó↔alkotó közös munka, márka nélkül) =====
+// Pl. fotós/operatőr + modell/influenszer közvetlen közös munkája. Külön a
+// márkás együttműködéstől; egyszerű: felkérés + beszélgetés + lezárás.
+export const creatorProjects = pgTable("creator_projects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  requesterId: uuid("requester_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  partnerId: uuid("partner_id").notNull().references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  requesterUserId: uuid("requester_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  partnerUserId: uuid("partner_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 160 }).notNull(),
+  note: text("note"),
+  status: varchar("status", { length: 20 }).notNull().default("active"), // active | closed
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
+}, (t) => ({
+  requesterIdx: index("creator_projects_requester_idx").on(t.requesterUserId),
+  partnerIdx: index("creator_projects_partner_idx").on(t.partnerUserId),
+}));
+
 // ============= COLLABORATION DELIVERABLES (leadott anyagok — linkek) =========
 // A tartalomgyártó megosztható linkeket ad át (Google Drive, YouTube, Vimeo,
 // Dropbox, WeTransfer, stb.). Revíziós körönként (round) csoportosítva.

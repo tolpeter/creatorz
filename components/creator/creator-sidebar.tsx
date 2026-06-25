@@ -13,6 +13,7 @@ import {
   CreditCard,
   Settings,
   Handshake,
+  Users2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -50,6 +51,12 @@ const navItems = [
     label: "Együttműködések",
     icon: Handshake,
     key: "collaborations",
+  },
+  {
+    href: "/creator/projects",
+    label: "Közös projektek",
+    icon: Users2,
+    key: "projects",
   },
   { href: "/ads", label: "Kampányok", icon: Megaphone, key: "ads" },
   {
