@@ -42,9 +42,23 @@ export default async function CreatorOnboardingPage() {
     youtubeSubscribers: p.youtubeSubscribers != null ? String(p.youtubeSubscribers) : "",
   };
 
+  const ct = (p.creatorType ?? "ugc") as "ugc" | "influencer" | "model";
+  const m = p.modelAttributes ?? {};
+
   return (
     <div className="w-full max-w-2xl">
-      <CreatorOnboardingWizard initial={initial} />
+      <CreatorOnboardingWizard
+        initial={initial}
+        creatorType={ct}
+        modelInitial={{
+          heightCm: m.heightCm != null ? String(m.heightCm) : "",
+          weightKg: m.weightKg != null ? String(m.weightKg) : "",
+          hairColor: m.hairColor ?? "",
+          eyeColor: m.eyeColor ?? "",
+          bodyArt: m.bodyArt ?? "",
+          modelTypes: m.modelTypes ?? [],
+        }}
+      />
     </div>
   );
 }

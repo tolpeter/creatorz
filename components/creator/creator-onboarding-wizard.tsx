@@ -35,6 +35,9 @@ import {
   GENDER_OPTIONS,
   BIO_MAX_LENGTH,
   MAX_CREATOR_CATEGORIES,
+  HAIR_COLORS,
+  EYE_COLORS,
+  MODEL_TYPES,
 } from "@/lib/constants";
 import { generateUsername } from "@/lib/utils/slug";
 import {
@@ -84,12 +87,44 @@ function ageFromIso(iso: string): number {
   return age;
 }
 
-export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitial }) {
+export type ModelOnboardingInitial = {
+  heightCm: string;
+  weightKg: string;
+  hairColor: string;
+  eyeColor: string;
+  bodyArt: string;
+  modelTypes: string[];
+};
+
+export function CreatorOnboardingWizard({
+  initial,
+  creatorType = "ugc",
+  modelInitial,
+}: {
+  initial: OnboardingInitial;
+  creatorType?: "ugc" | "influencer" | "model";
+  modelInitial?: ModelOnboardingInitial;
+}) {
+  const isModel = creatorType === "model";
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [connecting, setConnecting] = useState<"tiktok" | "youtube" | null>(null);
   const [usernameEdited, setUsernameEdited] = useState(false);
   const [v, setV] = useState<OnboardingInitial>(initial);
+  const [model, setModel] = useState<ModelOnboardingInitial>(
+    modelInitial ?? {
+      heightCm: "",
+      weightKg: "",
+      hairColor: "",
+      eyeColor: "",
+      bodyArt: "",
+      modelTypes: [],
+    },
+  );
+
+  function setM<K extends keyof ModelOnboardingInitial>(key: K, val: ModelOnboardingInitial[K]) {
+    setModel((prev) => ({ ...prev, [key]: val }));
+  }
   // Külön vezeték- és keresztnév (kötelező). A megjelenített név ebből áll össze:
   // "Vezetéknév Keresztnév" (magyar sorrend).
   const [lastName, setLastName] = useState("");
@@ -110,6 +145,7 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
 
   function validateStep(): string | null {
     if (step === 0) {
+      if (!v.avatarUrl) return "Tölts fel egy profilképet (kötelező)";
       if (lastName.trim().length < 2) return "Add meg a vezetékneved (min. 2 karakter)";
       if (firstName.trim().length < 2) return "Add meg a keresztneved (min. 2 karakter)";
       if (generateUsername(v.username).length < 3) return "A felhasználónév min. 3 karakter (ékezet nélkül)";
@@ -117,6 +153,11 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
       const age = ageFromIso(v.birthDate);
       if (age < 13 || age > 100) return "Az életkornak 13 és 100 év között kell lennie";
       if (!v.gender) return "Válaszd ki a nemed";
+      if (isModel) {
+        const h = Number(model.heightCm);
+        if (!(h >= 50 && h <= 250)) return "Add meg a magasságod (cm)";
+        if (model.modelTypes.length < 1) return "Válassz legalább egy modell-típust";
+      }
     }
     if (step === 1) {
       if (v.languages.length < 1) return "Válassz legalább egy nyelvet";
@@ -210,6 +251,16 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
         facebookFollowers: v.facebookFollowers ? Number(v.facebookFollowers) : null,
         youtubeUrl: v.youtubeUrl,
         youtubeSubscribers: v.youtubeSubscribers ? Number(v.youtubeSubscribers) : null,
+        modelAttributes: isModel
+          ? {
+              heightCm: model.heightCm ? Number(model.heightCm) : null,
+              weightKg: model.weightKg ? Number(model.weightKg) : null,
+              hairColor: model.hairColor,
+              eyeColor: model.eyeColor,
+              bodyArt: model.bodyArt,
+              modelTypes: model.modelTypes,
+            }
+          : undefined,
       });
     } catch {
       setLoading(false);
@@ -276,13 +327,14 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
               <ImageUploader
                 bucket="avatars"
                 variant="avatar"
-                label="Profilkép"
+                label="Profilkép *"
                 value={v.avatarUrl}
                 onChange={(url) => set("avatarUrl", url)}
                 centered
               />
               <p className="max-w-xs text-xs text-muted-foreground">
-                Egy valódi arc akár <span className="font-semibold text-foreground">3× több</span> megkeresést hoz a márkáktól.
+                A profilkép <span className="font-semibold text-foreground">kötelező</span> — egy valódi
+                arc akár <span className="font-semibold text-foreground">3× több</span> megkeresést hoz a márkáktól.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
@@ -393,6 +445,86 @@ export function CreatorOnboardingWizard({ initial }: { initial: OnboardingInitia
                 </Select>
               </div>
             </div>
+
+            {isModel && (
+              <div className="space-y-4 rounded-2xl border border-accent/30 bg-accent/[0.04] p-4">
+                <p className="text-sm font-bold">Modell-adatlap</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="m-height">Magasság (cm) *</Label>
+                    <Input
+                      id="m-height"
+                      type="number"
+                      inputMode="numeric"
+                      value={model.heightCm}
+                      placeholder="pl. 178"
+                      onChange={(e) => setM("heightCm", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="m-weight">Súly (kg) — opcionális</Label>
+                    <Input
+                      id="m-weight"
+                      type="number"
+                      inputMode="numeric"
+                      value={model.weightKg}
+                      placeholder="pl. 62"
+                      onChange={(e) => setM("weightKg", e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Hajszín</Label>
+                    <Select value={model.hairColor || undefined} onValueChange={(val) => setM("hairColor", val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Válassz…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {HAIR_COLORS.map((h) => (
+                          <SelectItem key={h.value} value={h.value}>
+                            {h.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Szemszín</Label>
+                    <Select value={model.eyeColor || undefined} onValueChange={(val) => setM("eyeColor", val)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Válassz…" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EYE_COLORS.map((e) => (
+                          <SelectItem key={e.value} value={e.value}>
+                            {e.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Modell-típus *</Label>
+                  <ChipMultiSelect
+                    compact
+                    options={MODEL_TYPES}
+                    value={model.modelTypes}
+                    onChange={(next) => setM("modelTypes", next)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="m-bodyart">Tetoválás / piercing</Label>
+                  <Textarea
+                    id="m-bodyart"
+                    rows={2}
+                    maxLength={300}
+                    value={model.bodyArt}
+                    placeholder="Van-e, és röviden hol / milyen. (Ha nincs, hagyd üresen.)"
+                    onChange={(e) => setM("bodyArt", e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
           </>
         )}
 

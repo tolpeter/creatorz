@@ -535,6 +535,16 @@ const onboardingSchema = basicsSchema.extend({
   youtubeUrl: z.string().max(300).optional().or(z.literal("")),
   youtubeSubscribers: z.coerce.number().int().min(0).optional().nullable(),
   avatarUrl: z.string().max(600).optional().or(z.literal("")),
+  modelAttributes: z
+    .object({
+      heightCm: z.coerce.number().int().min(50).max(250).optional().nullable(),
+      weightKg: z.coerce.number().int().min(20).max(300).optional().nullable(),
+      hairColor: z.string().max(20).optional().or(z.literal("")),
+      eyeColor: z.string().max(20).optional().or(z.literal("")),
+      bodyArt: z.string().max(300).optional().or(z.literal("")),
+      modelTypes: z.array(z.string().max(30)).max(8).optional().default([]),
+    })
+    .optional(),
 });
 
 export async function completeCreatorOnboarding(input: z.input<typeof onboardingSchema>) {
@@ -544,6 +554,10 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
   const parsed = onboardingSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
+  }
+  // Profilkép mostantól kötelező (a meglévő képet is elfogadjuk).
+  if (!parsed.data.avatarUrl && !creator.profile.avatarUrl) {
+    return { error: "Tölts fel egy profilképet (kötelező)" };
   }
   const d = {
     ...parsed.data,
@@ -603,6 +617,18 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
       facebookFollowers: d.facebookUrl ? d.facebookFollowers ?? null : null,
       youtubeUrl: d.youtubeUrl || null,
       youtubeSubscribers: d.youtubeUrl ? d.youtubeSubscribers ?? null : null,
+      ...(d.modelAttributes
+        ? {
+            modelAttributes: {
+              heightCm: d.modelAttributes.heightCm ?? undefined,
+              weightKg: d.modelAttributes.weightKg ?? undefined,
+              hairColor: d.modelAttributes.hairColor || undefined,
+              eyeColor: d.modelAttributes.eyeColor || undefined,
+              bodyArt: d.modelAttributes.bodyArt || undefined,
+              modelTypes: d.modelAttributes.modelTypes ?? [],
+            },
+          }
+        : {}),
       onboardingCompleted: true,
       updatedAt: new Date(),
     })
