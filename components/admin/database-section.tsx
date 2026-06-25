@@ -5,6 +5,8 @@ import {
   Building2,
   ChevronRight,
   Database,
+  Megaphone,
+  Ruler,
   Search,
   Sparkles,
   UserCheck,
@@ -13,6 +15,8 @@ import { ExportButton } from "@/components/admin/export-button";
 
 const ICONS: Record<string, typeof Database> = {
   ugc: UserCheck,
+  influencer: Megaphone,
+  model: Ruler,
   pro: Sparkles,
   brand: Building2,
 };
@@ -32,9 +36,9 @@ export function DatabaseSection({
   previewLimit,
 }: {
   title: string;
-  iconKey: "ugc" | "pro" | "brand";
+  iconKey: "ugc" | "influencer" | "model" | "pro" | "brand";
   count: number;
-  exportType: "creators-ugc" | "creators-pro" | "brands";
+  exportType: "creators-ugc" | "creators-influencer" | "creators-model" | "creators-pro" | "brands";
   columns: string[];
   rows: string[][];
   previewLimit: number;

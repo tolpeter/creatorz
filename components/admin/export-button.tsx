@@ -9,6 +9,8 @@ export function ExportButton({
     | "users"
     | "creators"
     | "creators-ugc"
+    | "creators-influencer"
+    | "creators-model"
     | "creators-pro"
     | "brands"
     | "ads"

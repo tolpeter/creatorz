@@ -1,4 +1,4 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   users,
@@ -9,7 +9,7 @@ import {
   newsletterSubscribers,
 } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { GENDER_OPTIONS } from "@/lib/constants";
+import { GENDER_OPTIONS, HAIR_COLOR_LABELS, EYE_COLOR_LABELS, MODEL_TYPE_LABELS } from "@/lib/constants";
 
 /** Életkor a születési dátumból (fallback: tárolt age). */
 function ageOf(birthDate: unknown, storedAge: number | null): string {
@@ -64,9 +64,16 @@ async function build(type: string): Promise<{ headers: string[]; rows: unknown[]
     }
     case "creators":
     case "creators-ugc":
+    case "creators-influencer":
     case "creators-pro": {
-      const kind =
-        type === "creators-ugc" ? "ugc" : type === "creators-pro" ? "professional" : null;
+      const where =
+        type === "creators-ugc"
+          ? and(eq(creatorProfiles.profileKind, "ugc"), eq(creatorProfiles.creatorType, "ugc"))
+          : type === "creators-influencer"
+            ? eq(creatorProfiles.creatorType, "influencer")
+            : type === "creators-pro"
+              ? eq(creatorProfiles.profileKind, "professional")
+              : undefined;
       const r = await db
         .select({
           username: creatorProfiles.username, displayName: creatorProfiles.displayName,
@@ -90,7 +97,7 @@ async function build(type: string): Promise<{ headers: string[]; rows: unknown[]
         })
         .from(creatorProfiles)
         .innerJoin(users, eq(users.id, creatorProfiles.userId))
-        .where(kind ? eq(creatorProfiles.profileKind, kind) : undefined)
+        .where(where)
         .orderBy(desc(creatorProfiles.createdAt));
       return {
         headers: [
@@ -107,6 +114,44 @@ async function build(type: string): Promise<{ headers: string[]; rows: unknown[]
           c.igUrl, c.ig, c.ttUrl, c.tt, c.ytUrl, c.yt, c.fbUrl, c.fb,
           c.verified, c.featured, c.adminFeatured, c.rating, c.reviewCount, c.createdAt,
         ]),
+      };
+    }
+    case "creators-model": {
+      const r = await db
+        .select({
+          username: creatorProfiles.username, displayName: creatorProfiles.displayName,
+          email: users.email,
+          birthDate: creatorProfiles.birthDate, age: creatorProfiles.age,
+          gender: creatorProfiles.gender,
+          city: creatorProfiles.city, county: creatorProfiles.county,
+          igUrl: creatorProfiles.instagramUrl, ig: creatorProfiles.instagramFollowers,
+          ttUrl: creatorProfiles.tiktokUrl, tt: creatorProfiles.tiktokFollowers,
+          model: creatorProfiles.modelAttributes,
+          createdAt: creatorProfiles.createdAt,
+        })
+        .from(creatorProfiles)
+        .innerJoin(users, eq(users.id, creatorProfiles.userId))
+        .where(eq(creatorProfiles.creatorType, "model"))
+        .orderBy(desc(creatorProfiles.createdAt));
+      return {
+        headers: [
+          "nev", "felhasznalonev", "email", "kor", "nem", "varos", "megye",
+          "magassag_cm", "suly_kg", "hajszin", "szemszin", "tetovalas_piercing", "modell_tipus",
+          "instagram_url", "instagram_kovetok", "tiktok_url", "tiktok_kovetok", "regisztralt",
+        ],
+        rows: r.map((c) => {
+          const m = c.model ?? {};
+          return [
+            c.displayName, c.username, c.email, ageOf(c.birthDate, c.age), genderLabel(c.gender),
+            c.city, c.county,
+            m.heightCm ?? "", m.weightKg ?? "",
+            m.hairColor ? HAIR_COLOR_LABELS[m.hairColor] ?? m.hairColor : "",
+            m.eyeColor ? EYE_COLOR_LABELS[m.eyeColor] ?? m.eyeColor : "",
+            m.bodyArt ?? "",
+            (m.modelTypes ?? []).map((t) => MODEL_TYPE_LABELS[t] ?? t).join("; "),
+            c.igUrl, c.ig, c.ttUrl, c.tt, c.createdAt,
+          ];
+        }),
       };
     }
     case "brands": {

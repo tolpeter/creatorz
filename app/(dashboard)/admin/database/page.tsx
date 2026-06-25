@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { Database } from "lucide-react";
 import { db } from "@/lib/db";
 import { creatorProfiles, brandProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { GENDER_OPTIONS, PROFESSIONAL_ROLES } from "@/lib/constants";
+import {
+  GENDER_OPTIONS,
+  PROFESSIONAL_ROLES,
+  HAIR_COLOR_LABELS,
+  MODEL_TYPE_LABELS,
+} from "@/lib/constants";
 import { DatabaseSection } from "@/components/admin/database-section";
 import { formatHuDate, formatNumber } from "@/lib/utils/format";
 
@@ -52,12 +57,44 @@ export default async function AdminDatabasePage() {
     createdAt: creatorProfiles.createdAt,
   };
 
-  const [ugc, pros, brands, counts, brandCountRows] = await Promise.all([
+  const modelCols = {
+    name: creatorProfiles.displayName,
+    email: users.email,
+    birthDate: creatorProfiles.birthDate,
+    age: creatorProfiles.age,
+    gender: creatorProfiles.gender,
+    city: creatorProfiles.city,
+    model: creatorProfiles.modelAttributes,
+    ig: creatorProfiles.instagramFollowers,
+    tt: creatorProfiles.tiktokFollowers,
+    createdAt: creatorProfiles.createdAt,
+  };
+
+  const ugcCreatorWhere = and(
+    eq(creatorProfiles.profileKind, "ugc"),
+    eq(creatorProfiles.creatorType, "ugc"),
+  );
+
+  const [ugc, influencers, models, pros, brands, counts, brandCountRows] = await Promise.all([
     db
       .select(creatorCols)
       .from(creatorProfiles)
       .innerJoin(users, eq(users.id, creatorProfiles.userId))
-      .where(eq(creatorProfiles.profileKind, "ugc"))
+      .where(ugcCreatorWhere)
+      .orderBy(desc(creatorProfiles.createdAt))
+      .limit(PREVIEW),
+    db
+      .select(creatorCols)
+      .from(creatorProfiles)
+      .innerJoin(users, eq(users.id, creatorProfiles.userId))
+      .where(eq(creatorProfiles.creatorType, "influencer"))
+      .orderBy(desc(creatorProfiles.createdAt))
+      .limit(PREVIEW),
+    db
+      .select(modelCols)
+      .from(creatorProfiles)
+      .innerJoin(users, eq(users.id, creatorProfiles.userId))
+      .where(eq(creatorProfiles.creatorType, "model"))
       .orderBy(desc(creatorProfiles.createdAt))
       .limit(PREVIEW),
     db
@@ -82,7 +119,9 @@ export default async function AdminDatabasePage() {
       .limit(PREVIEW),
     db
       .select({
-        ugc: sql<number>`count(*) filter (where ${creatorProfiles.profileKind} = 'ugc')::int`,
+        ugc: sql<number>`count(*) filter (where ${creatorProfiles.profileKind} = 'ugc' and ${creatorProfiles.creatorType} = 'ugc')::int`,
+        inf: sql<number>`count(*) filter (where ${creatorProfiles.creatorType} = 'influencer')::int`,
+        model: sql<number>`count(*) filter (where ${creatorProfiles.creatorType} = 'model')::int`,
         pro: sql<number>`count(*) filter (where ${creatorProfiles.profileKind} = 'professional')::int`,
       })
       .from(creatorProfiles),
@@ -90,6 +129,8 @@ export default async function AdminDatabasePage() {
   ]);
 
   const ugcCount = counts[0]?.ugc ?? 0;
+  const infCount = counts[0]?.inf ?? 0;
+  const modelCount = counts[0]?.model ?? 0;
   const proCount = counts[0]?.pro ?? 0;
   const brandCount = brandCountRows[0]?.n ?? 0;
 
@@ -102,8 +143,9 @@ export default async function AdminDatabasePage() {
         <div>
           <h1 className="text-2xl font-bold">Adatbázis</h1>
           <p className="text-muted-foreground">
-            Teljes, letölthető adatbázis külön a tartalomgyártókra, kreatív
-            szakemberekre és a márkákra. Nyisd le egy törzset, és szűrj bármely mezőre.
+            Teljes, letölthető adatbázis külön típusonként: UGC tartalomgyártók,
+            influenszerek, modellek, kreatív szakemberek és márkák. Nyisd le egy
+            törzset, és szűrj bármely mezőre.
           </p>
         </div>
       </div>
@@ -126,6 +168,51 @@ export default async function AdminDatabasePage() {
           c.website ?? "—",
           formatHuDate(c.createdAt),
         ])}
+      />
+
+      <DatabaseSection
+        title="Influenszerek"
+        iconKey="influencer"
+        count={infCount}
+        exportType="creators-influencer"
+        previewLimit={PREVIEW}
+        columns={["Név", "Email", "Kor", "Nem", "Város", "Instagram", "TikTok", "Weboldal", "Regisztrált"]}
+        rows={influencers.map((c) => [
+          c.name,
+          c.email,
+          ageOf(c.birthDate, c.age),
+          genderLabel(c.gender),
+          c.city ?? "—",
+          c.ig ? formatNumber(c.ig) : "—",
+          c.tt ? formatNumber(c.tt) : "—",
+          c.website ?? "—",
+          formatHuDate(c.createdAt),
+        ])}
+      />
+
+      <DatabaseSection
+        title="Modellek"
+        iconKey="model"
+        count={modelCount}
+        exportType="creators-model"
+        previewLimit={PREVIEW}
+        columns={["Név", "Email", "Kor", "Nem", "Város", "Magasság", "Hajszín", "Modell-típus", "Instagram", "TikTok", "Regisztrált"]}
+        rows={models.map((c) => {
+          const m = c.model ?? {};
+          return [
+            c.name,
+            c.email,
+            ageOf(c.birthDate, c.age),
+            genderLabel(c.gender),
+            c.city ?? "—",
+            m.heightCm ? `${m.heightCm} cm` : "—",
+            m.hairColor ? HAIR_COLOR_LABELS[m.hairColor] ?? m.hairColor : "—",
+            (m.modelTypes ?? []).map((t) => MODEL_TYPE_LABELS[t] ?? t).join(", ") || "—",
+            c.ig ? formatNumber(c.ig) : "—",
+            c.tt ? formatNumber(c.tt) : "—",
+            formatHuDate(c.createdAt),
+          ];
+        })}
       />
 
       <DatabaseSection
