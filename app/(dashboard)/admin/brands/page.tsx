@@ -27,6 +27,9 @@ export default async function AdminBrandsPage({
     );
   }
 
+  const baseWhere = conditions.length ? and(...conditions) : undefined;
+  const LIST_LIMIT = 500;
+
   const rows = await db
     .select({
       id: brandProfiles.id,
@@ -39,17 +42,24 @@ export default async function AdminBrandsPage({
     })
     .from(brandProfiles)
     .leftJoin(ads, eq(ads.brandId, brandProfiles.id))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(baseWhere)
     .groupBy(brandProfiles.id)
     .orderBy(desc(brandProfiles.createdAt))
-    .limit(200);
+    .limit(LIST_LIMIT);
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(brandProfiles)
+    .where(baseWhere);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Márkák</h1>
-          <p className="text-muted-foreground">{rows.length} találat</p>
+          <p className="text-muted-foreground">
+            {total} találat{total > rows.length ? ` · első ${rows.length} látható` : ""}
+          </p>
         </div>
         <ExportButton type="brands" />
       </div>

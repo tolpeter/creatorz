@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { and, desc, eq, gt, ilike, isNull, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, gt, ilike, isNull, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { creatorProfiles, users } from "@/lib/db/schema";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -48,6 +48,9 @@ export default async function AdminCreatorsPage({
       )!,
     );
 
+  const baseWhere = conditions.length ? and(...conditions) : undefined;
+  const LIST_LIMIT = 500;
+
   const rows = await db
     .select({
       creatorId: creatorProfiles.id,
@@ -66,11 +69,22 @@ export default async function AdminCreatorsPage({
     })
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(baseWhere)
     .orderBy(desc(creatorProfiles.createdAt))
-    .limit(200);
+    .limit(LIST_LIMIT);
 
-  const pending = rows.filter((r) => !r.approved);
+  // Valódi összegek (nem a lekért sorok száma) — a szűrőt is figyelembe véve.
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(baseWhere);
+  const [{ pendingTotal }] = await db
+    .select({ pendingTotal: sql<number>`count(*)::int` })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(baseWhere ? and(baseWhere, eq(users.approved, false)) : eq(users.approved, false));
+
   const now = new Date();
   const isCurrentlyFeatured = (r: (typeof rows)[number]) =>
     r.isAdminFeatured ||
@@ -82,7 +96,8 @@ export default async function AdminCreatorsPage({
         <div>
           <h1 className="text-2xl font-bold">Tartalomgyártók</h1>
           <p className="text-muted-foreground">
-            {rows.length} találat · {pending.length} jóváhagyásra vár
+            {total} találat · {pendingTotal} jóváhagyásra vár
+            {total > rows.length ? ` · első ${rows.length} látható` : ""}
           </p>
         </div>
         <ExportButton type="creators" />

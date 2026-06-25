@@ -1,4 +1,4 @@
-import { and, desc, eq, ilike, type SQL } from "drizzle-orm";
+import { and, desc, eq, ilike, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { UserRowActions } from "@/components/admin/user-row-actions";
@@ -24,19 +24,29 @@ export default async function AdminUsersPage({
     conditions.push(eq(users.role, role));
   if (role === "suspended") conditions.push(eq(users.suspended, true));
 
+  const baseWhere = conditions.length ? and(...conditions) : undefined;
+  const LIST_LIMIT = 500;
+
   const rows = await db
     .select()
     .from(users)
-    .where(conditions.length ? and(...conditions) : undefined)
+    .where(baseWhere)
     .orderBy(desc(users.createdAt))
-    .limit(200);
+    .limit(LIST_LIMIT);
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`count(*)::int` })
+    .from(users)
+    .where(baseWhere);
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Felhasználók</h1>
-          <p className="text-muted-foreground">{rows.length} találat</p>
+          <p className="text-muted-foreground">
+            {total} találat{total > rows.length ? ` · első ${rows.length} látható` : ""}
+          </p>
         </div>
         <ExportButton type="users" />
       </div>
