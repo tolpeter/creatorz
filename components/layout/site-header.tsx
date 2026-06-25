@@ -18,6 +18,8 @@ const LINKS: { label: string; href: string; bold?: boolean }[] = [
 const CREATOR_TYPE_LINKS = [
   { label: "Összes alkotó", href: "/creators" },
   { label: "UGC tartalomgyártók", href: "/creators?tipus=ugc" },
+  { label: "Influenszerek", href: "/influenszerek" },
+  { label: "Modellek", href: "/modellek" },
   { label: "Videóvágók", href: "/creators?tipus=editor" },
   { label: "Fotósok", href: "/creators?tipus=photographer" },
   { label: "Operatőrök", href: "/creators?tipus=videographer" },

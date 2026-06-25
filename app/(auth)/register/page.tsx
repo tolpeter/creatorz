@@ -23,6 +23,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { signUpAction } from "@/app/actions/auth";
 import { ReferralCapture } from "@/components/auth/referral-capture";
 import { fbTrack } from "@/lib/analytics/fb";
+import { CREATOR_TYPES } from "@/lib/constants";
+
+type CreatorType = "ugc" | "influencer" | "model";
 
 // UI-választás: a "professional" valójában creator role + professional profileKind
 type RoleChoice = "creator" | "professional" | "brand";
@@ -33,6 +36,7 @@ export default function RegisterPage() {
   const [role, setRole] = useState<RoleChoice | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [creatorType, setCreatorType] = useState<CreatorType>("ugc");
   const [gdpr, setGdpr] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -48,6 +52,7 @@ export default function RegisterPage() {
     const res = await signUpAction({
       role: role === "brand" ? "brand" : "creator",
       profileKind: role === "professional" ? "professional" : "ugc",
+      creatorType: role === "creator" ? creatorType : "ugc",
       email,
       password,
       gdpr,
@@ -222,6 +227,33 @@ export default function RegisterPage() {
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          {isCreator && (
+            <div className="space-y-1.5">
+              <Label>Milyen típusú alkotó vagy?</Label>
+              <div className="grid gap-2 sm:grid-cols-3">
+                {CREATOR_TYPES.map((t) => {
+                  const active = creatorType === t.value;
+                  return (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setCreatorType(t.value as CreatorType)}
+                      className={`rounded-xl border p-3 text-left transition-colors ${
+                        active
+                          ? "border-accent bg-[#f0f4e5] ring-1 ring-accent"
+                          : "border-black/10 bg-white hover:border-black/25"
+                      }`}
+                    >
+                      <span className="block text-sm font-bold">{t.label}</span>
+                      <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground">
+                        {t.tagline}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           <div className="space-y-1.5">
             <Label htmlFor="email">Email cím</Label>
             <div className="relative">

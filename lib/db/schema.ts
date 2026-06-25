@@ -160,6 +160,9 @@ export const creatorProfiles = pgTable("creator_profiles", {
 
   // Profil típusa: UGC tartalomgyártó vagy kreatív szakember
   profileKind: profileKindEnum("profile_kind").notNull().default("ugc"),
+  // Szolgáltatás-típus a profileKind='ugc'-n belül: "ugc" | "influencer" | "model".
+  // (A márka mást keres és más statot néz típusonként; külön szűrhető + SEO-zható.)
+  creatorType: varchar("creator_type", { length: 20 }).notNull().default("ugc"),
   // Csak professional profilnál: szerepkörök — "editor" | "photographer" | "videographer"
   professionalRoles: jsonb("professional_roles").$type<string[]>().notNull().default([]),
   // Csak professional profilnál: szakterület/stílus chip-ek (pl. "Esküvő", "Reklámfilm")

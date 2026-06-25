@@ -26,6 +26,8 @@ const signUpSchema = z.object({
   role: z.enum(["creator", "brand"]),
   // Csak creator role-nál értelmezett: UGC tartalomgyártó vagy kreatív szakember
   profileKind: z.enum(["ugc", "professional"]).optional().default("ugc"),
+  // A profileKind='ugc'-n belüli szolgáltatás-típus.
+  creatorType: z.enum(["ugc", "influencer", "model"]).optional().default("ugc"),
   email: emailField,
   password: z.string().min(8, "A jelszó legalább 8 karakter legyen"),
   gdpr: z.boolean().refine((v) => v === true, {
@@ -48,7 +50,7 @@ export async function signUpAction(input: SignUpInput) {
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
   }
-  const { role, profileKind, email, password } = parsed.data;
+  const { role, profileKind, creatorType, email, password } = parsed.data;
 
   const supabase = await createClient();
 
@@ -142,6 +144,8 @@ export async function signUpAction(input: SignUpInput) {
         username,
         displayName: base,
         profileKind,
+        // Csak ugc-profilnál van értelme; professionalnál marad az alap.
+        creatorType: profileKind === "ugc" ? creatorType : "ugc",
       })
       .onConflictDoNothing({ target: creatorProfiles.userId });
   } else {

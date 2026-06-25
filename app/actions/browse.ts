@@ -48,6 +48,10 @@ function buildConditions(filters: BrowseFiltersInput): SQL[] {
   const tipus = filters.tipus ?? "all";
   if (tipus === "ugc") {
     conditions.push(eq(creatorProfiles.profileKind, "ugc"));
+    conditions.push(eq(creatorProfiles.creatorType, "ugc"));
+  } else if (tipus === "influencer" || tipus === "model") {
+    conditions.push(eq(creatorProfiles.profileKind, "ugc"));
+    conditions.push(eq(creatorProfiles.creatorType, tipus));
   } else if (["editor", "photographer", "videographer"].includes(tipus)) {
     conditions.push(eq(creatorProfiles.profileKind, "professional"));
     conditions.push(

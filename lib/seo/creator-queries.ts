@@ -85,6 +85,23 @@ export async function creatorsByCategory(value: string, limit = 24): Promise<Cre
   return (rows as Row[]).map(toCard);
 }
 
+export async function creatorsByType(creatorType: string, limit = 24): Promise<CreatorCardData[]> {
+  const rows = await db
+    .select(SELECT)
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(
+      and(
+        eq(users.suspended, false),
+        eq(creatorProfiles.profileKind, "ugc"),
+        eq(creatorProfiles.creatorType, creatorType),
+      ),
+    )
+    .orderBy(...ORDER)
+    .limit(limit);
+  return (rows as Row[]).map(toCard);
+}
+
 export async function creatorsByCounty(county: string, limit = 24): Promise<CreatorCardData[]> {
   const rows = await db
     .select(SELECT)
@@ -107,6 +124,20 @@ async function countWhere(extra: ReturnType<typeof sql> | ReturnType<typeof eq>)
 
 export function countByCategory(value: string) {
   return countWhere(sql`${creatorProfiles.categories} @> ${JSON.stringify([value])}::jsonb`);
+}
+export async function countByType(creatorType: string): Promise<number> {
+  const [r] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(creatorProfiles)
+    .innerJoin(users, eq(users.id, creatorProfiles.userId))
+    .where(
+      and(
+        eq(users.suspended, false),
+        eq(creatorProfiles.profileKind, "ugc"),
+        eq(creatorProfiles.creatorType, creatorType),
+      ),
+    );
+  return r?.n ?? 0;
 }
 export function countByCounty(county: string) {
   return countWhere(eq(creatorProfiles.county, county));

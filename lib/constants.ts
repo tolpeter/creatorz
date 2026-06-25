@@ -9,10 +9,38 @@ export const PROFESSIONAL_ROLES = [
   { value: "videographer", label: "Operatőr" },
 ] as const;
 
+// Szolgáltatás-típusok a "tartalomgyártó" (profileKind='ugc') regisztráción belül.
+// A márka mást keres és más statot néz típusonként.
+export const CREATOR_TYPES = [
+  {
+    value: "ugc",
+    label: "UGC tartalomgyártó",
+    tagline: "Tartalmat készítesz a márkának (a márka teszi ki)",
+  },
+  {
+    value: "influencer",
+    label: "Influenszer",
+    tagline: "A saját csatornádon posztolsz a követőidnek",
+  },
+  {
+    value: "model",
+    label: "Modell",
+    tagline: "Termék- és divatfotózás, megjelenés-alapú munka",
+  },
+] as const;
+
+export const CREATOR_TYPE_LABELS: Record<string, string> = {
+  ugc: "UGC tartalomgyártó",
+  influencer: "Influenszer",
+  model: "Modell",
+};
+
 // A directory típus-szűrő opciói
 export const DIRECTORY_TYPES = [
   { value: "all", label: "Összes alkotó" },
   { value: "ugc", label: "UGC tartalomgyártó" },
+  { value: "influencer", label: "Influenszer" },
+  { value: "model", label: "Modell" },
   { value: "editor", label: "Videóvágó" },
   { value: "photographer", label: "Fotós" },
   { value: "videographer", label: "Operatőr" },

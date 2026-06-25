@@ -33,7 +33,7 @@ import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { activityLabel, getResponseStats } from "@/lib/creator-stats";
 import { ProfessionalProfile } from "@/components/creator/professional-profile";
 import { CATEGORY_ICONS } from "@/lib/category-icons";
-import { CREATOR_CATEGORIES, GENDER_OPTIONS, LANGUAGES, MAX_CREATOR_CATEGORIES } from "@/lib/constants";
+import { CREATOR_CATEGORIES, GENDER_OPTIONS, LANGUAGES, MAX_CREATOR_CATEGORIES, CREATOR_TYPE_LABELS } from "@/lib/constants";
 import { supabaseOgImage } from "@/lib/utils/og-image";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AvatarLightbox } from "@/components/creator/avatar-lightbox";
@@ -411,6 +411,13 @@ export default async function CreatorDetailPage({
                 <Badge className="rounded-full bg-accent px-3.5 py-1 text-black hover:bg-accent">
                   {activity ?? "Magyar UGC creator"}
                 </Badge>
+                {profile.profileKind === "ugc" &&
+                profile.creatorType &&
+                profile.creatorType !== "ugc" ? (
+                  <Badge className="rounded-full bg-white px-3.5 py-1 text-black hover:bg-white">
+                    {CREATOR_TYPE_LABELS[profile.creatorType] ?? profile.creatorType}
+                  </Badge>
+                ) : null}
                 {isFeatured ? (
                   <Badge className="rounded-full bg-white px-3.5 py-1 text-black hover:bg-white">
                     <Crown className="h-3.5 w-3.5" />
