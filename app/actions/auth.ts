@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { db } from "@/lib/db";
 import { users, creatorProfiles, brandProfiles } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { ensureUniqueUsername } from "@/lib/utils/username";
 import { dashboardPathForRole } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
@@ -56,12 +56,43 @@ export async function signUpAction(input: SignUpInput) {
   // (email_confirm: true). Így a felhasználó rögtön kapja a sessiont, és a saját
   // verifikációs flow-nkat futtatjuk (onboarding végén kapja a megerősítő emailt).
   const admin = createAdminClient();
-  const { data: created, error: createErr } = await admin.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: { role },
-  });
+  const createAuth = () =>
+    admin.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { role },
+    });
+
+  let { data: created, error: createErr } = await createAuth();
+
+  // Önjavítás "árva" auth-userre: ha a Supabase Auth-ban már létezik az email,
+  // DE nincs hozzá app `users` sor (félbemaradt korábbi regisztráció), akkor
+  // töröljük az árva auth-usert és újrapróbáljuk. Valódi (app sorral is
+  // rendelkező) fiókot SOHA nem törlünk — az a normál "már regisztrált" hibát kapja.
+  if (createErr && /regist|already|exist/i.test(createErr.message)) {
+    const [appRow] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, email))
+      .limit(1);
+    if (!appRow) {
+      try {
+        const res = await db.execute(
+          sql`select id from auth.users where lower(email) = ${email} limit 1`,
+        );
+        const list = Array.isArray(res) ? res : (res as { rows?: unknown[] }).rows ?? [];
+        const orphanId = (list[0] as { id?: string } | undefined)?.id;
+        if (orphanId) {
+          await admin.auth.admin.deleteUser(String(orphanId));
+          ({ data: created, error: createErr } = await createAuth());
+        }
+      } catch {
+        /* ha az önjavítás nem megy, marad az eredeti hibaüzenet */
+      }
+    }
+  }
+
   if (createErr) {
     return { error: authErrorMessage(createErr.message) };
   }
