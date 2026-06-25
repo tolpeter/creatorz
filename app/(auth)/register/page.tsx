@@ -238,16 +238,13 @@ export default function RegisterPage() {
                       key={t.value}
                       type="button"
                       onClick={() => setCreatorType(t.value as CreatorType)}
-                      className={`rounded-xl border p-3 text-left transition-colors ${
+                      className={`rounded-xl border px-3 py-2.5 text-center text-sm font-semibold transition-colors ${
                         active
                           ? "border-accent bg-[#f0f4e5] ring-1 ring-accent"
                           : "border-black/10 bg-white hover:border-black/25"
                       }`}
                     >
-                      <span className="block text-sm font-bold">{t.label}</span>
-                      <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground">
-                        {t.tagline}
-                      </span>
+                      {t.label}
                     </button>
                   );
                 })}
