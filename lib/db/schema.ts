@@ -541,11 +541,15 @@ export const creatorProjectReviews = pgTable("creator_project_reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
   projectId: uuid("project_id").notNull().references(() => creatorProjects.id, { onDelete: "cascade" }),
   reviewerUserId: uuid("reviewer_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  // Kit értékeltek (a másik fél) — a publikus megjelenítéshez és a csillag-átlaghoz.
+  revieweeId: uuid("reviewee_id").references(() => creatorProfiles.id, { onDelete: "cascade" }),
+  revieweeUserId: uuid("reviewee_user_id").references(() => users.id, { onDelete: "cascade" }),
   overallRating: integer("overall_rating").notNull(),
   text: text("text").notNull(),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 }, (t) => ({
   projectIdx: index("creator_project_reviews_project_idx").on(t.projectId),
+  revieweeIdx: index("creator_project_reviews_reviewee_idx").on(t.revieweeId),
   uniquePerReviewer: uniqueIndex("creator_project_reviews_unique_idx").on(t.projectId, t.reviewerUserId),
 }));
 

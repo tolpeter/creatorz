@@ -45,6 +45,8 @@ import { SocialStats } from "@/components/creator/social-stats";
 import { TikTokOfficialVideos } from "@/components/creator/tiktok-official-videos";
 import { ModelAttributesBlock } from "@/components/creator/model-attributes-block";
 import { CreatorProjectButton } from "@/components/creator/creator-project-button";
+import { ProjectReviewsBlock } from "@/components/creator/project-reviews-block";
+import { getPublicProjectReviews } from "@/app/actions/creator-projects";
 import { PortfolioGallery, type GalleryItem } from "@/components/creator/portfolio-gallery";
 import {
   TikTokVideoSlider,
@@ -186,6 +188,9 @@ export default async function CreatorDetailPage({
   } catch {
     isCreatorViewer = false;
   }
+
+  // Nyilvános alkotótársi (közös projekt) értékelések.
+  const projectReviews = await getPublicProjectReviews(profile.id);
 
   // Profil-megtekintés rögzítése — MINDEN látogatótól (bejelentkezett vagy
   // anonim), és MINDEN megtekintés számít (nincs napi dedup: 5 megtekintés = 5).
@@ -339,6 +344,7 @@ export default async function CreatorDetailPage({
         activity={activity}
         responseLabel={responseStats.label}
         invitableAds={invitableAds}
+        projectReviews={projectReviews}
       />
     );
   }
@@ -654,6 +660,8 @@ export default async function CreatorDetailPage({
               </div>
             )}
           </ProfileSection>
+
+          <ProjectReviewsBlock reviews={projectReviews} />
         </div>
 
         <aside className="min-w-0 space-y-4 lg:sticky lg:top-20 lg:self-start">

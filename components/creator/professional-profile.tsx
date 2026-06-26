@@ -20,6 +20,8 @@ import { ReportButton } from "@/components/shared/report-button";
 import { PortfolioEmbed } from "@/components/shared/portfolio-embed";
 import { ReviewCard, type ReviewView } from "@/components/shared/review-card";
 import { RatingDistribution } from "@/components/shared/rating-distribution";
+import { ProjectReviewsBlock } from "@/components/creator/project-reviews-block";
+import type { PublicProjectReview } from "@/app/actions/creator-projects";
 import { PROFESSIONAL_ROLES } from "@/lib/constants";
 
 export type ProfessionalPortfolioItem = {
@@ -75,6 +77,7 @@ export function ProfessionalProfile({
   activity,
   responseLabel,
   invitableAds = [],
+  projectReviews = [],
 }: {
   profile: ProfessionalProfileData;
   portfolio: ProfessionalPortfolioItem[];
@@ -85,6 +88,7 @@ export function ProfessionalProfile({
   activity: string | null;
   responseLabel: string | null;
   invitableAds?: InvitableAd[];
+  projectReviews?: PublicProjectReview[];
 }) {
   return (
     <div className="space-y-8 pb-8">
@@ -328,6 +332,9 @@ export function ProfessionalProfile({
           </div>
         )}
       </section>
+
+      {/* Alkotótársak (közös projekt) értékelései */}
+      <ProjectReviewsBlock reviews={projectReviews} />
 
       {/* Hasonló alkotók */}
       {similar.length > 0 ? (

@@ -17,6 +17,7 @@ import { getCurrentCreator, getCurrentUser } from "@/lib/auth";
 import { sendExpoPush } from "@/lib/push";
 import { sendMessageEmailThrottled } from "@/lib/email/message-throttle";
 import { renderNewMessageEmail } from "@/lib/email/templates";
+import { recalcCreatorRating } from "@/lib/creator-rating";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -565,13 +566,32 @@ export async function submitProjectReview(projectId: string, input: { overallRat
   if (!(rating >= 1 && rating <= 5)) return { error: "Adj 1–5 csillagot." };
   const text = (input.text ?? "").trim();
   if (text.length < 10) return { error: "Az értékelés legalább 10 karakter." };
+
+  // Kit értékelek: a másik fél (a publikus megjelenítéshez + csillag-átlaghoz).
+  const iAmRequester = myUserId === p.requesterUserId;
+  const revieweeId = iAmRequester ? p.partnerId : p.requesterId;
+  const revieweeUserId = iAmRequester ? p.partnerUserId : p.requesterUserId;
+
   try {
     await db
       .insert(creatorProjectReviews)
-      .values({ projectId, reviewerUserId: myUserId, overallRating: rating, text: text.slice(0, 2000) })
+      .values({
+        projectId,
+        reviewerUserId: myUserId,
+        revieweeId,
+        revieweeUserId,
+        overallRating: rating,
+        text: text.slice(0, 2000),
+      })
       .onConflictDoNothing({ target: [creatorProjectReviews.projectId, creatorProjectReviews.reviewerUserId] });
   } catch {
     return { error: "A funkció még nincs aktiválva (migráció szükséges)." };
+  }
+  // A publikus csillag-átlag frissítése (most már a projekt-értékelés is beleszámít).
+  try {
+    await recalcCreatorRating(revieweeId);
+  } catch {
+    /* best-effort */
   }
   const closed = await closeProjectIfBothReviewed(projectId);
   revalidatePath(`/creator/projects/${projectId}`);
@@ -605,4 +625,43 @@ export async function sendProjectMessage(projectId: string, body: string) {
   revalidatePath(`/creator/projects/${projectId}`);
   revalidatePath("/creator/messages");
   return { success: true };
+}
+
+export type PublicProjectReview = {
+  reviewerName: string;
+  reviewerUsername: string;
+  reviewerAvatar: string | null;
+  overallRating: number;
+  text: string;
+  createdAt: Date;
+};
+
+/** Egy alkotóról írt nyilvános, alkotótársi (közös projekt) értékelések. */
+export async function getPublicProjectReviews(creatorProfileId: string): Promise<PublicProjectReview[]> {
+  try {
+    const rows = await db
+      .select({
+        overallRating: creatorProjectReviews.overallRating,
+        text: creatorProjectReviews.text,
+        createdAt: creatorProjectReviews.createdAt,
+        name: creatorProfiles.displayName,
+        username: creatorProfiles.username,
+        avatar: creatorProfiles.avatarUrl,
+      })
+      .from(creatorProjectReviews)
+      .innerJoin(creatorProfiles, eq(creatorProfiles.userId, creatorProjectReviews.reviewerUserId))
+      .where(eq(creatorProjectReviews.revieweeId, creatorProfileId))
+      .orderBy(desc(creatorProjectReviews.createdAt))
+      .limit(12);
+    return rows.map((r) => ({
+      reviewerName: r.name,
+      reviewerUsername: r.username,
+      reviewerAvatar: r.avatar,
+      overallRating: r.overallRating,
+      text: r.text,
+      createdAt: r.createdAt,
+    }));
+  } catch {
+    return [];
+  }
 }

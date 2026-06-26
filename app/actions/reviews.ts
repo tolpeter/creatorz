@@ -17,6 +17,7 @@ import { getCurrentCreator, getCurrentBrand } from "@/lib/auth";
 import { sendEmailSafe } from "@/lib/resend/client";
 import { isEmailAllowed } from "@/lib/email/prefs";
 import { closeCollabIfBothReviewed } from "@/lib/collab/close";
+import { recalcCreatorRating } from "@/lib/creator-rating";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -193,18 +194,8 @@ export async function submitCreatorReview(
 }
 
 async function recalculateCreatorRating(creatorId: string) {
-  const all = await db
-    .select({ overallRating: reviews.overallRating })
-    .from(reviews)
-    .where(and(eq(reviews.creatorId, creatorId), eq(reviews.hidden, false)));
-
-  const count = all.length;
-  const avg = count > 0 ? all.reduce((s, r) => s + r.overallRating, 0) / count : null;
-
-  await db
-    .update(creatorProfiles)
-    .set({ reviewCount: count, averageRating: avg ? avg.toFixed(2) : null })
-    .where(eq(creatorProfiles.id, creatorId));
+  // Közös helper: a márka- ÉS az alkotó↔alkotó projekt-értékeléseket is számolja.
+  await recalcCreatorRating(creatorId);
 }
 
 const responseSchema = z.object({
