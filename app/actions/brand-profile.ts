@@ -5,7 +5,7 @@ import { db } from "@/lib/db";
 import { brandProfiles } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
-import { getCurrentBrand } from "@/lib/auth";
+import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 
 const onboardingSchema = z.object({
   companyName: z.string().min(2, "Add meg a cég / vállalkozás nevét").max(200),
@@ -96,5 +96,25 @@ export async function updateBrandLogo(input: z.input<typeof logoSchema>) {
 
   revalidatePath("/brand");
   revalidatePath("/brand/profile");
+  return { success: true };
+}
+
+/** Admin: egy adott márka logójának frissítése (pl. a saját Creatorz.hu profilé). */
+export async function adminUpdateBrandLogo(
+  brandId: string,
+  input: z.input<typeof logoSchema>,
+) {
+  const current = await getCurrentUser();
+  if (current?.dbUser?.role !== "admin") return { error: "Csak admin" };
+  const parsed = logoSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen adat" };
+
+  await db
+    .update(brandProfiles)
+    .set({ logoUrl: parsed.data.logoUrl || null, updatedAt: new Date() })
+    .where(eq(brandProfiles.id, brandId));
+
+  revalidatePath("/admin/ads");
+  revalidatePath("/ads");
   return { success: true };
 }

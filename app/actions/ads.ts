@@ -213,8 +213,17 @@ export async function adminCreateAd(brandId: string, input: z.input<typeof adSch
 }
 
 export async function updateAd(adId: string, input: z.input<typeof adUpdateSchema>) {
-  const brand = await getCurrentBrand();
-  if (!brand) return { error: "Nincs bejelentkezve" };
+  const current = await getCurrentUser();
+  if (!current?.dbUser) return { error: "Nincs bejelentkezve" };
+  const isAdmin = current.dbUser.role === "admin";
+
+  // Admin bármelyik kampányt szerkesztheti; a márka csak a sajátját.
+  let ownerBrandId: string | null = null;
+  if (!isAdmin) {
+    const brand = await getCurrentBrand();
+    if (!brand) return { error: "Nincs bejelentkezve" };
+    ownerBrandId = brand.profile.id;
+  }
 
   const parsed = adUpdateSchema.safeParse(input);
   if (!parsed.success) {
@@ -227,7 +236,7 @@ export async function updateAd(adId: string, input: z.input<typeof adUpdateSchem
     .from(ads)
     .where(eq(ads.id, adId))
     .limit(1);
-  if (!existing || existing.brandId !== brand.profile.id) {
+  if (!existing || (!isAdmin && existing.brandId !== ownerBrandId)) {
     return { error: "A kampány nem található" };
   }
 
@@ -257,6 +266,8 @@ export async function updateAd(adId: string, input: z.input<typeof adUpdateSchem
 
   revalidatePath(`/brand/ads/${adId}`);
   revalidatePath("/brand/ads");
+  revalidatePath("/admin/ads");
+  revalidatePath(`/ads/${adId}`);
   revalidatePath("/ads");
   return { success: true, id: adId };
 }

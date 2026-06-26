@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Archive, Plus } from "lucide-react";
+import { Archive, Pencil, Plus } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, brandProfiles } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,6 +76,11 @@ export default async function AdminAdsPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <AdModerationActions adId={a.id} status={a.status} featured={a.isFeatured} />
                   <AdLifecycleActions adId={a.id} status={a.status} />
+                  <Button asChild size="sm" variant="outline">
+                    <Link href={`/admin/ads/${a.id}/edit`}>
+                      <Pencil className="h-3.5 w-3.5" /> Szerkesztés
+                    </Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -110,7 +115,14 @@ export default async function AdminAdsPage() {
                   </td>
                   <td className="p-3 whitespace-nowrap">{formatHuDate(a.createdAt)}</td>
                   <td className="p-3">
-                    <AdLifecycleActions adId={a.id} status={a.status} />
+                    <div className="flex flex-wrap items-center gap-2">
+                      <AdLifecycleActions adId={a.id} status={a.status} />
+                      <Button asChild size="sm" variant="outline">
+                        <Link href={`/admin/ads/${a.id}/edit`}>
+                          <Pencil className="h-3.5 w-3.5" /> Szerkesztés
+                        </Link>
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -61,11 +61,14 @@ export function AdForm({
   adId,
   initial,
   adminBrandId,
+  adminEdit = false,
 }: {
   adId?: string;
   initial?: AdFormInitial;
   /** Admin mód: a kampány ennek a márkának a nevében jön létre. */
   adminBrandId?: string;
+  /** Admin szerkeszti egy meglévő kampányt → vissza az admin listára. */
+  adminEdit?: boolean;
 }) {
   const router = useRouter();
   const isEdit = Boolean(adId);
@@ -128,7 +131,7 @@ export function AdForm({
           ? "Kampány létrehozva (aktív)!"
           : "Kampány beküldve moderálásra!",
     );
-    router.push(adminBrandId ? "/admin/ads" : `/brand/ads/${res.id}`);
+    router.push(adminBrandId || adminEdit ? "/admin/ads" : `/brand/ads/${res.id}`);
     router.refresh();
   }
 
