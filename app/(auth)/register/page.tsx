@@ -390,7 +390,7 @@ function RoleCard({
       style={{ aspectRatio: "788 / 565" }}
     >
       <Image
-        src={`${image}?v=3`}
+        src={`${image}?v=4`}
         alt={alt}
         fill
         priority
