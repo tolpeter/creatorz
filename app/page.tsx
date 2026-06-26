@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { creatorProfiles, users } from "@/lib/db/schema";
+import { creatorProfiles, users, collaborations } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,6 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MarketplaceSection } from "@/components/shared/marketplace-section";
 import { WhyCreatorzSection } from "@/components/shared/why-creatorz-section";
 import { MobileAppPopup } from "@/components/shared/mobile-app-popup";
-import { RotatingWords } from "@/components/shared/rotating-words";
 import { getSetting } from "@/lib/settings";
 
 export default async function LandingPage() {
@@ -72,6 +71,18 @@ export default async function LandingPage() {
     isFeatured: Boolean(r.isFeatured || r.isAdminFeatured),
   }));
 
+  // Social proof: az összes regisztrált felhasználó + 300, kerekítve (50-es
+  // lefelé kerekítés), és a valós együttműködés-szám.
+  const [userCountRow, collabCountRow] = await Promise.all([
+    db.select({ c: sql<number>`count(*)::int` }).from(users).catch(() => [{ c: 0 }]),
+    db
+      .select({ c: sql<number>`count(*)::int` })
+      .from(collaborations)
+      .catch(() => [{ c: 0 }]),
+  ]);
+  const roundDown50 = (n: number) => Math.max(50, Math.floor(n / 50) * 50);
+  const profilesRounded = roundDown50((userCountRow[0]?.c ?? 0) + 300);
+  const collabCount = collabCountRow[0]?.c ?? 0;
 
   const steps = [
     {
@@ -95,7 +106,7 @@ export default async function LandingPage() {
     <div className="flex min-h-screen flex-col">
       <MobileAppPopup enabled={mobileAppPopup} />
       <SiteHeader isLoggedIn={Boolean(current?.dbUser)} />
-      <HomeHero />
+      <HomeHero profilesRounded={profilesRounded} collabCount={collabCount} />
 
       {featured.length > 0 && (
         <section className="py-20">
@@ -261,7 +272,14 @@ export default async function LandingPage() {
   );
 }
 
-function HomeHero() {
+function HomeHero({
+  profilesRounded,
+  collabCount,
+}: {
+  profilesRounded: number;
+  collabCount: number;
+}) {
+  const fmt = (n: number) => n.toLocaleString("hu-HU");
   return (
     <section className="relative isolate block overflow-hidden bg-[#0a0a0a] px-4 pb-16 pt-4 text-white sm:px-6 sm:pb-14 lg:min-h-[700px] lg:px-8 lg:pb-20">
       <Image
@@ -308,22 +326,19 @@ function HomeHero() {
               {"Magyar k\u00f6z\u00f6ss\u00e9g"}
             </div>
 
-            <h1 className="text-balance break-words text-[2rem] font-black leading-[1.04] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[64px]">
-              <RotatingWords
-                words={["Tartalomgy\u00e1rt\u00f3k", "Influencerek", "Modellek"]}
-                className="text-white"
-              />
-              <RotatingWords
-                words={["Fot\u00f3sok", "Vide\u00f3v\u00e1g\u00f3k", "Operat\u0151r\u00f6k"]}
-                className="text-accent"
-                interval={2600}
-              />
-              <span className="block">{"Egy helyen."}</span>
+            <h1 className="break-words font-black uppercase leading-[1.07] text-white text-[1.7rem] sm:text-[2.4rem] lg:text-[2.5rem] xl:text-[3rem]">
+              <span className="block">{"Tartalomgy\u00e1rt\u00f3k,"}</span>
+              <span className="block">{"Influencerek,"}</span>
+              <span className="block">{"Modellek,"}</span>
+              <span className="block normal-case font-bold text-accent text-[0.72em] leading-[1.15]">
+                {"Fot\u00f3sok, vide\u00f3v\u00e1g\u00f3k, operat\u0151r\u00f6k"}
+              </span>
+              <span className="block">{"Egy helyen"}</span>
             </h1>
 
             <p className="mt-5 max-w-full text-balance text-[15px] leading-6 text-white/70 sm:mt-6 sm:text-lg sm:leading-8 lg:max-w-[520px]">
               {
-                "Tal\u00e1lj m\u00e1rk\u00e1kat, kamp\u00e1nyokat \u00e9s izgalmas projekteket. Val\u00f3di egy\u00fcttm\u0171k\u00f6d\u00e9sek. Val\u00f3di eredm\u00e9nyek."
+                "Tal\u00e1ld meg a sz\u00e1modra megfelel\u0151 egy\u00fcttm\u0171k\u00f6d\u00e9st, partnert \u2013 an\u00e9lk\u00fcl, hogy fizetn\u00e9l a keres\u00e9s\u00e9rt. Val\u00f3di egy\u00fcttm\u0171k\u00f6d\u00e9sek. Val\u00f3di eredm\u00e9nyek."
               }
             </p>
 
@@ -353,6 +368,36 @@ function HomeHero() {
           {/* Jobb: telefon mockup */}
           <HeroVisual />
         </div>
+
+        {/* Social proof + statisztika */}
+        <div className="mt-8 border-t border-white/10 pt-7 sm:mt-10 sm:pt-8">
+          <p className="text-center text-sm text-white/65 sm:text-base">
+            {"Több mint "}
+            <span className="font-bold text-white">{fmt(profilesRounded)}+</span>
+            {" márka, cég, influencer, tartalomgyártó és modell választotta a "}
+            <span className="font-bold text-accent">Creatorz</span>
+            {"-t"}
+          </p>
+          <div className="mt-6 flex items-stretch justify-center gap-10 sm:gap-20">
+            <div className="text-center">
+              <div className="text-3xl font-black text-accent sm:text-4xl">
+                {fmt(profilesRounded)}+
+              </div>
+              <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
+                Regisztrált profil
+              </div>
+            </div>
+            <div className="w-px bg-white/10" aria-hidden />
+            <div className="text-center">
+              <div className="text-3xl font-black text-accent sm:text-4xl">
+                {fmt(collabCount)}
+              </div>
+              <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
+                Együttműködés
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
   );
@@ -366,7 +411,7 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[340px] w-full min-w-0 max-w-[560px] items-center justify-center sm:h-[540px] lg:h-[640px] lg:max-w-[680px] xl:max-w-[760px]">
+    <div className="relative mx-auto flex h-[380px] w-full min-w-0 max-w-[560px] items-center justify-center sm:h-[620px] lg:h-[770px] lg:max-w-[700px] xl:max-w-[780px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
@@ -381,7 +426,7 @@ function HeroVisual() {
         height={372}
         priority
         sizes="(min-width: 1024px) 520px, 85vw"
-        className="absolute bottom-[5%] left-1/2 z-0 h-auto w-[82%] max-w-[320px] -translate-x-1/2 object-contain sm:max-w-[460px] lg:max-w-[520px]"
+        className="absolute bottom-[5%] left-1/2 z-0 h-auto w-[84%] max-w-[340px] -translate-x-1/2 object-contain sm:max-w-[500px] lg:max-w-[560px]"
       />
 
       {/* K\u00f6zponti telefon mockup (k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
@@ -392,7 +437,7 @@ function HeroVisual() {
         height={1040}
         priority
         sizes="(min-width: 1280px) 320px, (min-width: 640px) 280px, 200px"
-        className="animate-float relative z-10 h-auto w-[200px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[280px] xl:w-[320px]"
+        className="animate-float relative z-10 h-auto w-[240px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[330px] lg:w-[350px] xl:w-[395px]"
       />
 
       {/* === Lebeg\u0151 kateg\u00f3ria-k\u00e1rty\u00e1k (a l\u00e1tv\u00e1nyterv elrendez\u00e9se) === */}
@@ -403,7 +448,7 @@ function HeroVisual() {
         width={540}
         height={600}
         sizes="160px"
-        className="animate-float absolute left-0 top-0 z-20 hidden h-auto w-[140px] rotate-[-5deg] object-contain drop-shadow-2xl md:block xl:w-[158px]"
+        className="animate-float absolute left-[1%] top-0 z-20 hidden h-auto w-[160px] rotate-[-5deg] object-contain drop-shadow-2xl md:block xl:w-[182px]"
       />
       {/* Jobb fels\u0151: Fot\u00f3sok */}
       <Image
@@ -412,7 +457,7 @@ function HeroVisual() {
         width={540}
         height={540}
         sizes="160px"
-        className="animate-float absolute right-0 top-0 z-20 hidden h-auto w-[140px] rotate-[4deg] object-contain drop-shadow-2xl md:block xl:w-[156px]"
+        className="animate-float absolute right-[1%] top-0 z-20 hidden h-auto w-[160px] rotate-[4deg] object-contain drop-shadow-2xl md:block xl:w-[180px]"
         style={{ animationDelay: "0.4s" }}
       />
       {/* Bal k\u00f6z\u00e9p: Modellek */}
@@ -422,7 +467,7 @@ function HeroVisual() {
         width={540}
         height={620}
         sizes="155px"
-        className="animate-float absolute left-[-1%] top-[37%] z-20 hidden h-auto w-[134px] -rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[152px]"
+        className="animate-float absolute left-0 top-[35%] z-20 hidden h-auto w-[154px] -rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[175px]"
         style={{ animationDelay: "0.9s" }}
       />
       {/* Jobb k\u00f6z\u00e9p: Vide\u00f3v\u00e1g\u00f3k */}
@@ -432,7 +477,7 @@ function HeroVisual() {
         width={560}
         height={520}
         sizes="165px"
-        className="animate-float absolute right-[-2%] top-[38%] z-20 hidden h-auto w-[142px] rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[162px]"
+        className="animate-float absolute right-[-1%] top-[32%] z-20 hidden h-auto w-[163px] rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[186px]"
         style={{ animationDelay: "0.6s" }}
       />
       {/* Bal als\u00f3: Tartalomgy\u00e1rt\u00f3k */}
@@ -442,7 +487,7 @@ function HeroVisual() {
         width={560}
         height={560}
         sizes="160px"
-        className="animate-float absolute bottom-0 left-[3%] z-30 hidden h-auto w-[146px] rotate-[2deg] object-contain drop-shadow-2xl lg:block xl:w-[164px]"
+        className="animate-float absolute bottom-0 left-[4%] z-30 hidden h-auto w-[168px] rotate-[2deg] object-contain drop-shadow-2xl lg:block xl:w-[189px]"
         style={{ animationDelay: "1.2s" }}
       />
       {/* Jobb als\u00f3: Operat\u0151r\u00f6k */}
@@ -452,7 +497,7 @@ function HeroVisual() {
         width={560}
         height={520}
         sizes="160px"
-        className="animate-float absolute bottom-[2%] right-0 z-20 hidden h-auto w-[142px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block xl:w-[158px]"
+        className="animate-float absolute bottom-[1%] right-0 z-20 hidden h-auto w-[163px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block xl:w-[182px]"
         style={{ animationDelay: "1.5s" }}
       />
     </div>
