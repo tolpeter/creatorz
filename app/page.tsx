@@ -373,20 +373,20 @@ function HeroVisual() {
         className="absolute bottom-[14%] left-1/2 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-accent/25 blur-[120px] sm:h-[420px] sm:w-[420px]"
       />
 
-      {/* Vil\u00e1g\u00edt\u00f3 f\u00e9nygy\u0171r\u0171 a telefon talp\u00e1n\u00e1l */}
+      {/* Vil\u00e1g\u00edt\u00f3 platform-korong a telefon talp\u00e1n\u00e1l */}
       <Image
-        src="/images/home-hero-2/ring.png"
+        src="/images/home-hero/hero-platform.webp"
         alt=""
-        width={1456}
-        height={1092}
+        width={1153}
+        height={372}
         priority
-        sizes="(min-width: 1024px) 560px, 90vw"
-        className="absolute bottom-[8%] left-1/2 z-0 h-auto w-[92%] max-w-[340px] -translate-x-1/2 object-contain mix-blend-screen sm:max-w-[500px] lg:max-w-[560px]"
+        sizes="(min-width: 1024px) 520px, 85vw"
+        className="absolute bottom-[5%] left-1/2 z-0 h-auto w-[82%] max-w-[320px] -translate-x-1/2 object-contain sm:max-w-[460px] lg:max-w-[520px]"
       />
 
       {/* K\u00f6zponti telefon mockup (k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
       <Image
-        src="/images/home-hero-2/phone.png"
+        src="/images/home-hero-2/phone.webp"
         alt={"Creatorz alkot\u00f3 a telefon k\u00e9perny\u0151j\u00e9n"}
         width={780}
         height={1040}
@@ -398,7 +398,7 @@ function HeroVisual() {
       {/* === Lebeg\u0151 kateg\u00f3ria-k\u00e1rty\u00e1k (a l\u00e1tv\u00e1nyterv elrendez\u00e9se) === */}
       {/* Bal fels\u0151: Influencerek */}
       <Image
-        src="/images/home-hero-2/card-influencer.png"
+        src="/images/home-hero-2/card-influencer.webp"
         alt="Influencerek"
         width={540}
         height={600}
@@ -407,7 +407,7 @@ function HeroVisual() {
       />
       {/* Jobb fels\u0151: Fot\u00f3sok */}
       <Image
-        src="/images/home-hero-2/card-photographer.png"
+        src="/images/home-hero-2/card-photographer.webp"
         alt="Fot\u00f3sok"
         width={540}
         height={540}
@@ -417,7 +417,7 @@ function HeroVisual() {
       />
       {/* Bal k\u00f6z\u00e9p-als\u00f3: Modellek */}
       <Image
-        src="/images/home-hero-2/card-model.png"
+        src="/images/home-hero-2/card-model.webp"
         alt="Modellek"
         width={540}
         height={620}
@@ -427,7 +427,7 @@ function HeroVisual() {
       />
       {/* Jobb k\u00f6z\u00e9p: Vide\u00f3v\u00e1g\u00f3k */}
       <Image
-        src="/images/home-hero-2/card-editor.png"
+        src="/images/home-hero-2/card-editor.webp"
         alt="Vide\u00f3v\u00e1g\u00f3k"
         width={560}
         height={520}
@@ -437,7 +437,7 @@ function HeroVisual() {
       />
       {/* Bal als\u00f3: Tartalomgy\u00e1rt\u00f3k (a telefon talp\u00e1n\u00e1l) */}
       <Image
-        src="/images/home-hero-2/card-ugc.png"
+        src="/images/home-hero-2/card-ugc.webp"
         alt="Tartalomgy\u00e1rt\u00f3k"
         width={560}
         height={560}
@@ -447,7 +447,7 @@ function HeroVisual() {
       />
       {/* Jobb als\u00f3: Operat\u0151r\u00f6k */}
       <Image
-        src="/images/home-hero-2/card-operator.png"
+        src="/images/home-hero-2/card-operator.webp"
         alt="Operat\u0151r\u00f6k"
         width={560}
         height={520}
