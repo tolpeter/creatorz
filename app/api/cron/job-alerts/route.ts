@@ -58,6 +58,7 @@ export async function GET(req: Request) {
       displayName: creatorProfiles.displayName,
       categories: creatorProfiles.categories,
       profileKind: creatorProfiles.profileKind,
+      creatorType: creatorProfiles.creatorType,
       professionalRoles: creatorProfiles.professionalRoles,
     })
     .from(creatorProfiles)
@@ -78,7 +79,9 @@ export async function GET(req: Request) {
     const matched = recentAds.filter((ad) => {
       const kinds = ad.targetKinds ?? ["ugc"];
       if (creator.profileKind === "ugc") {
-        if (!kinds.includes("ugc")) return false;
+        // UGC / influenszer / modell: a creator típusa szerepeljen a keresett típusok közt
+        const ctype = creator.creatorType ?? "ugc";
+        if (!kinds.includes(ctype)) return false;
         return (ad.categories ?? []).some((c) => creatorCats.includes(c));
       }
       // kreatív szakember: a szerepköre szerepeljen a keresett típusok közt

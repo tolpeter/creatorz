@@ -33,7 +33,7 @@ const adObject = z.object({
     .min(1, "Válassz legalább egy kategóriát")
     .max(3, "Legfeljebb 3 kategóriát választhatsz"),
   targetKinds: z
-    .array(z.enum(["ugc", "editor", "photographer", "videographer"]))
+    .array(z.enum(["ugc", "influencer", "model", "editor", "photographer", "videographer"]))
     .min(1, "Jelölj meg legalább egy keresett típust")
     .default(["ugc"]),
   contentType: z.enum(["video", "photo", "both"]),

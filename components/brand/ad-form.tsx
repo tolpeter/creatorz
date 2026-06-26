@@ -28,9 +28,11 @@ import {
 } from "@/lib/constants";
 import { createAd, updateAd, adminCreateAd } from "@/app/actions/ads";
 
-// "Kit keresel?" opciók — UGC creator + kreatív szakember típusok
+// "Kit keresel?" opciók — UGC creator / influenszer / modell + kreatív szakember típusok
 const TARGET_KIND_OPTIONS = [
   { value: "ugc", label: "UGC tartalomgyártó" },
+  { value: "influencer", label: "Influenszer" },
+  { value: "model", label: "Modell" },
   { value: "editor", label: "Videóvágó" },
   { value: "photographer", label: "Fotós" },
   { value: "videographer", label: "Operatőr" },
@@ -94,7 +96,7 @@ export function AdForm({
       title,
       description,
       categories,
-      targetKinds: targetKinds as ("ugc" | "editor" | "photographer" | "videographer")[],
+      targetKinds: targetKinds as ("ugc" | "influencer" | "model" | "editor" | "photographer" | "videographer")[],
       contentType: contentType as "video" | "photo" | "both",
       collaborationType: collaborationType as "project" | "longterm" | "barter",
       coverUrl,

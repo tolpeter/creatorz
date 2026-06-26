@@ -17,6 +17,8 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 
 const TARGET_LABELS: Record<string, string> = {
   ugc: "UGC tartalomgyártó",
+  influencer: "Influenszer",
+  model: "Modell",
   editor: "Videóvágó",
   photographer: "Fotós",
   videographer: "Operatőr",

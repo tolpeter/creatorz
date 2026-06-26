@@ -223,7 +223,7 @@ export default async function AdDetailPage({
   );
   const targetKindLabels = (ad.targetKinds ?? ["ugc"]).map(
     (k) =>
-      ({ ugc: "UGC tartalomgyártó", editor: "Videóvágó", photographer: "Fotós", videographer: "Operatőr" })[k] ?? k,
+      ({ ugc: "UGC tartalomgyártó", influencer: "Influenszer", model: "Modell", editor: "Videóvágó", photographer: "Fotós", videographer: "Operatőr" })[k] ?? k,
   );
   const contentTypeLabel =
     CONTENT_TYPES.find((x) => x.value === ad.contentType)?.label ?? ad.contentType;
