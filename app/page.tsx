@@ -10,7 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import { db } from "@/lib/db";
-import { creatorProfiles, users, collaborations } from "@/lib/db/schema";
+import { creatorProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -71,18 +71,13 @@ export default async function LandingPage() {
     isFeatured: Boolean(r.isFeatured || r.isAdminFeatured),
   }));
 
-  // Social proof: az összes regisztrált felhasználó + 300, kerekítve (50-es
-  // lefelé kerekítés), és a valós együttműködés-szám.
-  const [userCountRow, collabCountRow] = await Promise.all([
-    db.select({ c: sql<number>`count(*)::int` }).from(users).catch(() => [{ c: 0 }]),
-    db
-      .select({ c: sql<number>`count(*)::int` })
-      .from(collaborations)
-      .catch(() => [{ c: 0 }]),
-  ]);
+  // Social proof: az összes regisztrált felhasználó + 300, 50-re lefelé kerekítve.
+  const userCountRow = await db
+    .select({ c: sql<number>`count(*)::int` })
+    .from(users)
+    .catch(() => [{ c: 0 }]);
   const roundDown50 = (n: number) => Math.max(50, Math.floor(n / 50) * 50);
   const profilesRounded = roundDown50((userCountRow[0]?.c ?? 0) + 300);
-  const collabCount = collabCountRow[0]?.c ?? 0;
 
   const steps = [
     {
@@ -106,7 +101,7 @@ export default async function LandingPage() {
     <div className="flex min-h-screen flex-col">
       <MobileAppPopup enabled={mobileAppPopup} />
       <SiteHeader isLoggedIn={Boolean(current?.dbUser)} />
-      <HomeHero profilesRounded={profilesRounded} collabCount={collabCount} />
+      <HomeHero profilesRounded={profilesRounded} />
 
       {featured.length > 0 && (
         <section className="py-20">
@@ -272,13 +267,7 @@ export default async function LandingPage() {
   );
 }
 
-function HomeHero({
-  profilesRounded,
-  collabCount,
-}: {
-  profilesRounded: number;
-  collabCount: number;
-}) {
+function HomeHero({ profilesRounded }: { profilesRounded: number }) {
   const fmt = (n: number) => n.toLocaleString("hu-HU");
   return (
     <section className="relative isolate block overflow-hidden bg-[#0a0a0a] px-4 pb-16 pt-4 text-white sm:px-6 sm:pb-14 lg:min-h-[700px] lg:px-8 lg:pb-20">
@@ -363,40 +352,19 @@ function HomeHero({
                 </Link>
               </Button>
             </div>
+
+            {/* Social proof — a gombok alatt, kicsiben */}
+            <p className="mt-5 max-w-full text-xs leading-5 text-white/55 sm:text-sm lg:max-w-[520px]">
+              {"Több mint "}
+              <span className="font-bold text-white">{fmt(profilesRounded)}+</span>
+              {" márka, cég, influencer, tartalomgyártó és modell választotta a "}
+              <span className="font-bold text-accent">Creatorz</span>
+              {"-t"}
+            </p>
           </div>
 
           {/* Jobb: telefon mockup */}
           <HeroVisual />
-        </div>
-
-        {/* Social proof + statisztika */}
-        <div className="mt-8 border-t border-white/10 pt-7 sm:mt-10 sm:pt-8">
-          <p className="text-center text-sm text-white/65 sm:text-base">
-            {"Több mint "}
-            <span className="font-bold text-white">{fmt(profilesRounded)}+</span>
-            {" márka, cég, influencer, tartalomgyártó és modell választotta a "}
-            <span className="font-bold text-accent">Creatorz</span>
-            {"-t"}
-          </p>
-          <div className="mt-6 flex items-stretch justify-center gap-10 sm:gap-20">
-            <div className="text-center">
-              <div className="text-3xl font-black text-accent sm:text-4xl">
-                {fmt(profilesRounded)}+
-              </div>
-              <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
-                Regisztrált profil
-              </div>
-            </div>
-            <div className="w-px bg-white/10" aria-hidden />
-            <div className="text-center">
-              <div className="text-3xl font-black text-accent sm:text-4xl">
-                {fmt(collabCount)}
-              </div>
-              <div className="mt-1 text-xs font-semibold uppercase tracking-[0.12em] text-white/55">
-                Együttműködés
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </section>
