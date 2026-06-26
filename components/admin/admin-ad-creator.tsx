@@ -17,10 +17,12 @@ import { AdForm } from "@/components/brand/ad-form";
  */
 export function AdminAdCreator({
   brands,
+  defaultBrandId = "",
 }: {
   brands: { id: string; name: string }[];
+  defaultBrandId?: string;
 }) {
-  const [brandId, setBrandId] = useState<string>("");
+  const [brandId, setBrandId] = useState<string>(defaultBrandId);
 
   return (
     <div className="space-y-6">
