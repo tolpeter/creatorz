@@ -24,6 +24,7 @@ import { SiteHeader } from "@/components/layout/site-header";
 import { MarketplaceSection } from "@/components/shared/marketplace-section";
 import { WhyCreatorzSection } from "@/components/shared/why-creatorz-section";
 import { MobileAppPopup } from "@/components/shared/mobile-app-popup";
+import { RotatingWords } from "@/components/shared/rotating-words";
 import { getSetting } from "@/lib/settings";
 
 export default async function LandingPage() {
@@ -304,17 +305,25 @@ function HomeHero() {
           <div className="min-w-0 max-w-full lg:max-w-[640px]">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm">
               <Users className="h-3.5 w-3.5" />
-              {"Magyar UGC k\u00f6z\u00f6ss\u00e9g"}
+              {"Magyar k\u00f6z\u00f6ss\u00e9g"}
             </div>
 
-            <h1 className="text-balance break-words text-[1.8rem] font-black leading-[1.05] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[62px]">
-              {"Magyar tartalomgy\u00e1rt\u00f3k \u00e9s m\u00e1rk\u00e1k "}
-              <span className="text-accent">{"tal\u00e1lkoz\u00f3helye."}</span>
+            <h1 className="text-balance break-words text-[2rem] font-black leading-[1.04] text-white sm:text-5xl sm:leading-[1.02] lg:text-[56px] xl:text-[64px]">
+              <RotatingWords
+                words={["Tartalomgy\u00e1rt\u00f3k", "Influencerek", "Modellek"]}
+                className="text-white"
+              />
+              <RotatingWords
+                words={["Fot\u00f3sok", "Vide\u00f3v\u00e1g\u00f3k", "Operat\u0151r\u00f6k"]}
+                className="text-accent"
+                interval={2600}
+              />
+              <span className="block">{"Egy helyen."}</span>
             </h1>
 
-            <p className="mt-4 max-w-full text-balance text-[15px] leading-6 text-white/70 sm:mt-5 sm:text-lg sm:leading-8 lg:max-w-[560px]">
+            <p className="mt-5 max-w-full text-balance text-[15px] leading-6 text-white/70 sm:mt-6 sm:text-lg sm:leading-8 lg:max-w-[520px]">
               {
-                "Hiteles UGC tartalomgy\u00e1rt\u00f3k, vide\u00f3v\u00e1g\u00f3k, fot\u00f3sok \u00e9s operat\u0151r\u00f6k egy helyen. Tal\u00e1ld meg a t\u00f6k\u00e9letes partnert, ind\u00edts kamp\u00e1nyt, \u00e9s \u00e9p\u00edts hossz\u00fa t\u00e1v\u00fa egy\u00fcttm\u0171k\u00f6d\u00e9seket."
+                "Tal\u00e1lj m\u00e1rk\u00e1kat, kamp\u00e1nyokat \u00e9s izgalmas projekteket. Val\u00f3di egy\u00fcttm\u0171k\u00f6d\u00e9sek. Val\u00f3di eredm\u00e9nyek."
               }
             </p>
 
@@ -325,7 +334,7 @@ function HomeHero() {
                 className="h-[54px] w-full rounded-full bg-accent px-7 text-base font-bold text-black shadow-[0_0_44px_rgba(163,230,53,0.38)] hover:bg-white sm:w-auto"
               >
                 <Link href="/register?role=creator">
-                  {"Tartalomgy\u00e1rt\u00f3 vagyok"} <ArrowRight className="h-5 w-5" />
+                  {"Regisztr\u00e1lok alkot\u00f3k\u00e9nt"} <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
               <Button
@@ -335,7 +344,7 @@ function HomeHero() {
                 className="h-[54px] w-full rounded-full border-white/20 bg-white/[0.04] px-7 text-base font-bold text-white backdrop-blur hover:bg-white/10 hover:text-white sm:w-auto"
               >
                 <Link href="/register?role=brand">
-                  {"M\u00e1rk\u00e1t k\u00e9pviselek"} <ArrowRight className="h-5 w-5" />
+                  {"Regisztr\u00e1lok m\u00e1rkak\u00e9nt"} <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
             </div>
@@ -357,93 +366,93 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[280px] w-full min-w-0 max-w-[560px] items-end justify-center sm:h-[520px] lg:h-[600px] lg:max-w-[600px]">
+    <div className="relative mx-auto flex h-[340px] w-full min-w-0 max-w-[560px] items-center justify-center sm:h-[520px] lg:h-[620px] lg:max-w-[620px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
-        className="absolute bottom-[18%] left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full bg-accent/25 blur-[110px] sm:h-[380px] sm:w-[380px]"
+        className="absolute bottom-[14%] left-1/2 h-[320px] w-[320px] -translate-x-1/2 rounded-full bg-accent/25 blur-[120px] sm:h-[420px] sm:w-[420px]"
       />
 
-      {/* Vil\u00e1g\u00edt\u00f3 platform-korong a telefon alatt */}
+      {/* Vil\u00e1g\u00edt\u00f3 f\u00e9nygy\u0171r\u0171 a telefon talp\u00e1n\u00e1l */}
       <Image
-        src="/images/home-hero/hero-platform.webp"
+        src="/images/home-hero-2/ring.png"
         alt=""
-        width={1153}
-        height={372}
+        width={1456}
+        height={1092}
         priority
-        sizes="(min-width: 1024px) 440px, 80vw"
-        className="absolute bottom-[-8%] left-1/2 z-0 h-auto w-[78%] max-w-[300px] -translate-x-1/2 object-contain sm:bottom-[2%] sm:max-w-[440px]"
+        sizes="(min-width: 1024px) 560px, 90vw"
+        className="absolute bottom-[8%] left-1/2 z-0 h-auto w-[92%] max-w-[340px] -translate-x-1/2 object-contain mix-blend-screen sm:max-w-[500px] lg:max-w-[560px]"
       />
 
-      {/* Telefon mockup (m\u00e1r k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
+      {/* K\u00f6zponti telefon mockup (k\u00e9sz, 3D-d\u0151lt eszk\u00f6z) */}
       <Image
-        src="/images/home-hero/hero-phone.webp"
-        alt={"UGC vide\u00f3 felv\u00e9tel telefonon"}
-        width={679}
-        height={1241}
+        src="/images/home-hero-2/phone.png"
+        alt={"Creatorz alkot\u00f3 a telefon k\u00e9perny\u0151j\u00e9n"}
+        width={780}
+        height={1040}
         priority
-        sizes="(min-width: 1280px) 300px, (min-width: 640px) 270px, 170px"
-        className="animate-float relative z-10 mb-8 h-auto w-[132px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:mb-0 sm:w-[270px] xl:w-[300px]"
+        sizes="(min-width: 1280px) 320px, (min-width: 640px) 280px, 200px"
+        className="animate-float relative z-10 h-auto w-[200px] object-contain drop-shadow-[0_30px_80px_rgba(0,0,0,0.6)] sm:w-[280px] xl:w-[320px]"
       />
 
-      {/* === Lebeg\u0151 k\u00e1rty\u00e1k === */}
-      {/* Bal fels\u0151: K\u00f6vet\u0151k */}
+      {/* === Lebeg\u0151 kateg\u00f3ria-k\u00e1rty\u00e1k (a l\u00e1tv\u00e1nyterv elrendez\u00e9se) === */}
+      {/* Bal fels\u0151: Influencerek */}
       <Image
-        src="/images/home-hero/card-followers.webp"
-        alt=""
-        width={1156}
-        height={910}
-        sizes="190px"
-        className="animate-float absolute left-0 top-[4%] z-20 hidden h-auto w-[170px] rotate-[-3deg] object-contain drop-shadow-2xl md:block xl:w-[190px]"
+        src="/images/home-hero-2/card-influencer.png"
+        alt="Influencerek"
+        width={540}
+        height={600}
+        sizes="170px"
+        className="animate-float absolute left-[-2%] top-[2%] z-20 hidden h-auto w-[150px] rotate-[-5deg] object-contain drop-shadow-2xl md:block xl:w-[172px]"
       />
-      {/* Jobb fels\u0151: Akt\u00edv kamp\u00e1ny */}
+      {/* Jobb fels\u0151: Fot\u00f3sok */}
       <Image
-        src="/images/home-hero/card-campaign.webp"
-        alt=""
-        width={1241}
-        height={740}
-        sizes="210px"
-        className="animate-float absolute right-0 top-[2%] z-20 hidden h-auto w-[185px] rotate-[3deg] object-contain drop-shadow-2xl md:block xl:w-[210px]"
-        style={{ animationDelay: "0.3s" }}
+        src="/images/home-hero-2/card-photographer.png"
+        alt="Fot\u00f3sok"
+        width={540}
+        height={540}
+        sizes="165px"
+        className="animate-float absolute right-[-2%] top-[1%] z-20 hidden h-auto w-[148px] rotate-[4deg] object-contain drop-shadow-2xl md:block xl:w-[168px]"
+        style={{ animationDelay: "0.4s" }}
       />
-      {/* Bal als\u00f3: UGC tartalmak */}
+      {/* Bal k\u00f6z\u00e9p-als\u00f3: Modellek */}
       <Image
-        src="/images/home-hero/card-ugc.webp"
-        alt=""
-        width={1360}
-        height={831}
-        sizes="215px"
-        className="animate-float absolute bottom-[6%] left-[-2%] z-20 hidden h-auto w-[195px] rotate-[3deg] object-contain drop-shadow-2xl lg:block xl:w-[215px]"
+        src="/images/home-hero-2/card-model.png"
+        alt="Modellek"
+        width={540}
+        height={620}
+        sizes="160px"
+        className="animate-float absolute bottom-[10%] left-[-4%] z-20 hidden h-auto w-[145px] -rotate-[6deg] object-contain drop-shadow-2xl lg:block xl:w-[165px]"
         style={{ animationDelay: "0.9s" }}
       />
-      {/* Jobb als\u00f3: \u00dczenetek */}
+      {/* Jobb k\u00f6z\u00e9p: Vide\u00f3v\u00e1g\u00f3k */}
       <Image
-        src="/images/home-hero/card-messages.webp"
-        alt=""
-        width={1049}
-        height={698}
-        sizes="195px"
-        className="animate-float absolute bottom-[12%] right-0 z-20 hidden h-auto w-[180px] rotate-[-3deg] object-contain drop-shadow-2xl lg:block xl:w-[195px]"
-        style={{ animationDelay: "1.2s" }}
-      />
-      {/* Bal k\u00f6z\u00e9p: Elemz\u00e9sek (csak xl) */}
-      <Image
-        src="/images/home-hero/card-analytics.webp"
-        alt=""
-        width={1093}
-        height={922}
-        sizes="150px"
-        className="animate-float absolute left-[-3%] top-[42%] z-20 hidden h-auto w-[150px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block"
+        src="/images/home-hero-2/card-editor.png"
+        alt="Vide\u00f3v\u00e1g\u00f3k"
+        width={560}
+        height={520}
+        sizes="170px"
+        className="animate-float absolute right-[-5%] top-[40%] z-20 hidden h-auto w-[152px] rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[174px]"
         style={{ animationDelay: "0.6s" }}
       />
-      {/* Jobb k\u00f6z\u00e9p: Megtekint\u00e9sek (csak xl) */}
+      {/* Bal als\u00f3: Tartalomgy\u00e1rt\u00f3k (a telefon talp\u00e1n\u00e1l) */}
       <Image
-        src="/images/home-hero/card-views.webp"
-        alt=""
-        width={1197}
-        height={803}
+        src="/images/home-hero-2/card-ugc.png"
+        alt="Tartalomgy\u00e1rt\u00f3k"
+        width={560}
+        height={560}
+        sizes="180px"
+        className="animate-float absolute bottom-[2%] left-[6%] z-30 hidden h-auto w-[160px] rotate-[2deg] object-contain drop-shadow-2xl lg:block xl:w-[182px]"
+        style={{ animationDelay: "1.2s" }}
+      />
+      {/* Jobb als\u00f3: Operat\u0151r\u00f6k */}
+      <Image
+        src="/images/home-hero-2/card-operator.png"
+        alt="Operat\u0151r\u00f6k"
+        width={560}
+        height={520}
         sizes="170px"
-        className="animate-float absolute right-[-2%] top-[40%] z-20 hidden h-auto w-[170px] rotate-[4deg] object-contain drop-shadow-2xl xl:block"
+        className="animate-float absolute bottom-[6%] right-[-3%] z-20 hidden h-auto w-[152px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block xl:w-[172px]"
         style={{ animationDelay: "1.5s" }}
       />
     </div>

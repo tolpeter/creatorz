@@ -45,3 +45,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Hero forraskepek (hatter-eltavolitas elotti backup)
+public/images/home-hero-2/_raw/
