@@ -300,7 +300,7 @@ function HomeHero() {
       />
 
       <div className="relative z-10 mx-auto flex w-full max-w-[1280px] flex-col">
-        <div className="grid flex-1 items-center gap-1 pt-4 sm:gap-10 sm:pt-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-12 lg:pt-14">
+        <div className="grid flex-1 items-center gap-1 pt-4 sm:gap-10 sm:pt-12 lg:grid-cols-[0.92fr_1.08fr] lg:gap-10 lg:pt-14">
           {/* Bal: sz\u00f6veg */}
           <div className="min-w-0 max-w-full lg:max-w-[640px]">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/[0.06] px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-accent sm:text-sm">
@@ -366,7 +366,7 @@ function HomeHero() {
  */
 function HeroVisual() {
   return (
-    <div className="relative mx-auto flex h-[340px] w-full min-w-0 max-w-[560px] items-center justify-center sm:h-[520px] lg:h-[620px] lg:max-w-[620px]">
+    <div className="relative mx-auto flex h-[340px] w-full min-w-0 max-w-[560px] items-center justify-center sm:h-[540px] lg:h-[640px] lg:max-w-[680px] xl:max-w-[760px]">
       {/* Lime radi\u00e1lis glow a telefon m\u00f6g\u00f6tt */}
       <div
         aria-hidden
@@ -402,8 +402,8 @@ function HeroVisual() {
         alt="Influencerek"
         width={540}
         height={600}
-        sizes="170px"
-        className="animate-float absolute left-[-2%] top-[2%] z-20 hidden h-auto w-[150px] rotate-[-5deg] object-contain drop-shadow-2xl md:block xl:w-[172px]"
+        sizes="160px"
+        className="animate-float absolute left-0 top-0 z-20 hidden h-auto w-[140px] rotate-[-5deg] object-contain drop-shadow-2xl md:block xl:w-[158px]"
       />
       {/* Jobb fels\u0151: Fot\u00f3sok */}
       <Image
@@ -411,18 +411,18 @@ function HeroVisual() {
         alt="Fot\u00f3sok"
         width={540}
         height={540}
-        sizes="165px"
-        className="animate-float absolute right-[-2%] top-[1%] z-20 hidden h-auto w-[148px] rotate-[4deg] object-contain drop-shadow-2xl md:block xl:w-[168px]"
+        sizes="160px"
+        className="animate-float absolute right-0 top-0 z-20 hidden h-auto w-[140px] rotate-[4deg] object-contain drop-shadow-2xl md:block xl:w-[156px]"
         style={{ animationDelay: "0.4s" }}
       />
-      {/* Bal k\u00f6z\u00e9p-als\u00f3: Modellek */}
+      {/* Bal k\u00f6z\u00e9p: Modellek */}
       <Image
         src="/images/home-hero-2/card-model.webp"
         alt="Modellek"
         width={540}
         height={620}
-        sizes="160px"
-        className="animate-float absolute bottom-[10%] left-[-4%] z-20 hidden h-auto w-[145px] -rotate-[6deg] object-contain drop-shadow-2xl lg:block xl:w-[165px]"
+        sizes="155px"
+        className="animate-float absolute left-[-1%] top-[37%] z-20 hidden h-auto w-[134px] -rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[152px]"
         style={{ animationDelay: "0.9s" }}
       />
       {/* Jobb k\u00f6z\u00e9p: Vide\u00f3v\u00e1g\u00f3k */}
@@ -431,18 +431,18 @@ function HeroVisual() {
         alt="Vide\u00f3v\u00e1g\u00f3k"
         width={560}
         height={520}
-        sizes="170px"
-        className="animate-float absolute right-[-5%] top-[40%] z-20 hidden h-auto w-[152px] rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[174px]"
+        sizes="165px"
+        className="animate-float absolute right-[-2%] top-[38%] z-20 hidden h-auto w-[142px] rotate-[5deg] object-contain drop-shadow-2xl lg:block xl:w-[162px]"
         style={{ animationDelay: "0.6s" }}
       />
-      {/* Bal als\u00f3: Tartalomgy\u00e1rt\u00f3k (a telefon talp\u00e1n\u00e1l) */}
+      {/* Bal als\u00f3: Tartalomgy\u00e1rt\u00f3k */}
       <Image
         src="/images/home-hero-2/card-ugc.webp"
         alt="Tartalomgy\u00e1rt\u00f3k"
         width={560}
         height={560}
-        sizes="180px"
-        className="animate-float absolute bottom-[2%] left-[6%] z-30 hidden h-auto w-[160px] rotate-[2deg] object-contain drop-shadow-2xl lg:block xl:w-[182px]"
+        sizes="160px"
+        className="animate-float absolute bottom-0 left-[3%] z-30 hidden h-auto w-[146px] rotate-[2deg] object-contain drop-shadow-2xl lg:block xl:w-[164px]"
         style={{ animationDelay: "1.2s" }}
       />
       {/* Jobb als\u00f3: Operat\u0151r\u00f6k */}
@@ -451,8 +451,8 @@ function HeroVisual() {
         alt="Operat\u0151r\u00f6k"
         width={560}
         height={520}
-        sizes="170px"
-        className="animate-float absolute bottom-[6%] right-[-3%] z-20 hidden h-auto w-[152px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block xl:w-[172px]"
+        sizes="160px"
+        className="animate-float absolute bottom-[2%] right-0 z-20 hidden h-auto w-[142px] -rotate-[4deg] object-contain drop-shadow-2xl xl:block xl:w-[158px]"
         style={{ animationDelay: "1.5s" }}
       />
     </div>
