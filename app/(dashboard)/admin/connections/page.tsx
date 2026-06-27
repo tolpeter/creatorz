@@ -9,6 +9,7 @@ import {
   ads,
 } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Kapcsolatok" };
@@ -102,13 +103,11 @@ export default async function AdminConnectionsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Kapcsolatok</h1>
-        <p className="text-muted-foreground">
-          Ki kivel vette fel a kapcsolatot és milyen együttműködések jöttek létre.
-          Az üzenetek <strong>tartalmát</strong> nem látod — csak a kapcsolatot.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Kapcsolatok"
+        icon={ArrowLeftRight}
+        description="Ki kivel vette fel a kapcsolatot és milyen együttműködések jöttek létre. Az üzenetek tartalmát nem látod — csak a kapcsolatot."
+      />
 
       {/* Üzenet-kapcsolatok */}
       <section className="rounded-2xl border bg-card p-5 shadow-sm">

@@ -5,6 +5,8 @@ import { UserRowActions } from "@/components/admin/user-row-actions";
 import { ExportButton } from "@/components/admin/export-button";
 import { Badge } from "@/components/ui/badge";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Users } from "lucide-react";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Felhasználók" };
@@ -41,15 +43,12 @@ export default async function AdminUsersPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Felhasználók</h1>
-          <p className="text-muted-foreground">
-            {total} találat{total > rows.length ? ` · első ${rows.length} látható` : ""}
-          </p>
-        </div>
-        <ExportButton type="users" />
-      </div>
+      <AdminPageHeader
+        title="Felhasználók"
+        icon={Users}
+        description={`${total} találat${total > rows.length ? ` · első ${rows.length} látható` : ""}`}
+        action={<ExportButton type="users" />}
+      />
 
       <AdminSearch
         q={q}

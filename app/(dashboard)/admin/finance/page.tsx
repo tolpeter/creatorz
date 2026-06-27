@@ -3,6 +3,8 @@ import { db } from "@/lib/db";
 import { subscriptions, featurePurchases } from "@/lib/db/schema";
 import { getSetting } from "@/lib/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { TrendingUp } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuf } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Pénzügy" };
@@ -44,7 +46,7 @@ export default async function AdminFinancePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Pénzügy</h1>
+      <AdminPageHeader title="Pénzügy" icon={TrendingUp} description="Bevétel, előfizetések és kiemelés-vásárlások" />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <Card key={c.label}>

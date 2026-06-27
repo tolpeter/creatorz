@@ -7,6 +7,7 @@ import { reviews, brandProfiles, creatorProfiles, reports, users } from "@/lib/d
 import { RatingStars } from "@/components/shared/rating-stars";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import { ReportActions } from "@/components/admin/report-actions";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuDate } from "@/lib/utils/format";
 import { REPORT_REASONS } from "@/lib/constants";
 
@@ -53,12 +54,11 @@ export default async function AdminReportsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Bejelentések</h1>
-        <p className="text-muted-foreground">
-          {contentReports.length} nyitott tartalom-bejelentés · {reportedReviews.length} bejelentett értékelés
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Bejelentések"
+        icon={Flag}
+        description={`${contentReports.length} nyitott tartalom-bejelentés · ${reportedReviews.length} bejelentett értékelés`}
+      />
 
       {/* Tartalom-bejelentések (profil / kampány) */}
       <section className="space-y-3">

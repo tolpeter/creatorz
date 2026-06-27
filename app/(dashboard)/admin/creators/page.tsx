@@ -8,6 +8,8 @@ import { CreatorAdminActions } from "@/components/admin/creator-admin-actions";
 import { AdminMessageButton } from "@/components/admin/admin-message-button";
 import { ExportButton } from "@/components/admin/export-button";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { UserCheck } from "lucide-react";
 import { CREATOR_TYPE_LABELS } from "@/lib/constants";
 
 export const metadata = { title: "Admin — Alkotók" };
@@ -108,16 +110,12 @@ export default async function AdminCreatorsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Alkotók</h1>
-          <p className="text-muted-foreground">
-            {total} találat · {pendingTotal} jóváhagyásra vár
-            {total > rows.length ? ` · első ${rows.length} látható` : ""}
-          </p>
-        </div>
-        <ExportButton type="creators" />
-      </div>
+      <AdminPageHeader
+        title="Alkotók"
+        icon={UserCheck}
+        description={`${total} találat · ${pendingTotal} jóváhagyásra vár${total > rows.length ? ` · első ${rows.length} látható` : ""}`}
+        action={<ExportButton type="creators" />}
+      />
 
       <AdminSearch
         q={q}

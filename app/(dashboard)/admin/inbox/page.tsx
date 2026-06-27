@@ -8,6 +8,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ReplyForm } from "@/components/shared/reply-form";
 import { MessageAttachment } from "@/components/shared/message-attachment";
 import { AdminComposeMessage } from "@/components/admin/admin-compose-message";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { MessageSquare } from "lucide-react";
 import { relativeTime } from "@/lib/utils/relative-time";
 import { cn } from "@/lib/utils";
 
@@ -72,12 +74,11 @@ export default async function AdminInboxPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Üzenetek</h1>
-        <p className="text-muted-foreground">
-          Közvetlen beszélgetések a tartalomgyártókkal és márkákkal.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Üzenetek (DM)"
+        icon={MessageSquare}
+        description="Közvetlen beszélgetések a tartalomgyártókkal és márkákkal."
+      />
 
       <AdminComposeMessage />
 

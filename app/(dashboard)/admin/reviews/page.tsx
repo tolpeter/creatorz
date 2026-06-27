@@ -2,8 +2,10 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { reviews, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";
+import { Star } from "lucide-react";
 import { RatingStars } from "@/components/shared/rating-stars";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Értékelések" };
@@ -28,10 +30,11 @@ export default async function AdminReviewsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Értékelések</h1>
-        <p className="text-muted-foreground">{rows.length} értékelés</p>
-      </div>
+      <AdminPageHeader
+        title="Értékelések"
+        icon={Star}
+        description={`${rows.length} értékelés`}
+      />
       {rows.length === 0 ? (
         <div className="rounded-lg border border-dashed p-10 text-center text-muted-foreground">
           Még nincs értékelés.

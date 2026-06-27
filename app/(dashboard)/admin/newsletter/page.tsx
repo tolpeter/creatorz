@@ -1,5 +1,6 @@
 import { desc } from "drizzle-orm";
-import { Mail, Download } from "lucide-react";
+import { Mail, Download, Newspaper } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { db } from "@/lib/db";
 import { newsletterSubscribers } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";
@@ -22,19 +23,18 @@ export default async function AdminNewsletterPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Hírlevél-feliratkozók</h1>
-          <p className="text-muted-foreground">
-            {rows.length} feliratkozó · a láblécből és az app-popupból gyűjtve.
-          </p>
-        </div>
-        <Button asChild variant="outline">
-          <a href="/api/admin/export?type=newsletter">
-            <Download className="h-4 w-4" /> CSV export
-          </a>
-        </Button>
-      </div>
+      <AdminPageHeader
+        title="Hírlevél-feliratkozók"
+        icon={Newspaper}
+        description={`${rows.length} feliratkozó · a láblécből és az app-popupból gyűjtve.`}
+        action={
+          <Button asChild variant="outline">
+            <a href="/api/admin/export?type=newsletter">
+              <Download className="h-4 w-4" /> CSV export
+            </a>
+          </Button>
+        }
+      />
 
       {rows.length === 0 ? (
         <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed p-12 text-center text-sm text-muted-foreground">

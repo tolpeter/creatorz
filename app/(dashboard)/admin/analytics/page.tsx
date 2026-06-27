@@ -5,7 +5,9 @@ import {
   Send,
   Wallet,
   TrendingUp,
+  BarChart3,
 } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { db } from "@/lib/db";
 import {
   users,
@@ -195,10 +197,11 @@ export default async function AdminAnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-bold">Analitika</h1>
-        <p className="text-muted-foreground">Az elmúlt {DAYS} nap trendjei.</p>
-      </div>
+      <AdminPageHeader
+        title="Analitika"
+        icon={BarChart3}
+        description={`Az elmúlt ${DAYS} nap trendjei.`}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => {

@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { desc, eq } from "drizzle-orm";
-import { Archive, Pencil, Plus } from "lucide-react";
+import { Archive, Pencil, Plus, Megaphone } from "lucide-react";
 import { db } from "@/lib/db";
 import { ads, brandProfiles } from "@/lib/db/schema";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { AdModerationActions } from "@/components/admin/ad-moderation-actions";
 import { AdLifecycleActions } from "@/components/shared/ad-lifecycle-actions";
 import { ExportButton } from "@/components/admin/export-button";
 import { Button } from "@/components/ui/button";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatBudgetRange, formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Kampányok" };
@@ -42,17 +43,20 @@ export default async function AdminAdsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">Kampányok moderálása</h1>
-        <div className="flex items-center gap-2">
-          <Button asChild size="sm">
-            <Link href="/admin/ads/new">
-              <Plus className="h-4 w-4" /> Új kampány
-            </Link>
-          </Button>
-          <ExportButton type="ads" />
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Kampányok moderálása"
+        icon={Megaphone}
+        action={
+          <>
+            <Button asChild size="sm">
+              <Link href="/admin/ads/new">
+                <Plus className="h-4 w-4" /> Új kampány
+              </Link>
+            </Button>
+            <ExportButton type="ads" />
+          </>
+        }
+      />
 
       <section className="space-y-3">
         <h2 className="font-semibold">Moderálásra vár ({pending.length})</h2>

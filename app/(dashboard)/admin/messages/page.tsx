@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { contactMessages } from "@/lib/db/schema";
 import { Badge } from "@/components/ui/badge";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ContactMessageActions } from "@/components/admin/contact-message-actions";
 import { formatHuDate } from "@/lib/utils/format";
 
@@ -44,12 +45,11 @@ export default async function AdminMessagesPage({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Üzenetek</h1>
-        <p className="text-muted-foreground">
-          {rows.length} üzenet · {unread} olvasatlan
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Kapcsolat-üzenetek"
+        icon={Mail}
+        description={`${rows.length} üzenet · ${unread} olvasatlan`}
+      />
 
       <AdminSearch
         q={q}

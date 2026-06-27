@@ -11,6 +11,7 @@ import {
   MODEL_TYPE_LABELS,
 } from "@/lib/constants";
 import { DatabaseSection } from "@/components/admin/database-section";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuDate, formatNumber } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Adatbázis" };
@@ -136,19 +137,11 @@ export default async function AdminDatabasePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent/15 text-[#3f6212]">
-          <Database className="h-5 w-5" />
-        </span>
-        <div>
-          <h1 className="text-2xl font-bold">Adatbázis</h1>
-          <p className="text-muted-foreground">
-            Teljes, letölthető adatbázis külön típusonként: UGC tartalomgyártók,
-            influenszerek, modellek, kreatív szakemberek és márkák. Nyisd le egy
-            törzset, és szűrj bármely mezőre.
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        title="Adatbázis"
+        icon={Database}
+        description="Teljes, letölthető adatbázis típusonként: UGC, influenszerek, modellek, kreatív szakemberek és márkák. Nyisd le egy törzset, és szűrj bármely mezőre."
+      />
 
       <DatabaseSection
         title="UGC tartalomgyártók"

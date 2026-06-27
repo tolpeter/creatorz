@@ -4,6 +4,8 @@ import { brandProfiles, ads } from "@/lib/db/schema";
 import { AdminSearch } from "@/components/admin/admin-search";
 import { AdminMessageButton } from "@/components/admin/admin-message-button";
 import { ExportButton } from "@/components/admin/export-button";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
+import { Building2 } from "lucide-react";
 import { formatHuDate } from "@/lib/utils/format";
 
 export const metadata = { title: "Admin — Márkák" };
@@ -54,15 +56,12 @@ export default async function AdminBrandsPage({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">Márkák</h1>
-          <p className="text-muted-foreground">
-            {total} találat{total > rows.length ? ` · első ${rows.length} látható` : ""}
-          </p>
-        </div>
-        <ExportButton type="brands" />
-      </div>
+      <AdminPageHeader
+        title="Márkák"
+        icon={Building2}
+        description={`${total} találat${total > rows.length ? ` · első ${rows.length} látható` : ""}`}
+        action={<ExportButton type="brands" />}
+      />
 
       <AdminSearch q={q} placeholder="Keresés cégnév vagy iparág alapján…" />
 

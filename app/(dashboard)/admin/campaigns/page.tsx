@@ -1,4 +1,5 @@
 import { Mail, Eye, MousePointerClick, ImageIcon, Send } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import {
   getCampaignStats,
   getProfilePhotoCampaignStatus,
@@ -31,12 +32,11 @@ export default async function AdminCampaignsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Email kampányok</h1>
-        <p className="text-muted-foreground">
-          Megnyitás, kattintás és konverzió (feltöltött profilkép) kampányonként.
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Email kampányok"
+        icon={Send}
+        description="Megnyitás, kattintás és konverzió kampányonként."
+      />
 
       <CampaignSender
         eligible={sendStatus.eligible}

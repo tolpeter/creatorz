@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { desc, eq } from "drizzle-orm";
-import { ChevronRight, ExternalLink, Megaphone } from "lucide-react";
+import { ChevronRight, ExternalLink, Megaphone, FileText } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { db } from "@/lib/db";
 import { ads, adApplications, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
@@ -59,12 +60,11 @@ export default async function AdminApplicationsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Jelentkezők kampányonként</h1>
-        <p className="text-muted-foreground">
-          {rows.length} jelentkezés · {groupList.length} kampányon
-        </p>
-      </div>
+      <AdminPageHeader
+        title="Jelentkezők kampányonként"
+        icon={FileText}
+        description={`${rows.length} jelentkezés · ${groupList.length} kampányon`}
+      />
 
       {groupList.length === 0 ? (
         <p className="rounded-xl border border-dashed p-8 text-center text-muted-foreground">
