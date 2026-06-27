@@ -16,10 +16,21 @@ export async function GET(
   { params }: { params: Promise<{ token: string }> },
 ) {
   const { token } = await params;
-  const dest = `${APP_URL}/creator/profile`;
+  let dest = `${APP_URL}/creator/profile`;
 
   if (token) {
     try {
+      // Kampány szerint eltérő cél: az onboarding-emlékeztető a profil
+      // befejezésére visz (/creator → onboarding), minden más a szerkesztőre.
+      const [rec] = await db
+        .select({ campaign: emailCampaignRecipients.campaign })
+        .from(emailCampaignRecipients)
+        .where(eq(emailCampaignRecipients.token, token))
+        .limit(1);
+      if (rec?.campaign?.startsWith("onboarding")) {
+        dest = `${APP_URL}/creator`;
+      }
+
       // Kattintás rögzítése (csak az elsőt).
       await db
         .update(emailCampaignRecipients)

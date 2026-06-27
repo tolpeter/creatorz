@@ -322,6 +322,44 @@ export function renderProfilePhotoNudgeEmail(input: {
 }
 
 // ──────────────────────────────────────────────────────────────────────────
+// ONBOARDING-EMLÉKEZTETŐ — aki elkezdte a regisztrációt, de nem fejezte be
+// ──────────────────────────────────────────────────────────────────────────
+export function renderOnboardingReminderEmail(input: {
+  name: string;
+  ctaUrl: string; // követett CTA-link
+  pixelUrl?: string; // megnyitás-követő pixel
+}): { subject: string; html: string } {
+  const body = `
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#3f3f46;">
+      Elkezdted a regisztrációt a Creatorz-on, de a profilod még <strong>nincs befejezve</strong>.
+      Amíg nincs kész, <strong>nem jelensz meg</strong> a keresőben, és a márkák nem találnak rád.
+    </p>
+    <p style="margin:0 0 16px;font-size:15px;line-height:1.7;color:#3f3f46;">
+      Már csak pár lépés: add meg a <strong>neved</strong>, tölts fel egy <strong>profilképet</strong>,
+      és válaszd ki a <strong>kategóriáidat</strong>. Az egész <strong>2 perc</strong>, és máris láthatóvá válsz.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:4px 0 4px;">
+      <tr>
+        <td align="center" bgcolor="#84cc16" style="border-radius:9999px;background:#84cc16;">
+          <a href="${escapeHtml(input.ctaUrl)}" style="display:inline-block;padding:14px 32px;font-size:15px;font-weight:800;color:#0a0a0a;text-decoration:none;border-radius:9999px;">Profilom befejezése →</a>
+        </td>
+      </tr>
+    </table>`;
+
+  return {
+    subject: "Fejezd be a profilod – 2 perc az egész ✨",
+    html: renderBrandedEmail({
+      preheader: "Még nincs kész a profilod — pár lépés, és láthatóvá válsz a márkák előtt.",
+      heading: "Már csak egy lépés a kész profilod",
+      greeting: `Szia ${input.name}!`,
+      bodyHtml: body,
+      footnote: "Ezt az emlékeztetőt azért kaptad, mert elkezdted, de nem fejezted be a regisztrációd. A beállításokban bármikor leiratkozhatsz.",
+      pixelUrl: input.pixelUrl,
+    }),
+  };
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // EGYÜTTMŰKÖDÉS-FRISSÍTÉS (leadás / jóváhagyás / változtatás / megállapodás / lezárás)
 // ──────────────────────────────────────────────────────────────────────────
 export function renderCollabUpdateEmail(input: {
