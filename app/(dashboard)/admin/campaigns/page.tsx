@@ -1,6 +1,11 @@
 import { Mail, Eye, MousePointerClick, ImageIcon, Send } from "lucide-react";
-import { getCampaignStats, getProfilePhotoCampaignStatus } from "@/app/actions/campaigns";
+import {
+  getCampaignStats,
+  getProfilePhotoCampaignStatus,
+  getOnboardingReminderStatus,
+} from "@/app/actions/campaigns";
 import { CampaignSender } from "@/components/admin/campaign-sender";
+import { OnboardingReminderSender } from "@/components/admin/onboarding-reminder-sender";
 
 export const metadata = { title: "Admin — Email kampányok" };
 export const dynamic = "force-dynamic";
@@ -9,6 +14,7 @@ export const maxDuration = 60;
 
 const LABELS: Record<string, string> = {
   "profile-photo-2026-06": "Profilkép-ösztönző",
+  "onboarding-reminder": "Befejezetlen regisztráció — emlékeztető",
 };
 
 function pct(part: number, whole: number) {
@@ -17,9 +23,10 @@ function pct(part: number, whole: number) {
 }
 
 export default async function AdminCampaignsPage() {
-  const [stats, sendStatus] = await Promise.all([
+  const [stats, sendStatus, onbStatus] = await Promise.all([
     getCampaignStats(),
     getProfilePhotoCampaignStatus(),
+    getOnboardingReminderStatus(),
   ]);
 
   return (
@@ -35,6 +42,12 @@ export default async function AdminCampaignsPage() {
         eligible={sendStatus.eligible}
         sent={sendStatus.sent}
         remaining={sendStatus.remaining}
+      />
+
+      <OnboardingReminderSender
+        eligible={onbStatus.eligible}
+        sent={onbStatus.sent}
+        remaining={onbStatus.remaining}
       />
 
       {stats.length === 0 ? (

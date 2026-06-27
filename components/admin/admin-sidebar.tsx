@@ -19,6 +19,7 @@ import {
   FileText,
   Database,
   ShieldCheck,
+  ArrowLeftRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/admin", label: "Áttekintés", icon: LayoutDashboard, exact: true, key: "overview" },
   { href: "/admin/analytics", label: "Analitika", icon: BarChart3, key: "analytics" },
   { href: "/admin/inbox", label: "Üzenetek (DM)", icon: MessageSquare, key: "inbox" },
+  { href: "/admin/connections", label: "Kapcsolatok", icon: ArrowLeftRight, key: "connections" },
   { href: "/admin/messages", label: "Kapcsolat-üzenetek", icon: Mail, key: "messages" },
   { href: "/admin/newsletter", label: "Hírlevél", icon: Newspaper, key: "newsletter" },
   { href: "/admin/campaigns", label: "Email kampányok", icon: BarChart3, key: "campaigns" },
