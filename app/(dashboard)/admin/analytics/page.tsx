@@ -53,6 +53,9 @@ function fmtDur(ms: number): string {
 
 export default async function AdminAnalyticsPage() {
   const since = new Date(Date.now() - DAYS * 86400000);
+  // FIGYELEM: a db.execute(sql`...`) NEM tudja paraméterként kezelni a JS Date-et
+  // (elhasal, a try/catch elnyeli → "nincs adat"). ISO-stringként kell átadni.
+  const sinceIso = since.toISOString();
   const dayExpr = sql<string>`to_char(date_trunc('day', ${users.createdAt}), 'YYYY-MM-DD')`;
 
   const [regRows, adRows, appRows, revRow, subsRow, price] = await Promise.all([
@@ -134,12 +137,12 @@ export default async function AdminAnalyticsPage() {
       SELECT registered, round(avg(total))::int AS avg_ms, count(*)::int AS sessions
       FROM (
         SELECT session_id, sum(duration_ms) AS total, bool_or(user_id IS NOT NULL) AS registered
-        FROM page_events WHERE created_at > ${since} GROUP BY session_id
+        FROM page_events WHERE created_at > ${sinceIso} GROUP BY session_id
       ) s GROUP BY registered
     `)) as unknown as SegRow[];
     pathRows = (await db.execute(sql`
       SELECT path, round(avg(duration_ms))::int AS avg_ms, count(*)::int AS views
-      FROM page_events WHERE created_at > ${since}
+      FROM page_events WHERE created_at > ${sinceIso}
       GROUP BY path ORDER BY count(*) DESC LIMIT 15
     `)) as unknown as PathRow[];
     dailySegRows = (await db.execute(sql`
@@ -147,20 +150,20 @@ export default async function AdminAnalyticsPage() {
       FROM (
         SELECT session_id, date_trunc('day', min(created_at)) AS d, sum(duration_ms) AS total,
                bool_or(user_id IS NOT NULL) AS registered
-        FROM page_events WHERE created_at > ${since} GROUP BY session_id
+        FROM page_events WHERE created_at > ${sinceIso} GROUP BY session_id
       ) s GROUP BY d, registered ORDER BY d
     `)) as unknown as DailySegRow[];
     entryRows = (await db.execute(sql`
       SELECT path, count(*)::int AS n FROM (
         SELECT DISTINCT ON (session_id) session_id, path
-        FROM page_events WHERE created_at > ${since}
+        FROM page_events WHERE created_at > ${sinceIso}
         ORDER BY session_id, created_at ASC
       ) e GROUP BY path ORDER BY count(*) DESC LIMIT 8
     `)) as unknown as EntryRow[];
     exitRows = (await db.execute(sql`
       SELECT path, count(*)::int AS n FROM (
         SELECT DISTINCT ON (session_id) session_id, path
-        FROM page_events WHERE created_at > ${since}
+        FROM page_events WHERE created_at > ${sinceIso}
         ORDER BY session_id, created_at DESC
       ) e GROUP BY path ORDER BY count(*) DESC LIMIT 8
     `)) as unknown as EntryRow[];
