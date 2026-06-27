@@ -78,6 +78,7 @@ export default async function AdminCreatorsPage({
       featuredUntil: creatorProfiles.featuredUntil,
       verified: creatorProfiles.verified,
       approved: users.approved,
+      onboardingCompleted: creatorProfiles.onboardingCompleted,
       profileKind: creatorProfiles.profileKind,
       creatorType: creatorProfiles.creatorType,
       createdAt: creatorProfiles.createdAt,
@@ -171,10 +172,16 @@ export default async function AdminCreatorsPage({
                       ? "Kreatív szakember"
                       : CREATOR_TYPE_LABELS[r.creatorType] ?? "Tartalomgyártó"}
                   </Badge>
-                  {!r.approved && (
-                    <Badge className="bg-yellow-500/15 text-yellow-700 dark:text-yellow-400">
-                      Jóváhagyásra vár
+                  {!r.onboardingCompleted ? (
+                    <Badge className="bg-red-500/15 text-red-600 dark:text-red-400">
+                      Befejezetlen regisztráció
                     </Badge>
+                  ) : (
+                    !r.approved && (
+                      <Badge className="bg-yellow-500/15 text-yellow-700 dark:text-yellow-400">
+                        Jóváhagyásra vár
+                      </Badge>
+                    )
                   )}
                   {r.verified && (
                     <Badge className="bg-sky-500/15 text-sky-700 dark:text-sky-400">

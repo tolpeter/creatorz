@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { or, eq, sql } from "drizzle-orm";
+import { or, eq, and, sql } from "drizzle-orm";
 import {
   ArrowRight,
   Check,
@@ -57,9 +57,12 @@ export default async function LandingPage() {
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
     .where(
-      or(
-        eq(creatorProfiles.isFeatured, true),
-        eq(creatorProfiles.isAdminFeatured, true),
+      and(
+        eq(creatorProfiles.onboardingCompleted, true),
+        or(
+          eq(creatorProfiles.isFeatured, true),
+          eq(creatorProfiles.isAdminFeatured, true),
+        ),
       ),
     )
     .orderBy(sql`${creatorProfiles.averageRating} desc nulls last`)

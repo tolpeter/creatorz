@@ -42,7 +42,12 @@ const PAGE_SIZE = 12;
 
 /** A szűrőkből felépíti a közös WHERE feltételeket (loadMore + count is használja). */
 function buildConditions(filters: BrowseFiltersInput): SQL[] {
-  const conditions: SQL[] = [eq(users.suspended, false)];
+  // Csak a befejezett regisztrációjú (név + profilkép megadva) profilok
+  // jelenhetnek meg publikusan — a félbehagyott regisztrációk nem.
+  const conditions: SQL[] = [
+    eq(users.suspended, false),
+    eq(creatorProfiles.onboardingCompleted, true),
+  ];
 
   // Típus-szűrő: UGC vagy kreatív szakember (szerepkör szerint)
   const tipus = filters.tipus ?? "all";

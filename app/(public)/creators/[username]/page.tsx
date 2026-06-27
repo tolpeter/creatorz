@@ -127,6 +127,8 @@ export default async function CreatorDetailPage({
     .limit(1);
   const profile = rows[0];
   if (!profile) notFound();
+  // Félbehagyott regisztráció (nincs név/profilkép megadva) nem nyilvános.
+  if (!profile.onboardingCompleted) notFound();
 
   const [responseStats, activeRow, items] = await Promise.all([
     getResponseStats(profile.userId),

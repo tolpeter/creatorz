@@ -77,6 +77,7 @@ export async function creatorsByCategory(value: string, limit = 24): Promise<Cre
     .where(
       and(
         eq(users.suspended, false),
+        eq(creatorProfiles.onboardingCompleted, true),
         sql`${creatorProfiles.categories} @> ${JSON.stringify([value])}::jsonb`,
       ),
     )
@@ -93,6 +94,7 @@ export async function creatorsByType(creatorType: string, limit = 24): Promise<C
     .where(
       and(
         eq(users.suspended, false),
+        eq(creatorProfiles.onboardingCompleted, true),
         eq(creatorProfiles.profileKind, "ugc"),
         eq(creatorProfiles.creatorType, creatorType),
       ),
@@ -107,7 +109,8 @@ export async function creatorsByCounty(county: string, limit = 24): Promise<Crea
     .select(SELECT)
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
-    .where(and(eq(users.suspended, false), eq(creatorProfiles.county, county)))
+    .where(and(eq(users.suspended, false),
+        eq(creatorProfiles.onboardingCompleted, true), eq(creatorProfiles.county, county)))
     .orderBy(...ORDER)
     .limit(limit);
   return (rows as Row[]).map(toCard);
@@ -118,7 +121,8 @@ async function countWhere(extra: ReturnType<typeof sql> | ReturnType<typeof eq>)
     .select({ n: sql<number>`count(*)::int` })
     .from(creatorProfiles)
     .innerJoin(users, eq(users.id, creatorProfiles.userId))
-    .where(and(eq(users.suspended, false), extra));
+    .where(and(eq(users.suspended, false),
+        eq(creatorProfiles.onboardingCompleted, true), extra));
   return r?.n ?? 0;
 }
 
@@ -133,6 +137,7 @@ export async function countByType(creatorType: string): Promise<number> {
     .where(
       and(
         eq(users.suspended, false),
+        eq(creatorProfiles.onboardingCompleted, true),
         eq(creatorProfiles.profileKind, "ugc"),
         eq(creatorProfiles.creatorType, creatorType),
       ),
