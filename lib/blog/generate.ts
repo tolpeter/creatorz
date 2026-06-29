@@ -62,7 +62,7 @@ VÁLASZ FORMÁTUM: KIZÁRÓLAG érvényes JSON, pontosan ez a séma:
   "excerpt": "string (1-2 mondatos összefoglaló)",
   "keywords": ["string", ...5-8 db],
   "tags": ["string", ...2-4 db rövid címke],
-  "coverPrompt": "ENGLISH image prompt for a modern, vibrant editorial hero image, no text, no letters",
+  "coverPrompt": "ENGLISH image prompt for a modern, vibrant editorial hero image, no text, no letters; if it depicts people, they must be European (Hungarian) looking",
   "coverAlt": "magyar alt szöveg a borítóképhez",
   "readMinutes": number,
   "blocks": [ {"type":"p","text":"..."}, {"type":"h2","text":"..."}, {"type":"h3","text":"..."}, {"type":"ul","items":["..."]}, {"type":"ol","items":["..."]}, {"type":"quote","text":"..."}, {"type":"cta","text":"...","href":"/register","label":"..."} ],
@@ -187,7 +187,7 @@ export async function generateAndPublishPost(): Promise<{ slug: string; title: s
   let coverUrl: string | null = null;
   try {
     const imgUrl = await generateImage(
-      `${post.coverPrompt}. Editorial, high quality, vibrant lime-green and black accent palette, no text, no watermark`,
+      `${post.coverPrompt}. If people appear, they are European (Hungarian) looking: light/Central-European skin tones, natural Hungarian features. Editorial, high quality, vibrant lime-green and black accent palette, no text, no watermark`,
       { aspectRatio: "16:9" },
     );
     coverUrl = (await persistCover(imgUrl, slug)).url;
