@@ -198,7 +198,7 @@ export default async function AdminCreatorsPage({
                 userId={r.userId}
                 creatorId={r.creatorId}
                 approved={r.approved}
-                adminFeatured={r.isAdminFeatured}
+                adminFeatured={isCurrentlyFeatured(r)}
                 verified={r.verified}
               />
             </div>

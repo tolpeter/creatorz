@@ -117,11 +117,22 @@ export async function setUserApproved(userId: string, approved: boolean) {
 
 export async function setAdminFeatured(creatorId: string, value: boolean) {
   if (!(await requireAdmin())) return { error: "Csak admin" };
+  // Bekapcsolás: admin-kiemelés. Kikapcsolás: MINDEN kiemelés törlése
+  // (admin override a fizetett kiemelésre is) — különben a badge bennragad.
+  const set = value
+    ? { isAdminFeatured: true, updatedAt: new Date() }
+    : {
+        isAdminFeatured: false,
+        isFeatured: false,
+        featuredUntil: null,
+        updatedAt: new Date(),
+      };
   await db
     .update(creatorProfiles)
-    .set({ isAdminFeatured: value, updatedAt: new Date() })
+    .set(set)
     .where(eq(creatorProfiles.id, creatorId));
   revalidatePath("/admin/creators");
+  revalidatePath("/creators");
   return { success: true };
 }
 
