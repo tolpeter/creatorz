@@ -35,15 +35,20 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(`${origin}/login?error=missing_code`);
   }
 
-  // Cél: explicit `next`, vagy a role szerinti dashboard
+  // Van-e már app `users` sor? Ha nincs (új OAuth/Google-felhasználó), a
+  // szerepkör-választóra küldjük, ahol befejezi a regisztrációt.
   let destination = next ?? "/dashboard";
-  if (!next && authedUserId) {
+  if (authedUserId) {
     const rows = await db
       .select({ role: users.role })
       .from(users)
       .where(eq(users.authId, authedUserId))
       .limit(1);
-    if (rows[0]) destination = dashboardPathForRole(rows[0].role);
+    if (!rows[0]) {
+      destination = "/regisztracio-google";
+    } else if (!next) {
+      destination = dashboardPathForRole(rows[0].role);
+    }
   }
 
   return NextResponse.redirect(`${origin}${destination}`);

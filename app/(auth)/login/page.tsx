@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/ui/password-input";
+import { GoogleButton } from "@/components/auth/google-button";
 import { Label } from "@/components/ui/label";
 import {
   signInAction,
@@ -306,6 +307,10 @@ export default function LoginPage() {
           <span className="h-px flex-1 bg-border" />
           VAGY
           <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <div className="mb-3">
+          <GoogleButton label="Belépés Google-fiókkal" />
         </div>
 
         <Button

@@ -182,6 +182,115 @@ export async function signUpAction(input: SignUpInput) {
   };
 }
 
+// ─────────────────── Google (OAuth) regisztráció befejezése ────────────────
+const socialSchema = z.object({
+  role: z.enum(["creator", "brand"]).default("creator"),
+  profileKind: z.enum(["ugc", "professional"]).optional().default("ugc"),
+  creatorType: z.enum(["ugc", "influencer", "model"]).optional().default("ugc"),
+});
+
+/**
+ * A Google-belépés UTÁN futtatja a választott szerepkörrel. A felhasználó már
+ * be van jelentkezve a Supabase-be (van session), de még nincs app `users` sora.
+ * Itt hozzuk létre a sort + profilt, a nevet/avatart a Google-fiókból átvéve.
+ * Az email Google által hitelesített → emailVerified=true (nincs külön megerősítés).
+ */
+export async function completeSocialSignup(input: z.input<typeof socialSchema>) {
+  const parsed = socialSchema.safeParse(input);
+  if (!parsed.success) return { error: "Érvénytelen adatok" };
+  const { role, profileKind, creatorType } = parsed.data;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user || !user.email) return { error: "Nincs bejelentkezve" };
+
+  // Ha már van app fiók, ne hozzunk létre újat — irány a vezérlőpult.
+  const [existing] = await db
+    .select({ id: users.id, role: users.role })
+    .from(users)
+    .where(eq(users.authId, user.id))
+    .limit(1);
+  if (existing) {
+    return { success: true, redirectTo: dashboardPathForRole(existing.role) };
+  }
+
+  const email = user.email.toLowerCase();
+  const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
+  const googleName = String(meta.full_name || meta.name || emailLocalPart(email)).slice(0, 100);
+  const googleAvatar = (meta.avatar_url || meta.picture) as string | undefined;
+
+  // users sor — Google által hitelesített email → emailVerified=true
+  const inserted = await db
+    .insert(users)
+    .values({ authId: user.id, email, role, emailVerified: true })
+    .onConflictDoNothing({ target: users.authId })
+    .returning({ id: users.id });
+  let appUserId = inserted[0]?.id;
+  if (!appUserId) {
+    const [row] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.authId, user.id))
+      .limit(1);
+    appUserId = row?.id;
+  }
+  if (!appUserId) return { error: "Nem sikerült létrehozni a felhasználói rekordot" };
+
+  // A szerepkört a Supabase user_metadata-ba is beírjuk (a getCurrentUser ezt nézi).
+  try {
+    const admin = createAdminClient();
+    await admin.auth.admin.updateUserById(user.id, {
+      user_metadata: { ...meta, role },
+    });
+  } catch {
+    /* best-effort */
+  }
+
+  if (role === "creator") {
+    const username = await ensureUniqueUsername(emailLocalPart(email));
+    await db
+      .insert(creatorProfiles)
+      .values({
+        userId: appUserId,
+        username,
+        displayName: googleName,
+        avatarUrl: googleAvatar || null,
+        profileKind,
+        creatorType: profileKind === "ugc" ? creatorType : "ugc",
+      })
+      .onConflictDoNothing({ target: creatorProfiles.userId });
+  } else {
+    await db
+      .insert(brandProfiles)
+      .values({
+        userId: appUserId,
+        companyName: googleName,
+        logoUrl: googleAvatar || null,
+      })
+      .onConflictDoNothing({ target: brandProfiles.userId });
+  }
+
+  // Ajánlás rögzítése, ha meghívó-linkről jött (cz_ref cookie).
+  try {
+    const cookieStore = await cookies();
+    const refCode = cookieStore.get("cz_ref")?.value;
+    if (refCode) {
+      await recordReferral(refCode, appUserId);
+      cookieStore.delete("cz_ref");
+    }
+  } catch {
+    /* best-effort */
+  }
+
+  const onboardingPath =
+    role === "creator" && profileKind === "professional"
+      ? "/onboarding/professional"
+      : `/onboarding/${role}`;
+  return { success: true, redirectTo: onboardingPath };
+}
+
 const signInSchema = z.object({
   email: emailField,
   password: z.string().min(1, "Add meg a jelszót"),

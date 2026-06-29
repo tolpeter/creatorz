@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { signUpAction } from "@/app/actions/auth";
 import { ReferralCapture } from "@/components/auth/referral-capture";
+import { GoogleButton } from "@/components/auth/google-button";
 import { fbTrack } from "@/lib/analytics/fb";
 import { CREATOR_TYPES } from "@/lib/constants";
 
@@ -113,7 +114,19 @@ export default function RegisterPage() {
             />
           </div>
 
-          <p className="text-center text-sm text-muted-foreground">
+          <div className="mx-auto mt-7 w-full max-w-sm">
+            <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              VAGY GYORSAN
+              <span className="h-px flex-1 bg-border" />
+            </div>
+            <GoogleButton label="Regisztráció Google-fiókkal" />
+            <p className="mt-2 text-center text-xs text-muted-foreground">
+              A neved és emailed automatikusan kitöltjük — utána csak a szerepkört választod ki.
+            </p>
+          </div>
+
+          <p className="mt-6 text-center text-sm text-muted-foreground">
             Van már fiókod?{" "}
             <Link
               href="/login"
