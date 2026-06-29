@@ -45,7 +45,14 @@ export async function GET(request: NextRequest) {
       .where(eq(users.authId, authedUserId))
       .limit(1);
     if (!rows[0]) {
-      destination = "/regisztracio-google";
+      // Ha a Google-gomb átadta a szerepkört, vigyük tovább → kimarad a választó.
+      const p = new URLSearchParams();
+      for (const k of ["role", "profileKind", "creatorType"]) {
+        const v = searchParams.get(k);
+        if (v) p.set(k, v);
+      }
+      const qs = p.toString();
+      destination = `/regisztracio-google${qs ? `?${qs}` : ""}`;
     } else if (!next) {
       destination = dashboardPathForRole(rows[0].role);
     }

@@ -5,11 +5,17 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { dashboardPathForRole } from "@/lib/auth";
 import { GoogleRolePicker } from "@/components/auth/google-role-picker";
+import { GoogleAutoComplete } from "@/components/auth/google-autocomplete";
 
 export const metadata = { title: "Regisztráció befejezése" };
 export const dynamic = "force-dynamic";
 
-export default async function GoogleRegisterPage() {
+export default async function GoogleRegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ role?: string; profileKind?: string; creatorType?: string }>;
+}) {
+  const sp = await searchParams;
   const supabase = await createClient();
   const {
     data: { user },
@@ -27,6 +33,24 @@ export default async function GoogleRegisterPage() {
 
   const meta = (user.user_metadata ?? {}) as Record<string, unknown>;
   const name = String(meta.full_name || meta.name || "").trim();
+
+  // Ha a Google-gomb hozta a szerepkört, automatikusan befejezzük (nincs választó).
+  const presetRole = sp.role === "creator" || sp.role === "brand" ? sp.role : null;
+  if (presetRole) {
+    return (
+      <div className="mx-auto flex min-h-[70vh] w-full max-w-md flex-col justify-center px-5 py-12">
+        <GoogleAutoComplete
+          role={presetRole}
+          profileKind={sp.profileKind === "professional" ? "professional" : "ugc"}
+          creatorType={
+            sp.creatorType === "influencer" || sp.creatorType === "model"
+              ? sp.creatorType
+              : "ugc"
+          }
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-lg flex-col justify-center px-5 py-12">

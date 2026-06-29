@@ -13,9 +13,16 @@ import { createClient } from "@/lib/supabase/client";
 export function GoogleButton({
   label = "Folytatás Google-fiókkal",
   next,
+  role,
+  profileKind,
+  creatorType,
 }: {
   label?: string;
   next?: string;
+  /** Ha a szerepkört már kiválasztotta, átadjuk → kimarad a szerepkör-választó. */
+  role?: "creator" | "brand";
+  profileKind?: "ugc" | "professional";
+  creatorType?: "ugc" | "influencer" | "model";
 }) {
   const [loading, setLoading] = useState(false);
 
@@ -23,9 +30,13 @@ export function GoogleButton({
     setLoading(true);
     try {
       const supabase = createClient();
-      const cb =
-        `${window.location.origin}/api/auth/callback` +
-        (next ? `?next=${encodeURIComponent(next)}` : "");
+      const params = new URLSearchParams();
+      if (next) params.set("next", next);
+      if (role) params.set("role", role);
+      if (profileKind) params.set("profileKind", profileKind);
+      if (creatorType) params.set("creatorType", creatorType);
+      const qs = params.toString();
+      const cb = `${window.location.origin}/api/auth/callback${qs ? `?${qs}` : ""}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: { redirectTo: cb },

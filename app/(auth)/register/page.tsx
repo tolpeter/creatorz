@@ -344,6 +344,23 @@ export default function RegisterPage() {
           </Button>
         </form>
 
+        <div className="mt-5">
+          <div className="mb-3 flex items-center gap-3 text-xs text-muted-foreground">
+            <span className="h-px flex-1 bg-border" />
+            VAGY GYORSAN
+            <span className="h-px flex-1 bg-border" />
+          </div>
+          <GoogleButton
+            label="Folytatás Google-fiókkal"
+            role={role === "brand" ? "brand" : "creator"}
+            profileKind={isProfessional ? "professional" : "ugc"}
+            creatorType={isCreator ? creatorType : "ugc"}
+          />
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            A neved, emailed (és profilképed) a Google-fiókodból töltjük ki — jelszó nélkül.
+          </p>
+        </div>
+
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Van már fiókod?{" "}
           <Link
