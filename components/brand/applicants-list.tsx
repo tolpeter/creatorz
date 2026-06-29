@@ -56,9 +56,15 @@ const GENDER_LABEL: Record<string, string> = Object.fromEntries(
 export function ApplicantsList({
   apps,
   collapsible = false,
+  readOnly = false,
+  showHeading = true,
 }: {
   apps: Applicant[];
   collapsible?: boolean;
+  /** Admin nézet: nincs elfogadás/elutasítás gomb (csak megtekintés + szűrés). */
+  readOnly?: boolean;
+  /** A "Beérkezett pályázatok (N)" cím megjelenítése (nem-collapsible módban). */
+  showHeading?: boolean;
 }) {
   // A szűrő alapból NYITVA van — egyből látható és használható.
   const [open, setOpen] = useState(true);
@@ -277,7 +283,9 @@ export function ApplicantsList({
                 </div>
 
                 <p className="whitespace-pre-wrap text-sm">{a.message}</p>
-                {a.status === "pending" && <ApplicationActions applicationId={a.id} />}
+                {!readOnly && a.status === "pending" && (
+                  <ApplicationActions applicationId={a.id} />
+                )}
               </CardContent>
             </Card>
           ))}
@@ -289,7 +297,9 @@ export function ApplicantsList({
   if (!collapsible) {
     return (
       <div>
-        <h2 className="mb-3 text-xl font-bold">Beérkezett pályázatok ({apps.length})</h2>
+        {showHeading && (
+          <h2 className="mb-3 text-xl font-bold">Beérkezett pályázatok ({apps.length})</h2>
+        )}
         {inner}
       </div>
     );

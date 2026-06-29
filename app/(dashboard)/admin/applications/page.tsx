@@ -6,9 +6,7 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { db } from "@/lib/db";
 import { ads, adApplications, brandProfiles, creatorProfiles } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ApplicationStatusBadge } from "@/components/shared/ad-status-badge";
-import { formatHuDate, formatNumber } from "@/lib/utils/format";
+import { ApplicantsList } from "@/components/brand/applicants-list";
 
 export const metadata = { title: "Admin — Jelentkezők" };
 
@@ -19,6 +17,7 @@ export default async function AdminApplicationsPage() {
   const rows = await db
     .select({
       appId: adApplications.id,
+      message: adApplications.message,
       status: adApplications.status,
       createdAt: adApplications.createdAt,
       adId: ads.id,
@@ -31,7 +30,15 @@ export default async function AdminApplicationsPage() {
       displayName: creatorProfiles.displayName,
       avatarUrl: creatorProfiles.avatarUrl,
       tiktokFollowers: creatorProfiles.tiktokFollowers,
+      tiktokLikes: creatorProfiles.tiktokLikes,
       instagramFollowers: creatorProfiles.instagramFollowers,
+      facebookFollowers: creatorProfiles.facebookFollowers,
+      age: creatorProfiles.age,
+      gender: creatorProfiles.gender,
+      city: creatorProfiles.city,
+      county: creatorProfiles.county,
+      creatorType: creatorProfiles.creatorType,
+      categories: creatorProfiles.categories,
     })
     .from(adApplications)
     .innerJoin(ads, eq(ads.id, adApplications.adId))
@@ -86,44 +93,37 @@ export default async function AdminApplicationsPage() {
                 </span>
               </summary>
 
-              <div className="border-t px-4 py-2">
+              <div className="border-t px-4 py-3">
                 <Link
                   href={`/ads/${g.adSlug ?? adId}`}
                   target="_blank"
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-[#4d7c0f] hover:underline"
+                  className="mb-3 inline-flex items-center gap-1 text-xs font-semibold text-[#4d7c0f] hover:underline"
                 >
                   Kampány megnyitása <ExternalLink className="h-3 w-3" />
                 </Link>
-              </div>
-
-              <div className="divide-y border-t">
-                {g.apps.map((a) => (
-                  <div key={a.appId} className="flex items-center gap-3 px-4 py-3">
-                    <Avatar className="h-9 w-9">
-                      <AvatarImage src={a.avatarUrl ?? undefined} />
-                      <AvatarFallback>{a.displayName.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="min-w-0 flex-1">
-                      <Link
-                        href={`/creators/${a.username}`}
-                        target="_blank"
-                        className="inline-flex items-center gap-1 font-medium hover:underline"
-                      >
-                        {a.displayName}
-                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
-                      </Link>
-                      <p className="text-xs text-muted-foreground">
-                        {formatHuDate(a.createdAt)}
-                        {a.tiktokFollowers
-                          ? ` · ${formatNumber(a.tiktokFollowers)} TikTok`
-                          : a.instagramFollowers
-                            ? ` · ${formatNumber(a.instagramFollowers)} Instagram`
-                            : ""}
-                      </p>
-                    </div>
-                    <ApplicationStatusBadge status={a.status} />
-                  </div>
-                ))}
+                <ApplicantsList
+                  apps={g.apps.map((a) => ({
+                    id: a.appId,
+                    message: a.message,
+                    status: a.status,
+                    createdAt: a.createdAt,
+                    username: a.username,
+                    displayName: a.displayName,
+                    avatarUrl: a.avatarUrl,
+                    tiktokFollowers: a.tiktokFollowers,
+                    tiktokLikes: a.tiktokLikes,
+                    instagramFollowers: a.instagramFollowers,
+                    facebookFollowers: a.facebookFollowers,
+                    age: a.age,
+                    gender: a.gender,
+                    city: a.city,
+                    county: a.county,
+                    creatorType: a.creatorType,
+                    categories: a.categories,
+                  }))}
+                  readOnly
+                  showHeading={false}
+                />
               </div>
             </details>
           ))}
