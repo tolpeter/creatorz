@@ -72,7 +72,9 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-6xl gap-8 px-6 py-12 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <div className="sm:col-span-2 lg:col-span-1">
           <Logo variant="light" className="text-xl" />
-          <p className="mt-2 text-sm">Magyar UGC tartalomgyártó platform.</p>
+          <p className="mt-2 text-sm">
+            Magyar alkotói piactér — UGC tartalomgyártók, influencerek, modellek és kreatív szakemberek.
+          </p>
           <a
             href="mailto:info@creatorz.hu"
             className="mt-3 inline-block text-sm font-medium text-accent hover:underline"

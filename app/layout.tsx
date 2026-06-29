@@ -21,17 +21,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Creatorz — Magyar UGC tartalomgyártó platform",
+    default: "Creatorz — UGC tartalomgyártók, influencerek és modellek egy helyen",
     template: "%s | Creatorz",
   },
   description:
-    "Találd meg a tökéletes magyar UGC tartalomgyártót a márkádhoz, vagy regisztrálj creatorként és kezdj el dolgozni magyar brandekkel.",
+    "A magyar alkotói piactér: UGC tartalomgyártók, influencerek, modellek, fotósok és operatőrök. Alkotóként munkákat találsz és megkereséseket kapsz; márkaként kampányt adsz fel, és egy helyen, kényelmesen szűröd a jelentkezőket — nem 50 emailből és Facebook-üzenetből.",
   keywords: [
-    "UGC",
-    "tartalomgyártó",
-    "magyar creator",
+    "UGC tartalomgyártó",
+    "influencer",
+    "modell",
+    "magyar alkotók",
     "influencer marketing",
-    "márka tartalom",
+    "kampány",
+    "márka együttműködés",
+    "fotós",
+    "operatőr",
   ],
   authors: [{ name: "Creatorz" }],
   metadataBase: new URL(
@@ -76,7 +80,7 @@ export default function RootLayout({
                 url: process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu",
                 logo: `${process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu"}/og-image.png`,
                 description:
-                  "Magyar UGC tartalomgyártó platform — márkák és tartalomgyártók közvetlen összekötése.",
+                  "Magyar alkotói piactér — UGC tartalomgyártók, influencerek, modellek, fotósok és operatőrök; márkák és alkotók közvetlen összekötése.",
                 email: "info@creatorz.hu",
               },
               {

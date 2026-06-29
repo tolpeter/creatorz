@@ -28,7 +28,7 @@ import {
 
 export const metadata = {
   title: "Kampányok",
-  description: "Aktív márka-kampányok magyar UGC tartalomgyártóknak.",
+  description: "Aktív márka-kampányok magyar alkotóknak — UGC tartalomgyártóknak, influencereknek és modelleknek, amikre pályázhatsz.",
 };
 
 type SP = Record<string, string | string[] | undefined>;
@@ -51,7 +51,7 @@ export default async function AdsFeedPage({
       <MembersOnlyGate
         next="/ads"
         title="A kampányok böngészése csak tagoknak elérhető"
-        description="Regisztrálj ingyen tartalomgyártóként, és máris láthatod a márkák aktív briefjeit, amikre pályázhatsz — vagy lépj be a fiókodba."
+        description="Regisztrálj ingyen alkotóként (UGC, influencer, modell), és máris láthatod a márkák aktív briefjeit, amikre pályázhatsz — vagy lépj be a fiókodba."
       />
     );
   }
@@ -207,7 +207,7 @@ export default async function AdsFeedPage({
               Márka briefek
             </div>
             <h1 className="text-balance text-3xl font-black leading-tight sm:text-4xl lg:text-5xl">
-              Kampányok, amikből jó UGC együttműködések indulnak.
+              Kampányok, amikből valódi együttműködések indulnak.
             </h1>
             <p className="mt-4 max-w-md text-sm leading-6 text-white/70 sm:text-base">
               Böngéssz kampánycél, kategória, formátum és határidő alapján —

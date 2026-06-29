@@ -86,17 +86,17 @@ export default async function LandingPage() {
     {
       icon: UserPlus,
       title: "Regisztrálj",
-      desc: "Ingyenes, 2 perc. Tartalomgyártóként vagy márkaként.",
+      desc: "Ingyenes, 2 perc. Alkotóként (UGC, influencer, modell, fotós, operatőr) vagy márkaként.",
     },
     {
       icon: Search,
       title: "Találd meg a párost",
-      desc: "Szűrőkkel a tökéletes tartalomgyártót, vagy pályázz kampányra.",
+      desc: "Márkaként szűrd a megfelelő alkotót és a jelentkezőket; alkotóként pályázz a kampányokra.",
     },
     {
       icon: Handshake,
       title: "Kezdj el dolgozni",
-      desc: "Közvetlen kapcsolatfelvétel, együttműködés, értékelés.",
+      desc: "Közvetlen kapcsolatfelvétel, együttműködés és kölcsönös értékelés — egy helyen.",
     },
   ];
 
@@ -209,26 +209,26 @@ export default async function LandingPage() {
         className="mx-auto grid w-full max-w-6xl gap-6 px-6 py-20 md:grid-cols-2"
       >
         <SideCard
-          title="Márka vagy?"
+          title="Márka, cég vagy vállalkozás vagy?"
           image="/images/generated/feature-brand.webp"
           perks={[
             "Ingyenes böngészés és kapcsolatfelvétel",
             "Kampányfeladás díjmentesen",
-            "Szűrés kategória, követőszám, ár szerint",
-            "Ellenőrzött, értékelt tartalomgyártók",
+            "A jelentkezők egy helyen — nem 50 emailben és FB-üzenetben",
+            "Szűrés kategória, város, nyelv, követőszám és típus szerint",
           ]}
           cta="Márkaként kezdem"
         />
         <SideCard
-          title="Tartalomgyártó vagy?"
+          title="Alkotó vagy? (UGC, influencer, modell…)"
           image="/images/generated/feature-creator.webp"
           perks={[
             "Ingyenes profil és portfólió",
             "Pályázz márkák kampányaira",
-            "Építsd a hírneved értékelésekkel",
-            "Opcionális kiemelés a directoryban",
+            "Kapj közvetlen megkereséseket a márkáktól",
+            "Építsd a hírneved valós értékelésekkel",
           ]}
-          cta="Tartalomgyártóként csatlakozom"
+          cta="Alkotóként csatlakozom"
           highlight
         />
       </section>

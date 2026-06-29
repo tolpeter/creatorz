@@ -15,11 +15,11 @@ export function NicheBrowser() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="mb-2">
           <h2 className="text-3xl font-bold sm:text-4xl">
-            Keresd meg a legjobb tartalomgyártókat{" "}
+            Keresd meg a megfelelő alkotót{" "}
             <span className="text-accent">kategóriák szerint</span>
           </h2>
           <p className="mt-2 text-muted-foreground">
-            Fedezd fel a legjobb tartalomgyártókat minden kategóriában.
+            UGC tartalomgyártók, influencerek és modellek minden kategóriában.
           </p>
         </div>
 

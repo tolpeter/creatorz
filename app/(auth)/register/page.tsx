@@ -102,7 +102,7 @@ export default function RegisterPage() {
           <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             <RoleCard
               onClick={() => chooseRole("creator")}
-              alt="Tartalomgyártó vagyok"
+              alt="UGC tartalomgyártó, influencer, modell vagyok"
               image="/images/register-creator.webp"
             />
             <ProfessionalRoleCard onClick={() => chooseRole("professional")} />
@@ -188,7 +188,7 @@ export default function RegisterPage() {
             {isProfessional
               ? "Kreatív szakembereknek"
               : isCreator
-                ? "Tartalomgyártóknak"
+                ? "Alkotóknak (UGC, influencer, modell)"
                 : "Márkáknak"}
           </span>
           <h2 className="mt-4 text-balance text-3xl font-black leading-tight">
@@ -219,7 +219,7 @@ export default function RegisterPage() {
           {isProfessional
             ? "Kreatív szakember regisztráció"
             : isCreator
-              ? "Tartalomgyártó regisztráció"
+              ? "Alkotói regisztráció"
               : "Márka regisztráció"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">

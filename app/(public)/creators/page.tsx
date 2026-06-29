@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { DIRECTORY_TYPES } from "@/lib/constants";
 
 export const metadata = {
-  title: "Tartalomgyártók böngészése",
-  description: "Találd meg a tökéletes magyar UGC tartalomgyártót a márkádhoz.",
+  title: "Alkotók böngészése",
+  description: "Találd meg a megfelelő magyar alkotót: UGC tartalomgyártók, influencerek, modellek, fotósok és operatőrök — szűrhetően, egy helyen.",
 };
 
 type SP = Record<string, string | string[] | undefined>;
@@ -62,7 +62,7 @@ export default async function CreatorsBrowsePage({
       <MembersOnlyGate
         next="/creators"
         title="Az alkotók böngészése csak tagoknak elérhető"
-        description="Regisztrálj ingyen, és máris böngészheted a magyar tartalomgyártókat és kreatív szakembereket, vagy lépj be a fiókodba."
+        description="Regisztrálj ingyen, és máris böngészheted a magyar alkotókat — UGC tartalomgyártókat, influencereket, modelleket és kreatív szakembereket —, vagy lépj be a fiókodba."
       />
     );
   }
@@ -143,7 +143,7 @@ export default async function CreatorsBrowsePage({
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <h1 className="text-3xl font-semibold tracking-normal sm:text-4xl">
-                Tartalomgyártók, Kreatív szakemberek
+                Alkotók — UGC, influencer, modell, fotós, operatőr
               </h1>
               <p className="mt-1 text-sm text-muted-foreground">
                 {totalCount === 0
@@ -200,8 +200,8 @@ export default async function CreatorsBrowsePage({
                     Nem találtad meg, akit keresel?
                   </h3>
                   <p className="mt-1 text-sm text-white/65">
-                    Írd le, milyen tartalomgyártót keresel, és segítünk
-                    megtalálni a tökéletes partnert.
+                    Írd le, milyen alkotót keresel, és segítünk megtalálni a
+                    tökéletes partnert.
                   </p>
                 </div>
               </div>

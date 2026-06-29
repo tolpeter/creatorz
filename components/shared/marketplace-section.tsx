@@ -4,18 +4,18 @@ import { MessageCircle, BadgeCheck, KeyRound, type LucideIcon } from "lucide-rea
 const STEPS = [
   {
     n: 1,
-    title: "Fedezd fel a legjobb magyar tehetségeket",
-    desc: "Böngéssz több száz ellenőrzött TikTok-, Instagram-, YouTube- és UGC-alkotó között, akik készen állnak a terméked bemutatására.",
+    title: "Találd meg a megfelelő alkotót",
+    desc: "Böngéssz UGC tartalomgyártók, influencerek, modellek, fotósok és operatőrök között — ellenőrzött profilok, valós, AI-hitelesített követőszámmal.",
   },
   {
     n: 2,
-    title: "Lépj kapcsolatba közvetlenül",
-    desc: "Írj az alkotóknak üzenetben, beszéljétek meg a részleteket, és indítsátok el az együttműködést — közvetítő nélkül, gyorsan.",
+    title: "Adj fel kampányt, a jelentkezők egy helyre érkeznek",
+    desc: "Nem kell 50 emailt és Facebook-üzenetet egyesével átnézned: a pályázók egy felületen jönnek, ahol kategória, város, nyelv és követőszám szerint pár másodperc alatt leszűröd a megfelelőt.",
   },
   {
     n: 3,
-    title: "Figyelemfelkeltő tartalom",
-    desc: "Kapj olyan videókat és posztokat, amelyek megállítják a görgetést, és valódi eredményt hoznak a kampányaidnak.",
+    title: "Indítsátok el az együttműködést",
+    desc: "Közvetlen üzenet, egyeztetés, leadás és kölcsönös értékelés — közvetítő nélkül, gyorsan, egy helyen követve.",
   },
 ];
 
@@ -23,14 +23,14 @@ const CARDS: { icon: LucideIcon; emoji: string; title: string; desc: string }[] 
   {
     icon: MessageCircle,
     emoji: "💬",
-    title: "Közvetlen üzenetváltás",
-    desc: "Csevegj az alkotókkal az egyeztetéstől a leadásig: oszd meg az elvárásaidat, és kövesd a munka állását egy helyen.",
+    title: "Minden egy helyen",
+    desc: "Jelentkezők, üzenetek és a munka állása egyetlen felületen — nem szétszórva 50 emailben és Facebook-üzenetben. Időt és fejfájást spórolsz.",
   },
   {
     icon: BadgeCheck,
     emoji: "🎓",
     title: "Ellenőrzött alkotók",
-    desc: "Olyan tartalomgyártókkal dolgozz, akiknek a követőszámát AI hitelesíti, és a profiljuk valós, naprakész adatokat mutat.",
+    desc: "UGC tartalomgyártók, influencerek és modellek, akiknek a követőszámát AI hitelesíti, és a profiljuk valós, naprakész adatokat mutat.",
   },
   {
     icon: KeyRound,
@@ -48,7 +48,7 @@ export function MarketplaceSection() {
           Alkotói piactér
         </p>
         <h2 className="mt-3 text-balance text-center text-3xl font-black leading-tight sm:text-4xl lg:text-[42px]">
-          Találd meg és kérd fel a megfelelő alkotót — pár kattintással
+          Találd meg a megfelelő alkotót — és szűrd a jelentkezőket egy helyen
         </h2>
 
         {/* Kép + 3 számozott pont */}

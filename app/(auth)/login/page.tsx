@@ -152,7 +152,7 @@ export default function LoginPage() {
         <div className="absolute inset-x-0 bottom-0 p-8 text-white">
           <span className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
             <Sparkles className="h-3.5 w-3.5" />
-            Magyar UGC közösség
+            Magyar alkotói közösség
           </span>
           <h2 className="mt-4 text-balance text-3xl font-black leading-tight">
             Üdv újra a{" "}
@@ -164,7 +164,7 @@ export default function LoginPage() {
           </p>
           <ul className="mt-5 space-y-2 text-sm text-white/85">
             {[
-              "Hiteles, ellenőrzött tartalomgyártók",
+              "UGC tartalomgyártók, influencerek, modellek",
               "Közvetlen kapcsolat a márkákkal",
               "AI-frissített követőszámok",
             ].map((t) => (

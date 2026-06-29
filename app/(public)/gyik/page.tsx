@@ -14,7 +14,7 @@ import {
 export const metadata = {
   title: "GYIK és súgó",
   description:
-    "Gyakran ismételt kérdések a Creatorz platformról — tartalomgyártóknak és márkáknak.",
+    "Gyakran ismételt kérdések a Creatorz platformról — alkotóknak (UGC, influencer, modell) és márkáknak.",
 };
 
 type QA = { q: string; a: React.ReactNode };
@@ -27,11 +27,11 @@ const GROUPS: Group[] = [
     items: [
       {
         q: "Mi az a Creatorz?",
-        a: "A Creatorz egy magyar UGC (felhasználó által készített tartalom) platform, amely közvetlenül összeköti a tartalomgyártókat és a márkákat. Egy helyen böngészhetsz alkotók között, kapcsolatba léphetsz velük, kampányt adhatsz fel, és pályázhatsz együttműködésekre — közvetítő ügynökség nélkül.",
+        a: "A Creatorz egy magyar alkotói piactér, amely közvetlenül összeköti az alkotókat (UGC tartalomgyártók, influencerek, modellek, fotósok, operatőrök) a márkákkal. Egy helyen böngészhetsz alkotók között, kapcsolatba léphetsz velük, kampányt adhatsz fel, és pályázhatsz együttműködésekre — közvetítő ügynökség nélkül.",
       },
       {
         q: "Kinek szól a platform?",
-        a: "Egyrészt magyar tartalomgyártóknak — TikTok-, Instagram-, YouTube- és UGC-alkotóknak —, akik márkákkal szeretnének dolgozni. Másrészt márkáknak és cégeknek, akik hiteles, figyelemfelkeltő tartalmat keresnek a termékeikhez vagy szolgáltatásaikhoz.",
+        a: "Egyrészt magyar alkotóknak — UGC tartalomgyártóknak, influencereknek, modelleknek, fotósoknak és operatőröknek —, akik munkákat keresnek, megkereséseket kapnának és kampányokra pályáznának. Másrészt márkáknak, cégeknek és vállalkozásoknak, akik kampányt adnak fel, és egy helyen, kényelmesen szűrik a jelentkezőket — nem 50 emailből és Facebook-üzenetből.",
       },
       {
         q: "Miben más, mint egy hagyományos ügynökség?",
@@ -45,24 +45,25 @@ const GROUPS: Group[] = [
   },
   {
     icon: Users,
-    title: "Tartalomgyártóknak",
+    title: "Alkotóknak (UGC, influencer, modell, fotós, operatőr)",
     items: [
       {
-        q: "Hogyan regisztrálok tartalomgyártóként?",
+        q: "Hogyan regisztrálok alkotóként?",
         a: (
           <>
             Kattints a{" "}
             <Link href="/register" className="font-medium text-[#4d7c0f] underline">
               Regisztráció
             </Link>{" "}
-            gombra, és válaszd a „Tartalomgyártó vagyok” lehetőséget. Ezután töltsd
+            gombra, és válaszd az alkotói regisztrációt, majd a típusodat (UGC
+            tartalomgyártó, influencer, modell vagy kreatív szakember). Ezután töltsd
             ki a profilod, add meg a kategóriáidat és a közösségi linkjeidet, majd
             csatold a portfóliódat.
           </>
         ),
       },
       {
-        q: "Mennyibe kerül tartalomgyártóként?",
+        q: "Mennyibe kerül alkotóként?",
         a: "Az alapregisztráció és a profil ingyenes. Emellett választható egy prémium előfizetés (jelenleg 2 990 Ft/hó), amely extra láthatóságot és funkciókat ad. A keresőben való kiemelés egyszeri díjas: 7 nap 4 990 Ft, 30 nap 12 990 Ft. Az aktuális, pontos díjszabást mindig az ÁSZF tartalmazza.",
       },
       {
@@ -70,8 +71,8 @@ const GROUPS: Group[] = [
         a: "A kiemeléssel a profilod a böngészési találatok elejére kerül egy megkülönböztető jelöléssel, így a márkák nagyobb eséllyel találnak rád. A kiemelés időtartama alatt folyamatosan az élre kerülsz a releváns kategóriákban.",
       },
       {
-        q: "Hogyan jutok munkához?",
-        a: "Három úton: (1) tölts ki egy erős, portfólióval ellátott profilt, hogy a márkák megtaláljanak és megkeressenek; (2) böngészd a Kampányok oldalt, és pályázz a hozzád illő briefekre; (3) szerezz pozitív értékeléseket, amelyek növelik az esélyeidet a következő együttműködésnél.",
+        q: "Hogyan jutok munkához vagy megkereséshez?",
+        a: "Három úton: (1) tölts ki egy erős, portfólióval ellátott profilt, hogy a márkák megtaláljanak és közvetlenül megkeressenek; (2) böngészd a Kampányok oldalt, és pályázz a hozzád illő briefekre; (3) szerezz pozitív értékeléseket, amelyek növelik az esélyeidet a következő együttműködésnél.",
       },
       {
         q: "Honnan tudják a márkák, hogy valós a követőszámom?",
@@ -88,21 +89,26 @@ const GROUPS: Group[] = [
     title: "Márkáknak",
     items: [
       {
-        q: "Hogyan találok megfelelő tartalomgyártót?",
+        q: "Hogyan találok megfelelő alkotót?",
         a: (
           <>
-            A{" "}
+            Az{" "}
             <Link href="/creators" className="font-medium text-[#4d7c0f] underline">
-              Tartalomgyártók
+              Alkotók
             </Link>{" "}
-            oldalon szűrhetsz kategória, platform, követőszám, nyelv és helyszín
-            szerint, így pár kattintással megtalálod a kampányodhoz illő alkotót.
+            oldalon szűrhetsz típus (UGC, influencer, modell, fotós, operatőr),
+            kategória, követőszám, nyelv és helyszín szerint, így pár kattintással
+            megtalálod a kampányodhoz illő embert.
           </>
         ),
       },
       {
+        q: "Hogyan kezelem a jelentkezőket? Nem kell 50 emailt átnéznem?",
+        a: "Nem. A kampányodra érkező pályázók egy helyen, a kampányod alatt jelennek meg — nem szétszórva 50 emailben és Facebook-üzenetben. Egy felületen átnézed, szűröd és összehasonlítod őket (kategória, város, követőszám, értékelés), így gyorsan, időt spórolva választod ki a megfelelőt.",
+      },
+      {
         q: "Mennyibe kerül a márkáknak a használat?",
-        a: "A böngészés, a tartalomgyártókkal való kapcsolatfelvétel és a kampány (brief) feladása a márkák számára ingyenes. Csak akkor merül fel költség, ha az alkotóval díjazásban állapodtok meg — ez közvetlenül köztetek dől el.",
+        a: "A böngészés, az alkotókkal való kapcsolatfelvétel és a kampány (brief) feladása a márkák számára ingyenes. Csak akkor merül fel költség, ha az alkotóval díjazásban állapodtok meg — ez közvetlenül köztetek dől el.",
       },
       {
         q: "Hogyan adok fel kampányt?",
@@ -112,9 +118,9 @@ const GROUPS: Group[] = [
             <Link href="/dashboard" className="font-medium text-[#4d7c0f] underline">
               Irányítópultra
             </Link>
-            , és hozz létre egy új kampányt. Add meg a kampány célját, a
-            kategóriát, a formátumot és a határidőt — a tartalomgyártók pedig pár
-            kattintással pályázhatnak rá.
+            , és hozz létre egy új kampányt. Add meg a kampány célját, kit keresel
+            (UGC, influencer, modell, fotós, operatőr), a kategóriát, a formátumot
+            és a határidőt — az alkotók pedig pár kattintással pályázhatnak rá.
           </>
         ),
       },

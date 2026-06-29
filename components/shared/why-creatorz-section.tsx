@@ -17,26 +17,26 @@ const CARDS: {
 }[] = [
   {
     icon: Clapperboard,
-    title: "Bármilyen típusú tartalom",
-    desc: "Szerezz bármilyen videót, képet vagy közösségi média bejegyzést, amire szükséged van — a márkádhoz igazítva.",
+    title: "Minden alkotótípus egy helyen",
+    desc: "UGC tartalomgyártók, influencerek, modellek, fotósok és operatőrök — a megfelelő embert pár szűréssel megtalálod.",
     href: "/creators",
   },
   {
     icon: Rocket,
-    title: "Gyors és egyszerű",
-    desc: "Adj fel briefet percek alatt, és néhány napon belül megkapod a tartalmat — gyorsan és zökkenőmentesen.",
-    href: "/register",
-  },
-  {
-    icon: Trophy,
-    title: "Alkotói szintek",
-    desc: "A kezdőktől a profikig: alkotóink az elvégzett munkák és a kapott értékelések alapján lépnek szintet.",
-    href: "/creators",
+    title: "Kampány percek alatt",
+    desc: "Adj fel egy briefet, és a jelentkezők egy helyre érkeznek. Kategória, város, nyelv és követőszám szerint szűrsz — nem 50 emailt és Facebook-üzenetet nézel át.",
+    href: "/register?role=brand",
   },
   {
     icon: FolderHeart,
-    title: "Alkotói portfóliók",
-    desc: "Böngéssz az alkotók portfóliói között, nézd meg a korábbi munkáikat, és ellenőrizd az értékeléseiket.",
+    title: "Munka és megkeresés alkotóknak",
+    desc: "Regisztrálj alkotóként: pályázz kampányokra, kapj közvetlen megkereséseket a márkáktól, és építs portfóliót valós értékelésekkel.",
+    href: "/register?role=creator",
+  },
+  {
+    icon: Trophy,
+    title: "Valós értékelések, átlátható múlt",
+    desc: "Az alkotók az elvégzett munkák és a kapott értékelések alapján épülnek — a márkák pedig biztosra mennek.",
     href: "/creators",
   },
 ];
@@ -69,9 +69,9 @@ export function WhyCreatorzSection() {
           Miért válaszd a <span className="text-[#4d7c0f]">Creatorz</span>{" "}
           platformot?
         </h2>
-        <p className="mt-3 text-center text-base text-muted-foreground">
-          Minden, amire szükséged van a minőségi tartalomkészítéshez — egy
-          helyen.
+        <p className="mt-3 text-balance text-center text-base text-muted-foreground">
+          Alkotóként munkát és megkereséseket találsz, márkaként kampányt adsz
+          fel és egy helyen szűröd a jelentkezőket — időt spórolva.
         </p>
         <div className="mx-auto mt-5 h-1 w-16 rounded-full bg-accent" />
 
