@@ -6,6 +6,61 @@ import { createClient } from "@/lib/supabase/client";
 // A "blog" bucket szerver-oldali (admin client, lib/blog/generate.ts).
 export type Bucket = "avatars" | "banners" | "portfolio" | "logos" | "messages";
 
+// 1 év — a fájlnevek egyediek (UUID), így a hosszú cache sosem ad elavult képet.
+// Ez drasztikusan csökkenti a Supabase Storage egresst (böngésző + CDN cache).
+const LONG_CACHE = "31536000";
+
+// Bucketenkénti max. élhossz (px). Az ennél nagyobb képeket átméretezzük
+// feltöltés előtt — így töredékére csökken a tárolt méret ÉS a kiszolgált
+// sávszélesség (egress). A "messages" csatolmány bármi lehet → nem méretezzük.
+const MAX_DIM: Partial<Record<Bucket, number>> = {
+  avatars: 600,
+  logos: 600,
+  banners: 1600,
+  portfolio: 1920,
+};
+
+type Prepared = { body: Blob; ext: string; type: string };
+
+/**
+ * Ha a fájl kép és van rá max. méret, átméretezi (arányosan) és webp-be
+ * tömöríti egy canvas-szal. Hibánál / nem-kép esetén az eredetit adja vissza.
+ */
+async function prepare(bucket: Bucket, file: File): Promise<Prepared> {
+  const ext = (file.name.split(".").pop() || "bin").toLowerCase();
+  const fallback: Prepared = { body: file, ext, type: file.type || "application/octet-stream" };
+
+  const maxDim = MAX_DIM[bucket];
+  if (!maxDim || !file.type.startsWith("image/") || file.type === "image/gif") {
+    return fallback;
+  }
+
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, maxDim / Math.max(bitmap.width, bitmap.height));
+    const w = Math.round(bitmap.width * scale);
+    const h = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return fallback;
+    ctx.drawImage(bitmap, 0, 0, w, h);
+    bitmap.close?.();
+
+    const blob: Blob | null = await new Promise((res) =>
+      canvas.toBlob((b) => res(b), "image/webp", 0.82),
+    );
+    if (!blob) return fallback;
+    // Csak akkor használjuk az átméretezettet, ha tényleg kisebb lett.
+    if (blob.size >= file.size && scale === 1) return fallback;
+    return { body: blob, ext: "webp", type: "image/webp" };
+  } catch {
+    return fallback; // pl. HEIC, amit a böngésző nem dekódol
+  }
+}
+
 /**
  * Fájl feltöltése a felhasználó saját mappájába (`<authUid>/...`), hogy az
  * RLS policy átengedje. A publikus URL-t adja vissza.
@@ -20,12 +75,13 @@ export async function uploadFile(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Nincs bejelentkezve" };
 
-  const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-  const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+  const prepared = await prepare(bucket, file);
+  const path = `${user.id}/${crypto.randomUUID()}.${prepared.ext}`;
 
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    cacheControl: "3600",
+  const { error } = await supabase.storage.from(bucket).upload(path, prepared.body, {
+    cacheControl: LONG_CACHE,
     upsert: true,
+    contentType: prepared.type,
   });
   if (error) return { error: error.message };
 
@@ -48,8 +104,8 @@ export async function uploadFileWithProgress(
   } = await supabase.auth.getSession();
   if (!session) return { error: "Nincs bejelentkezve" };
 
-  const ext = (file.name.split(".").pop() || "bin").toLowerCase();
-  const path = `${session.user.id}/${crypto.randomUUID()}.${ext}`;
+  const prepared = await prepare(bucket, file);
+  const path = `${session.user.id}/${crypto.randomUUID()}.${prepared.ext}`;
   const base = process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!base) return { error: "Hiányzó Supabase konfiguráció" };
   const endpoint = `${base}/storage/v1/object/${bucket}/${path}`;
@@ -59,8 +115,8 @@ export async function uploadFileWithProgress(
     xhr.open("POST", endpoint);
     xhr.setRequestHeader("Authorization", `Bearer ${session.access_token}`);
     xhr.setRequestHeader("x-upsert", "true");
-    xhr.setRequestHeader("cache-control", "3600");
-    if (file.type) xhr.setRequestHeader("content-type", file.type);
+    xhr.setRequestHeader("cache-control", LONG_CACHE);
+    if (prepared.type) xhr.setRequestHeader("content-type", prepared.type);
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     };
@@ -82,6 +138,6 @@ export async function uploadFileWithProgress(
       }
     };
     xhr.onerror = () => resolve({ error: "Hálózati hiba a feltöltésnél" });
-    xhr.send(file);
+    xhr.send(prepared.body);
   });
 }
