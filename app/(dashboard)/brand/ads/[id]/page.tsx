@@ -49,6 +49,12 @@ export default async function BrandAdDetailPage({
       tiktokLikes: creatorProfiles.tiktokLikes,
       instagramFollowers: creatorProfiles.instagramFollowers,
       facebookFollowers: creatorProfiles.facebookFollowers,
+      age: creatorProfiles.age,
+      gender: creatorProfiles.gender,
+      city: creatorProfiles.city,
+      county: creatorProfiles.county,
+      creatorType: creatorProfiles.creatorType,
+      categories: creatorProfiles.categories,
     })
     .from(adApplications)
     .innerJoin(creatorProfiles, eq(creatorProfiles.id, adApplications.creatorId))
