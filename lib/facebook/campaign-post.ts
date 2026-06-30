@@ -30,8 +30,17 @@ type CampaignInfo = {
   brand: string | null; // null = anonim
   targets: string;
   collab: string | null;
+  collabKind: string; // project | longterm | barter
   budget: string | null;
+  contentType: string; // videó / fotó / videó és fotó
+  itemCount: number;
   deadline: string | null;
+};
+
+const CONTENT_LABELS: Record<string, string> = {
+  video: "videó",
+  photo: "fotó",
+  both: "videó és fotó",
 };
 
 /** AI-szöveg a megadott minták stílusában (link NÉLKÜL — azt mi fűzzük hozzá). */
@@ -43,17 +52,24 @@ async function generatePostText(info: CampaignInfo): Promise<string | null> {
     const system =
       "Magyar közösségimédia-szövegíró vagy a Creatorz.hu alkotói piactérnek. " +
       "Írj RÖVID, lelkes Facebook-poszt szöveget egy új kampányról, amire alkotók pályázhatnak. " +
-      "Stílus (kövesd pontosan): 1) első sor figyelemfelkeltő mondat 1-2 emojival, megnevezve kit keresnek; " +
-      "2) 1-2 mondat a kampányról/márkáról; 3) ha van, külön sorban 'Bérezés: ...' és 'Jelentkezési határidő: ...'. " +
-      "NE írj hashtaget, NE írj linket, NE tedd bele a CTA-mondatot. Max 4-5 sor. Csak a szöveget add vissza.";
+      "Stílus (kövesd pontosan): " +
+      "1) első sor: figyelemfelkeltő mondat 1-2 emojival, megnevezve kit keresnek; " +
+      "2) ha van bérezés vagy juttatás info, külön sorban: 'Amit kapsz: ...' (pl. összeg, vagy barternél a termék/juttatás); " +
+      "3) külön sorban: 'A feladat: ...' — RÖVIDEN (1 mondat), mit várnak cserében (milyen tartalmat, hány darabot); " +
+      "4) ha van határidő, külön sorban: 'Jelentkezési határidő: ...'. " +
+      "Csak akkor írj 'Amit kapsz' sort, ha tényleg van rá adat (összeg vagy a leírásban szereplő juttatás); ne találj ki értéket. " +
+      "NE írj hashtaget, NE írj linket, NE tedd bele a 'Részletek és jelentkezés' mondatot. Max 5 sor. Csak a szöveget add vissza.";
     const lines = [
       `Kampány címe: ${info.title}`,
       info.brand ? `Márka: ${info.brand}` : "Márka: (bizalmas, ne nevezd meg)",
       `Keresett alkotók: ${info.targets}`,
-      info.collab ? `Együttműködés: ${info.collab}` : "",
-      info.budget ? `Bérezés: ${info.budget}` : "Bérezés: Megegyezés szerint",
+      `Együttműködés típusa: ${info.collabKind}${info.collab ? ` (${info.collab})` : ""}`,
+      info.budget
+        ? `Bérezés/juttatás értéke: ${info.budget}${info.collabKind === "barter" ? " (barter, azaz termék/szolgáltatás formájában)" : ""}`
+        : "Bérezés: nincs publikus összeg (megegyezés szerint)",
+      `Kért tartalom: ${info.itemCount} db ${info.contentType}`,
       info.deadline ? `Jelentkezési határidő: ${info.deadline}` : "",
-      `Leírás: ${info.description.slice(0, 500)}`,
+      `Leírás (ebből vond ki a feladatot és az esetleges juttatást): ${info.description.slice(0, 600)}`,
     ].filter(Boolean);
     const res = await client.chat.completions.create({
       model: "gpt-4o-mini",
@@ -77,8 +93,14 @@ function templatePostText(info: CampaignInfo): string {
   const parts: string[] = [];
   parts.push(`${info.targets} keresünk – csatlakozz a Creatorz-on! ✨`);
   parts.push(`${who} új kampányt indított: „${info.title}”.`);
-  if (info.budget) parts.push(`Bérezés: ${info.budget}`);
-  else parts.push("Bérezés: Megegyezés szerint");
+  if (info.budget) {
+    parts.push(
+      info.collabKind === "barter"
+        ? `Amit kapsz: ${info.budget} értékű juttatás (barter).`
+        : `Amit kapsz: ${info.budget}.`,
+    );
+  }
+  parts.push(`A feladat: ${info.itemCount} db ${info.contentType} készítése.`);
   if (info.deadline) parts.push(`Jelentkezési határidő: ${info.deadline}`);
   return parts.join("\n");
 }
@@ -101,6 +123,8 @@ export async function autoPostCampaignToFacebook(
       budgetMinHuf: ads.budgetMinHuf,
       budgetMaxHuf: ads.budgetMaxHuf,
       budgetPublic: ads.budgetPublic,
+      contentType: ads.contentType,
+      itemCount: ads.itemCount,
       deadline: ads.deadline,
       coverUrl: ads.coverUrl,
       brandName: brandProfiles.companyName,
@@ -117,10 +141,13 @@ export async function autoPostCampaignToFacebook(
     brand: row.anonymous ? null : row.brandName ?? null,
     targets: (row.targetKinds ?? ["ugc"]).map((t) => TARGET_LABELS[t] ?? t).join(", "),
     collab: COLLAB_LABELS[row.collaborationType] ?? null,
+    collabKind: row.collaborationType ?? "project",
     budget:
       row.budgetPublic && row.budgetMinHuf
         ? formatBudgetRange(row.budgetMinHuf, row.budgetMaxHuf)
         : null,
+    contentType: CONTENT_LABELS[row.contentType] ?? "tartalom",
+    itemCount: row.itemCount ?? 1,
     deadline: row.deadline ? formatHuDate(row.deadline) : null,
   };
 
