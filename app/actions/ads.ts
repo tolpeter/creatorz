@@ -9,6 +9,7 @@ import { getCurrentBrand, getCurrentUser } from "@/lib/auth";
 import { checkRateLimit, HOUR } from "@/lib/utils/rate-limit";
 import { sendEmailSafe } from "@/lib/resend/client";
 import { slugify } from "@/lib/utils/slugify";
+import { getSetting } from "@/lib/settings";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -399,6 +400,18 @@ export async function approveAd(adId: string) {
 
   // Keresési riasztás: a kampány kategóriáival egyező tartalomgyártók értesítése.
   await notifyMatchingCreators(adId, ad?.title ?? "", ad?.categories ?? []);
+
+  // Automatikus Facebook-poszt (ha az admin bekapcsolta + van token). Best-effort:
+  // a jóváhagyás akkor is sikeres, ha a poszt nem megy ki.
+  try {
+    if (await getSetting("fb_autopost_enabled").catch(() => false)) {
+      const { autoPostCampaignToFacebook } = await import("@/lib/facebook/campaign-post");
+      const res = await autoPostCampaignToFacebook(adId);
+      if (!res.posted) console.error("[fb] auto-post sikertelen:", res.error);
+    }
+  } catch (e) {
+    console.error("[fb] auto-post hiba:", (e as Error).message);
+  }
 
   revalidatePath("/admin");
   revalidatePath("/ads");

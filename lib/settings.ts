@@ -19,6 +19,9 @@ export const DEFAULT_SETTINGS = {
   public_view_ads: false,
   // Mobil-app "hamarosan" popup a főoldalon.
   mobile_app_popup_enabled: false,
+  // Kampány jóváhagyásakor automatikus Facebook-poszt a Creatorz oldalra.
+  // Csak akkor posztol, ha az FB_PAGE_ID + FB_PAGE_ACCESS_TOKEN env is be van állítva.
+  fb_autopost_enabled: false,
   // -----------------------------------------------------------------------
   // Jogi adatkezelő-adatok (admin-ról szerkeszthetők). Élesedéskor cégváltás
   // (magánszemély → EV → KFT) esetén csak ezeket kell módosítani, a jogi
@@ -52,6 +55,7 @@ export type SettingsMap = {
   public_view_creators: boolean;
   public_view_ads: boolean;
   mobile_app_popup_enabled: boolean;
+  fb_autopost_enabled: boolean;
   legal_entity_type: LegalEntityType;
   legal_name: string;
   legal_address: string;

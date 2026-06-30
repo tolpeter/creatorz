@@ -59,6 +59,7 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
     { key: "public_view_ads", label: "Kampányok-lista nyilvános", desc: "Ha ki van kapcsolva, csak bejelentkezett felhasználó látja a /ads oldalt." },
     { key: "mobile_app_popup_enabled", label: "Mobil-app popup a főoldalon", desc: "„Hamarosan elérhető a Creatorz mobil app” felugró ablak a kezdőlapon (Android + iOS)." },
     { key: "analytics_enabled", label: "Látogatottság-mérés (Analytics)", desc: "Google Analytics / Tag Manager betöltése. Csak akkor működik, ha a NEXT_PUBLIC_GA_ID vagy NEXT_PUBLIC_GTM_ID is be van állítva." },
+    { key: "fb_autopost_enabled", label: "Facebook auto-poszt kampányokról", desc: "Kampány jóváhagyásakor automatikusan poszt készül a Creatorz Facebook-oldalra (AI-szöveg + link + borítókép). Csak akkor működik, ha az FB_PAGE_ID és FB_PAGE_ACCESS_TOKEN env be van állítva." },
   ];
 
   const numbers: Array<{ key: keyof SettingsMap; label: string }> = [
