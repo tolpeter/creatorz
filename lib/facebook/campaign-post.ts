@@ -53,11 +53,14 @@ async function generatePostText(info: CampaignInfo): Promise<string | null> {
       "Magyar közösségimédia-szövegíró vagy a Creatorz.hu alkotói piactérnek. " +
       "Írj RÖVID, lelkes Facebook-poszt szöveget egy új kampányról, amire alkotók pályázhatnak. " +
       "Stílus (kövesd pontosan): " +
-      "1) első sor: figyelemfelkeltő mondat 1-2 emojival, megnevezve kit keresnek; " +
-      "2) ha van bérezés vagy juttatás info, külön sorban: 'Amit kapsz: ...' (pl. összeg, vagy barternél a termék/juttatás); " +
+      "1) ELSŐ SOR MINDIG egy egyértelmű főcím, ami megnevezi KIT keresnek + KI keresi + MIRE. " +
+      "Pl. 'UGC tartalomgyártót keres a Showme.hu egy pörgős tech-lifestyle kampányhoz! 📱✨' vagy bizalmas márkánál " +
+      "'Influenszert keresnek egy alkohollal kapcsolatos ajándéktermék bemutatására. 🍸'. 1-2 emoji a végén. " +
+      "2) ha van összeg/juttatás info, külön sorban a típus szerint: fizetős (projekt/hosszú távú) esetén 'Bérezés: ...', " +
+      "barter esetén 'Juttatás: ...' (termék/szolgáltatás formájában). NE használd az 'Amit kapsz' kifejezést. " +
       "3) külön sorban: 'A feladat: ...' — RÖVIDEN (1 mondat), mit várnak cserében (milyen tartalmat, hány darabot); " +
       "4) ha van határidő, külön sorban: 'Jelentkezési határidő: ...'. " +
-      "Csak akkor írj 'Amit kapsz' sort, ha tényleg van rá adat (összeg vagy a leírásban szereplő juttatás); ne találj ki értéket. " +
+      "Csak akkor írj Bérezés/Juttatás sort, ha tényleg van rá adat (összeg vagy a leírásban szereplő juttatás); ne találj ki értéket. " +
       "NE írj hashtaget, NE írj linket, NE tedd bele a 'Részletek és jelentkezés' mondatot. Max 5 sor. Csak a szöveget add vissza.";
     const lines = [
       `Kampány címe: ${info.title}`,
@@ -89,20 +92,29 @@ async function generatePostText(info: CampaignInfo): Promise<string | null> {
 
 /** Determinisztikus sablon, ha az AI nem elérhető. */
 function templatePostText(info: CampaignInfo): string {
-  const who = info.brand ? `${info.brand}` : "Egy bizalmas márka";
+  // Egyetlen keresett típus → egyes szám ("UGC tartalomgyártót keres"), több → felsorolás.
+  const target = info.targets.split(",")[0]?.trim() || info.targets;
   const parts: string[] = [];
-  parts.push(`${info.targets} keresünk – csatlakozz a Creatorz-on! ✨`);
-  parts.push(`${who} új kampányt indított: „${info.title}”.`);
+  // Főcím: KIT keres + KI + (cím).
+  if (info.brand) {
+    parts.push(`${capitalize(target)}t keres a ${info.brand} – „${info.title}” 📣`);
+  } else {
+    parts.push(`${capitalize(target)}t keresnek – „${info.title}” 📣`);
+  }
   if (info.budget) {
     parts.push(
       info.collabKind === "barter"
-        ? `Amit kapsz: ${info.budget} értékű juttatás (barter).`
-        : `Amit kapsz: ${info.budget}.`,
+        ? `Juttatás: ${info.budget} értékű termék/szolgáltatás (barter).`
+        : `Bérezés: ${info.budget}.`,
     );
   }
   parts.push(`A feladat: ${info.itemCount} db ${info.contentType} készítése.`);
   if (info.deadline) parts.push(`Jelentkezési határidő: ${info.deadline}`);
   return parts.join("\n");
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 /**
