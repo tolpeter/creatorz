@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { or, eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, isNotNull } from "drizzle-orm";
 import {
   ArrowRight,
   Check,
@@ -13,11 +13,8 @@ import { db } from "@/lib/db";
 import { creatorProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
-import {
-  CreatorCard,
-  type CreatorCardData,
-} from "@/components/creator/creator-card";
-import { FeaturedCreatorsCarousel } from "@/components/creator/featured-creators-carousel";
+import { type CreatorCardData } from "@/components/creator/creator-card";
+import { FeaturedExpandingCarousel } from "@/components/creator/featured-expanding-carousel";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { NicheBrowser } from "@/components/shared/niche-browser";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -59,14 +56,15 @@ export default async function LandingPage() {
     .where(
       and(
         eq(creatorProfiles.onboardingCompleted, true),
-        or(
-          eq(creatorProfiles.isFeatured, true),
-          eq(creatorProfiles.isAdminFeatured, true),
-        ),
+        isNotNull(creatorProfiles.avatarUrl),
       ),
     )
-    .orderBy(sql`${creatorProfiles.averageRating} desc nulls last`)
-    .limit(6);
+    // Kiemeltek elöl, utána a legjobb értékelésűek — a carousel kitöltéséhez.
+    .orderBy(
+      sql`(case when ${creatorProfiles.isFeatured} or ${creatorProfiles.isAdminFeatured} then 1 else 0 end) desc`,
+      sql`${creatorProfiles.averageRating} desc nulls last`,
+    )
+    .limit(12);
 
   const featured: CreatorCardData[] = featuredRows.map((r) => ({
     ...r,
@@ -107,9 +105,9 @@ export default async function LandingPage() {
       <HomeHero profilesRounded={profilesRounded} />
 
       {featured.length > 0 && (
-        <section className="py-20">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="mb-8 flex items-center justify-between gap-4">
+        <section className="overflow-hidden py-16 sm:py-20">
+          <div className="mx-auto max-w-[1400px] px-6">
+            <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="text-3xl font-bold">Kiemelt tartalomgyártók</h2>
               <Link
                 href="/creators"
@@ -118,16 +116,8 @@ export default async function LandingPage() {
                 Mind megtekintése <ArrowRight className="inline h-4 w-4" />
               </Link>
             </div>
-            {/* Mobil: egysoros, automatikusan úszó + kézzel húzható carousel. */}
-            <div className="sm:hidden">
-              <FeaturedCreatorsCarousel creators={featured} />
-            </div>
-            {/* Tablet/asztali: rács. */}
-            <div className="hidden gap-4 sm:grid sm:grid-cols-2 lg:grid-cols-3">
-              {featured.map((c) => (
-                <CreatorCard key={c.username} creator={c} />
-              ))}
-            </div>
+            {/* "Expanding cards" carousel — asztali és mobil egyaránt. */}
+            <FeaturedExpandingCarousel creators={featured} />
           </div>
         </section>
       )}
