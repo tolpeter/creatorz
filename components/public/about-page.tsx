@@ -125,12 +125,13 @@ export function AboutPage() {
       <section className="relative mx-auto max-w-5xl px-6 py-20 sm:py-24">
         <div className="grid items-center gap-10 md:grid-cols-[auto_1fr]">
           <Reveal className="mx-auto md:mx-0">
-            <div className="relative w-44 sm:w-52">
+            <div className="relative w-64 sm:w-80 lg:w-96">
               <Image
                 src="/images/alapito.webp"
                 alt="Tölgyesi Péter — a Creatorz alapítója"
-                width={640}
-                height={640}
+                width={900}
+                height={900}
+                sizes="(max-width: 640px) 256px, (max-width: 1024px) 320px, 384px"
                 className="animate-float h-auto w-full select-none drop-shadow-[0_24px_55px_rgba(0,0,0,0.28)]"
               />
             </div>
