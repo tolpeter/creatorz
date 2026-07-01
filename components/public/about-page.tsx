@@ -147,13 +147,14 @@ export function AboutPage() {
       <section className="relative mx-auto max-w-5xl px-6 py-20 sm:py-24">
         <div className="grid items-center gap-10 md:grid-cols-[auto_1fr]">
           <Reveal className="mx-auto md:mx-0">
-            <div className="relative">
-              <div className="animate-float flex h-32 w-32 items-center justify-center rounded-[2rem] bg-[#0a0a0a] text-4xl font-black text-accent shadow-[0_20px_60px_rgba(0,0,0,0.18)]">
-                TP
-              </div>
-              <span className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full bg-accent text-black shadow-lg">
-                <BadgeCheck className="h-5 w-5" />
-              </span>
+            <div className="relative w-44 sm:w-52">
+              <Image
+                src="/images/alapito.webp"
+                alt="Tölgyesi Péter — a Creatorz alapítója"
+                width={640}
+                height={640}
+                className="animate-float h-auto w-full select-none drop-shadow-[0_24px_55px_rgba(0,0,0,0.28)]"
+              />
             </div>
           </Reveal>
 
