@@ -14,7 +14,8 @@ import { creatorProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { type CreatorCardData } from "@/components/creator/creator-card";
-import { FeaturedCreatorsShowcase } from "@/components/creator/featured-creators-showcase";
+import { FeaturedTwoRowMarquee } from "@/components/creator/featured-creators-showcase";
+import { FeaturedExpandingCarousel } from "@/components/creator/featured-expanding-carousel";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { NicheBrowser } from "@/components/shared/niche-browser";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -117,8 +118,14 @@ export default async function LandingPage() {
                 Mind megtekintése <ArrowRight className="inline h-4 w-4" />
               </Link>
             </div>
-            {/* Folyamatos, húzható slideshow — asztali és mobil egyaránt. */}
-            <FeaturedCreatorsShowcase creators={featured} />
+            {/* Asztali: "expanding cards" fan. */}
+            <div className="hidden sm:block">
+              <FeaturedExpandingCarousel creators={featured} />
+            </div>
+            {/* Mobil: két sor, ellentétes irányban úszó, húzható marquee. */}
+            <div className="sm:hidden">
+              <FeaturedTwoRowMarquee creators={featured} />
+            </div>
           </div>
         </section>
       )}

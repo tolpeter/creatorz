@@ -16,7 +16,9 @@ function label(c: CreatorCardData): string {
 }
 
 /** A magasabb követőszámú platform (Instagram vagy TikTok). */
-function topFollowers(c: CreatorCardData): { n: number; platform: "ig" | "tt" } | null {
+function topFollowers(
+  c: CreatorCardData,
+): { n: number; platform: "ig" | "tt" } | null {
   const ig = c.instagramFollowers;
   const tt = c.tiktokFollowers;
   if (ig == null && tt == null) return null;
@@ -24,13 +26,13 @@ function topFollowers(c: CreatorCardData): { n: number; platform: "ig" | "tt" } 
   return { n: tt ?? 0, platform: "tt" };
 }
 
-function ShowcaseCard({ c }: { c: CreatorCardData }) {
+export function ShowcaseCard({ c }: { c: CreatorCardData }) {
   const f = topFollowers(c);
   return (
     <Link
       href={`/creators/${c.username}`}
       draggable={false}
-      className="group relative block h-[220px] w-[152px] shrink-0 overflow-hidden rounded-2xl bg-[#0a0a0a] shadow-[0_8px_24px_rgba(0,0,0,0.18)] sm:h-[340px] sm:w-[240px]"
+      className="group relative block h-[210px] w-[146px] shrink-0 overflow-hidden rounded-2xl bg-[#0a0a0a] shadow-[0_8px_24px_rgba(0,0,0,0.18)]"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -42,31 +44,28 @@ function ShowcaseCard({ c }: { c: CreatorCardData }) {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/25 to-transparent" />
 
-      {/* Követőszám */}
       {f && (
-        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm sm:left-3 sm:top-3 sm:px-2.5 sm:py-1 sm:text-xs">
+        <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-black/55 px-2 py-0.5 text-[11px] font-semibold text-white backdrop-blur-sm">
           {f.platform === "ig" ? (
-            <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <Camera className="h-3 w-3" />
           ) : (
-            <Music2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <Music2 className="h-3 w-3" />
           )}
           {formatNumber(f.n)}
         </div>
       )}
 
-      {/* Kiemelt jelvény */}
       {c.isFeatured && (
-        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-black sm:right-3 sm:top-3 sm:px-2 sm:text-[11px]">
-          <Star className="h-2.5 w-2.5 fill-black sm:h-3 sm:w-3" /> Kiemelt
+        <div className="absolute right-2 top-2 flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[10px] font-bold text-black">
+          <Star className="h-2.5 w-2.5 fill-black" /> Kiemelt
         </div>
       )}
 
-      {/* Név + kategória */}
-      <div className="absolute inset-x-0 bottom-0 p-2.5 sm:p-4">
-        <h3 className="truncate text-sm font-bold text-white drop-shadow sm:text-lg">
+      <div className="absolute inset-x-0 bottom-0 p-2.5">
+        <h3 className="truncate text-sm font-bold text-white drop-shadow">
           {c.displayName}
         </h3>
-        <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-accent sm:text-xs">
+        <p className="truncate text-[10px] font-semibold uppercase tracking-wide text-accent">
           {label(c)}
         </p>
       </div>
@@ -75,14 +74,15 @@ function ShowcaseCard({ c }: { c: CreatorCardData }) {
 }
 
 /**
- * Kiemelt tartalomgyártók — folyamatos, automatikusan úszó slideshow (marquee),
- * ami kézzel is húzható jobbra-balra (touch + egér). Asztali ÉS mobil.
- * A lista végtelenítve (duplikálva), a fél szélességnél visszaugrik.
+ * Egy vízszintes marquee-sor: folyamatosan úszik (irány szerint), végtelenítve,
+ * és kézzel is húzható. A `direction="left"` balra úsztat, `"right"` jobbra.
  */
-export function FeaturedCreatorsShowcase({
+function MarqueeRow({
   creators,
+  direction,
 }: {
   creators: CreatorCardData[];
+  direction: "left" | "right";
 }) {
   const railRef = useRef<HTMLDivElement>(null);
   const dragStartX = useRef(0);
@@ -91,45 +91,40 @@ export function FeaturedCreatorsShowcase({
   const interactingRef = useRef(false);
   const [dragging, setDragging] = useState(false);
 
-  // Végtelenítés: kevés elemnél többször ismételjük, hogy legyen mit úsztatni.
-  const base =
-    creators.length >= 6
-      ? creators
-      : creators.length >= 3
-        ? [...creators, ...creators]
-        : [...creators, ...creators, ...creators, ...creators];
+  const base = creators.length >= 6 ? creators : [...creators, ...creators];
   const railItems = [...base, ...base];
 
   useEffect(() => {
-    if (creators.length === 0) return;
     const rail = railRef.current;
     if (!rail) return;
-
     let started = false;
     let frame = 0;
     const tick = () => {
       if (rail.scrollWidth > rail.clientWidth) {
         const half = rail.scrollWidth / 2;
         if (!started) {
-          rail.scrollLeft = half;
+          rail.scrollLeft = direction === "right" ? half : 0;
           started = true;
         }
         if (!interactingRef.current) {
-          rail.scrollLeft -= 0.4;
-          if (rail.scrollLeft <= 0) rail.scrollLeft += half;
+          if (direction === "left") {
+            rail.scrollLeft += 0.4;
+            if (rail.scrollLeft >= half) rail.scrollLeft -= half;
+          } else {
+            rail.scrollLeft -= 0.4;
+            if (rail.scrollLeft <= 0) rail.scrollLeft += half;
+          }
         }
       }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(frame);
-  }, [creators.length]);
-
-  if (creators.length === 0) return null;
+  }, [direction]);
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
     interactingRef.current = true;
-    if (e.pointerType !== "mouse" || e.button !== 0) return; // touch: natív görgetés
+    if (e.pointerType !== "mouse" || e.button !== 0) return;
     const rail = railRef.current;
     if (!rail) return;
     setDragging(true);
@@ -138,7 +133,6 @@ export function FeaturedCreatorsShowcase({
     dragStartScroll.current = rail.scrollLeft;
     e.currentTarget.setPointerCapture(e.pointerId);
   }
-
   function onPointerMove(e: PointerEvent<HTMLDivElement>) {
     if (!dragging) return;
     const rail = railRef.current;
@@ -147,9 +141,7 @@ export function FeaturedCreatorsShowcase({
     if (Math.abs(delta) > 6) draggedRef.current = true;
     rail.scrollLeft = dragStartScroll.current - delta;
   }
-
   function endInteraction(e: PointerEvent<HTMLDivElement>) {
-    // Kis késleltetés, hogy a lendület után folytatódjon az automata úszás.
     interactingRef.current = false;
     setDragging(false);
     try {
@@ -161,8 +153,8 @@ export function FeaturedCreatorsShowcase({
 
   return (
     <div className="relative -mx-6">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent sm:w-16" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent sm:w-16" />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-8 bg-gradient-to-r from-background to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-background to-transparent" />
       <div
         ref={railRef}
         onPointerDown={onPointerDown}
@@ -176,7 +168,7 @@ export function FeaturedCreatorsShowcase({
           draggedRef.current = false;
         }}
         style={{ touchAction: "pan-x", overscrollBehaviorX: "contain" }}
-        className={`flex gap-3 overflow-x-auto px-6 py-3 sm:gap-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
+        className={`flex gap-3 overflow-x-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden ${
           dragging ? "cursor-grabbing select-none" : "cursor-grab"
         }`}
       >
@@ -184,6 +176,25 @@ export function FeaturedCreatorsShowcase({
           <ShowcaseCard key={`${c.username}-${i}`} c={c} />
         ))}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Kiemelt tartalomgyártók MOBIL nézet: KÉT sor egymás alatt — a felső balra,
+ * az alsó jobbra úszik (ellentétes irány), mindkettő kézzel húzható.
+ */
+export function FeaturedTwoRowMarquee({
+  creators,
+}: {
+  creators: CreatorCardData[];
+}) {
+  if (creators.length === 0) return null;
+  const bottom = [...creators].reverse();
+  return (
+    <div className="space-y-3">
+      <MarqueeRow creators={creators} direction="left" />
+      <MarqueeRow creators={bottom} direction="right" />
     </div>
   );
 }
