@@ -98,28 +98,47 @@ function MarqueeRow({
     const rail = railRef.current;
     if (!rail) return;
     let frame = 0;
-    // A pozíciót JS-ben halmozzuk (tört értékkel), így akkor is folyamatosan
-    // mozog, ha a böngésző a scrollLeftet egészre kerekíti — és mindkét sor
-    // (bal/jobb irány) biztosan úszik.
+    // A pozíciót JS-ben halmozzuk (tört értékkel), így a böngésző egészre
+    // kerekítése ellenére is folyamatosan mozog mindkét irány.
     let pos = -1;
+    let lastWritten = -1;
+    let interactingUntil = 0; // eddig NE írjunk scrollLeftet (felhasználói görgetés + utóhűtés)
     const speed = direction === "left" ? 0.4 : -0.4;
+    const nowMs = () =>
+      typeof performance !== "undefined" ? performance.now() : 0;
+
+    // Ha a scrollLeft nem az általunk írt érték → a felhasználó görget/húz
+    // (touch natív görgetés is ide esik). Ilyenkor 1,2 mp-ig nem írunk.
+    const onScroll = () => {
+      if (Math.abs(rail.scrollLeft - lastWritten) > 2) {
+        interactingUntil = nowMs() + 1200;
+        pos = rail.scrollLeft;
+      }
+    };
+    rail.addEventListener("scroll", onScroll, { passive: true });
+
     const tick = () => {
       const half = rail.scrollWidth / 2;
       if (half > 4) {
         if (pos < 0) pos = direction === "right" ? half : 0;
-        if (interactingRef.current) {
-          pos = rail.scrollLeft; // húzás alatt szinkronban maradunk
-        } else {
+        const idle = !interactingRef.current && nowMs() >= interactingUntil;
+        if (idle) {
           pos += speed;
           if (pos >= half) pos -= half;
           else if (pos < 0) pos += half;
           rail.scrollLeft = pos;
+          lastWritten = rail.scrollLeft;
+        } else {
+          pos = rail.scrollLeft; // interakció alatt csak szinkron, nem írunk
         }
       }
       frame = requestAnimationFrame(tick);
     };
     frame = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      rail.removeEventListener("scroll", onScroll);
+    };
   }, [direction]);
 
   function onPointerDown(e: PointerEvent<HTMLDivElement>) {
