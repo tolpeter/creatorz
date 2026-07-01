@@ -33,6 +33,7 @@ export function SiteFooter() {
     {
       title: "Súgó",
       links: [
+        { href: "/rolunk", label: "Rólunk" },
         { href: "/gyik", label: "GYIK és súgó" },
         { href: "/status", label: "Platform státusz" },
         { href: "/kapcsolat", label: "Kapcsolat" },

@@ -11,6 +11,7 @@ const LINKS: { label: string; href: string; bold?: boolean }[] = [
   { label: "Kampányok", href: "/ads", bold: true },
   { label: "Aktuális fejlesztések", href: "/status" },
   { label: "Blog", href: "/blog" },
+  { label: "Rólunk", href: "/rolunk" },
   { label: "Kapcsolat", href: "/kapcsolat" },
 ];
 
