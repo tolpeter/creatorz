@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   ArrowRight,
   Handshake,
@@ -54,7 +55,7 @@ const HERO_WORDS = ["A", "Creatorz", "története"];
 
 export function AboutPage() {
   return (
-    <div className="overflow-hidden bg-white">
+    <div className="relative -mb-6 -mt-6 ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-hidden bg-white">
       {/* ================= HERO (dark) ================= */}
       <section className="relative isolate overflow-hidden bg-[#0a0a0a] text-white">
         {/* animált blob háttér */}
@@ -81,7 +82,7 @@ export function AboutPage() {
           />
         </div>
 
-        <div className="mx-auto max-w-5xl px-6 py-24 text-center sm:py-32">
+        <div className="mx-auto max-w-5xl px-6 pb-10 pt-24 text-center sm:pt-32">
           <span className="animate-slide-up inline-flex items-center gap-1.5 rounded-full border border-accent/35 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
             <Sparkles className="h-3.5 w-3.5" /> Rólunk
           </span>
@@ -123,6 +124,19 @@ export function AboutPage() {
               Alkotók böngészése
             </Link>
           </div>
+        </div>
+
+        {/* hero fotó — alkotók (influencerek, modellek, fotósok, videósok) */}
+        <div className="relative mx-auto w-full max-w-[1500px] px-4 pb-2 sm:px-6">
+          <Image
+            src="/images/rolunk-hero.webp"
+            alt="Creatorz alkotók — influencerek, modellek, fotósok és videósok egy közösségben"
+            width={1916}
+            height={821}
+            priority
+            sizes="(max-width: 1500px) 100vw, 1500px"
+            className="animate-float h-auto w-full select-none"
+          />
         </div>
 
         {/* alsó ív */}
