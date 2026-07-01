@@ -18,6 +18,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/modellek`, lastModified: new Date(), priority: 0.8, changeFrequency: "weekly" },
     { url: `${baseUrl}/ads`, lastModified: new Date(), priority: 0.9, changeFrequency: "daily" },
     { url: `${baseUrl}/blog`, lastModified: new Date(), priority: 0.8, changeFrequency: "daily" },
+    { url: `${baseUrl}/rolunk`, lastModified: new Date(), priority: 0.6, changeFrequency: "monthly" },
     { url: `${baseUrl}/gyik`, lastModified: new Date(), priority: 0.5, changeFrequency: "monthly" },
     { url: `${baseUrl}/szabalyzat`, lastModified: new Date(), priority: 0.3 },
     { url: `${baseUrl}/status`, lastModified: new Date(), priority: 0.3, changeFrequency: "weekly" },
