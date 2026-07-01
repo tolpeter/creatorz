@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { eq, and, sql, isNotNull } from "drizzle-orm";
+import { or, eq, and, sql, isNotNull } from "drizzle-orm";
 import {
   ArrowRight,
   Check,
@@ -14,7 +14,7 @@ import { creatorProfiles, users } from "@/lib/db/schema";
 import { getCurrentUser } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { type CreatorCardData } from "@/components/creator/creator-card";
-import { FeaturedExpandingCarousel } from "@/components/creator/featured-expanding-carousel";
+import { FeaturedCreatorsShowcase } from "@/components/creator/featured-creators-showcase";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { NicheBrowser } from "@/components/shared/niche-browser";
 import { SiteHeader } from "@/components/layout/site-header";
@@ -57,14 +57,15 @@ export default async function LandingPage() {
       and(
         eq(creatorProfiles.onboardingCompleted, true),
         isNotNull(creatorProfiles.avatarUrl),
+        // CSAK a ténylegesen kiemeltek (fizetett vagy admin-kiemelés).
+        or(
+          eq(creatorProfiles.isFeatured, true),
+          eq(creatorProfiles.isAdminFeatured, true),
+        ),
       ),
     )
-    // Kiemeltek elöl, utána a legjobb értékelésűek — a carousel kitöltéséhez.
-    .orderBy(
-      sql`(case when ${creatorProfiles.isFeatured} or ${creatorProfiles.isAdminFeatured} then 1 else 0 end) desc`,
-      sql`${creatorProfiles.averageRating} desc nulls last`,
-    )
-    .limit(12);
+    .orderBy(sql`${creatorProfiles.averageRating} desc nulls last`)
+    .limit(20);
 
   const featured: CreatorCardData[] = featuredRows.map((r) => ({
     ...r,
@@ -116,8 +117,8 @@ export default async function LandingPage() {
                 Mind megtekintése <ArrowRight className="inline h-4 w-4" />
               </Link>
             </div>
-            {/* "Expanding cards" carousel — asztali és mobil egyaránt. */}
-            <FeaturedExpandingCarousel creators={featured} />
+            {/* Folyamatos, húzható slideshow — asztali és mobil egyaránt. */}
+            <FeaturedCreatorsShowcase creators={featured} />
           </div>
         </section>
       )}
