@@ -495,6 +495,14 @@ body {
   transition-delay: 0.05s;
 }
 
+/* Teljes-lapos kattintható link a kártyán (profilra ugrik). */
+.fc-hit {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: block;
+}
+
 .fc-nav {
   padding: 0.5em 0;
   justify-self: end;

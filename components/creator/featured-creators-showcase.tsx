@@ -97,23 +97,23 @@ function MarqueeRow({
   useEffect(() => {
     const rail = railRef.current;
     if (!rail) return;
-    let started = false;
     let frame = 0;
+    // A pozíciót JS-ben halmozzuk (tört értékkel), így akkor is folyamatosan
+    // mozog, ha a böngésző a scrollLeftet egészre kerekíti — és mindkét sor
+    // (bal/jobb irány) biztosan úszik.
+    let pos = -1;
+    const speed = direction === "left" ? 0.4 : -0.4;
     const tick = () => {
-      if (rail.scrollWidth > rail.clientWidth) {
-        const half = rail.scrollWidth / 2;
-        if (!started) {
-          rail.scrollLeft = direction === "right" ? half : 0;
-          started = true;
-        }
-        if (!interactingRef.current) {
-          if (direction === "left") {
-            rail.scrollLeft += 0.4;
-            if (rail.scrollLeft >= half) rail.scrollLeft -= half;
-          } else {
-            rail.scrollLeft -= 0.4;
-            if (rail.scrollLeft <= 0) rail.scrollLeft += half;
-          }
+      const half = rail.scrollWidth / 2;
+      if (half > 4) {
+        if (pos < 0) pos = direction === "right" ? half : 0;
+        if (interactingRef.current) {
+          pos = rail.scrollLeft; // húzás alatt szinkronban maradunk
+        } else {
+          pos += speed;
+          if (pos >= half) pos -= half;
+          else if (pos < 0) pos += half;
+          rail.scrollLeft = pos;
         }
       }
       frame = requestAnimationFrame(tick);

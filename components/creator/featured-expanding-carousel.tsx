@@ -59,17 +59,6 @@ export function FeaturedExpandingCarousel({
       list.append(first);
       activate(items()[idx]);
     };
-    const chooseSlide = (e: Event) => {
-      const max = 8;
-      const slide = (e.target as HTMLElement).closest<HTMLElement>(".fc-item");
-      if (!slide) return;
-      const idx = indexOf(slide);
-      if (idx < 3 || idx > max) return;
-      if (idx === max) nextSlide();
-      if (idx === 3) prevSlide();
-      activate(slide);
-    };
-
     let auto = window.setInterval(nextSlide, 3500);
     const pause = () => window.clearInterval(auto);
     const resume = () => {
@@ -85,15 +74,6 @@ export function FeaturedExpandingCarousel({
       pause();
       prevSlide();
     };
-    const onChoose = (e: Event) => {
-      if ((e.target as HTMLElement).closest("a")) return; // névre → navigáció
-      pause();
-      chooseSlide(e);
-    };
-    const onFocusIn = (e: Event) => {
-      pause();
-      chooseSlide(e);
-    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft" || e.key === "a") onPrev();
       else if (e.key === "ArrowRight" || e.key === "d") onNext();
@@ -103,9 +83,9 @@ export function FeaturedExpandingCarousel({
     const prev = root.querySelector<HTMLElement>(".fc-prev");
     next?.addEventListener("click", onNext);
     prev?.addEventListener("click", onPrev);
-    list.addEventListener("click", onChoose);
-    list.addEventListener("focusin", onFocusIn);
     list.addEventListener("keyup", onKey as EventListener);
+    // Egérrel a carousel fölött megáll a léptetés — így a kattintás nem
+    // esik egybe egy rotációval (ami elvinné a linket).
     root.addEventListener("mouseenter", pause);
     root.addEventListener("mouseleave", resume);
 
@@ -113,8 +93,6 @@ export function FeaturedExpandingCarousel({
       pause();
       next?.removeEventListener("click", onNext);
       prev?.removeEventListener("click", onPrev);
-      list.removeEventListener("click", onChoose);
-      list.removeEventListener("focusin", onFocusIn);
       list.removeEventListener("keyup", onKey as EventListener);
       root.removeEventListener("mouseenter", pause);
       root.removeEventListener("mouseleave", resume);
@@ -143,11 +121,16 @@ export function FeaturedExpandingCarousel({
               />
             </div>
             <div className="fc-contents">
-              <h3 className="fc-name">
-                <Link href={`/creators/${c.username}`}>{c.displayName}</Link>
-              </h3>
+              <h3 className="fc-name">{c.displayName}</h3>
               <p className="fc-title">{label(c)}</p>
             </div>
+            {/* Teljes-lapos kattinthatóság → a creator profilja. */}
+            <Link
+              href={`/creators/${c.username}`}
+              className="fc-hit"
+              aria-label={`${c.displayName} profilja`}
+              draggable={false}
+            />
           </li>
         ))}
       </ul>
