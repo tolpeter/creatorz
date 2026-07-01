@@ -3,7 +3,7 @@
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { settings, users, creatorProfiles, reviews } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -113,6 +113,82 @@ export async function testFacebookConnection(): Promise<{
   } catch (e) {
     return { ok: false, step: "network", error: (e as Error).message, env };
   }
+}
+
+/**
+ * Emlékeztető email azoknak a BEFEJEZETT regisztrációjú tartalomgyártóknak,
+ * akiknek nincs valódi profilképük (avatar null vagy Google-URL). A meglévő
+ * "profilkép-ösztönző" template-et küldi, felhasználónként CSAK EGYSZER
+ * (email_campaign_recipients dedup). Az összes-email kikapcsolókat tiszteli.
+ */
+export async function sendProfilePhotoReminders(): Promise<{
+  ok: boolean;
+  candidates?: number;
+  sent?: number;
+  error?: string;
+}> {
+  if (!(await requireAdmin())) return { ok: false, error: "Csak admin" };
+
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://creatorz.hu";
+  const CAMPAIGN = "profile-photo-nudge";
+  const { randomBytes } = await import("crypto");
+  const { sendEmailSafe } = await import("@/lib/resend/client");
+  const { renderProfilePhotoNudgeEmail } = await import("@/lib/email/templates");
+  const { emailCampaignRecipients } = await import("@/lib/db/schema");
+
+  let todo: { userId: string; name: string | null; email: string }[] = [];
+  try {
+    const rows = await db.execute(sql`
+      SELECT cp.user_id AS "userId", cp.display_name AS "name", u.email AS "email"
+      FROM creator_profiles cp
+      JOIN users u ON u.id = cp.user_id
+      WHERE cp.onboarding_completed = true
+        AND u.role = 'creator'
+        AND u.suspended = false
+        AND coalesce(u.email_prefs->>'all','') <> 'false'
+        AND (cp.avatar_url IS NULL OR cp.avatar_url ILIKE '%googleusercontent.com%')
+        AND NOT EXISTS (
+          SELECT 1 FROM email_campaign_recipients r
+          WHERE r.campaign = ${CAMPAIGN} AND r.user_id = cp.user_id
+        )
+      LIMIT 300
+    `);
+    const list = Array.isArray(rows)
+      ? rows
+      : (rows as { rows?: unknown[] }).rows ?? [];
+    todo = (list as Record<string, unknown>[]).map((r) => ({
+      userId: String(r.userId),
+      name: r.name ? String(r.name) : null,
+      email: String(r.email),
+    }));
+  } catch (e) {
+    return { ok: false, error: "Lekérdezési hiba: " + (e as Error).message };
+  }
+
+  let sent = 0;
+  for (const r of todo) {
+    const token = randomBytes(16).toString("hex");
+    const { subject, html } = renderProfilePhotoNudgeEmail({
+      name: r.name || "alkotó",
+      ctaUrl: `${APP_URL}/creator/profile`,
+    });
+    const res = await sendEmailSafe({ to: r.email, subject, html });
+    if (res.sent) {
+      await db
+        .insert(emailCampaignRecipients)
+        .values({
+          campaign: CAMPAIGN,
+          userId: r.userId,
+          email: r.email,
+          token,
+          sentAt: new Date(),
+        })
+        .onConflictDoNothing();
+      sent++;
+    }
+  }
+
+  return { ok: true, candidates: todo.length, sent };
 }
 
 export async function updateSetting(

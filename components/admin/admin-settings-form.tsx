@@ -8,7 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateSetting, testFacebookConnection } from "@/app/actions/admin";
+import {
+  updateSetting,
+  testFacebookConnection,
+  sendProfilePhotoReminders,
+} from "@/app/actions/admin";
 import type { LegalEntityType, SettingsMap } from "@/lib/settings";
 
 export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
@@ -16,6 +20,34 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
   const [, startTransition] = useTransition();
   const [fbTesting, setFbTesting] = useState(false);
   const [fbResult, setFbResult] = useState<{ ok: boolean; text: string } | null>(null);
+  const [photoSending, setPhotoSending] = useState(false);
+  const [photoResult, setPhotoResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function runPhotoReminders() {
+    setPhotoSending(true);
+    setPhotoResult(null);
+    try {
+      const res = await sendProfilePhotoReminders();
+      if (res.ok) {
+        setPhotoResult({
+          ok: true,
+          text:
+            (res.sent ?? 0) === 0
+              ? "Nincs kiküldendő — mindenkinek van valódi profilképe (vagy már kaptak emlékeztetőt)."
+              : `Kiküldve ${res.sent} emlékeztető (${res.candidates} jelölt). Egy user csak egyszer kap.`,
+        });
+        toast.success("Emlékeztetők elküldve");
+      } else {
+        setPhotoResult({ ok: false, text: res.error ?? "Ismeretlen hiba" });
+        toast.error("Hiba a küldés közben");
+      }
+    } catch (e) {
+      setPhotoResult({ ok: false, text: `Váratlan hiba: ${(e as Error).message}` });
+      toast.error("Hiba a küldés közben");
+    } finally {
+      setPhotoSending(false);
+    }
+  }
 
   async function runFbTest() {
     setFbTesting(true);
@@ -137,6 +169,28 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
                 className={`text-xs ${fbResult.ok ? "text-green-700" : "text-red-600"}`}
               >
                 {fbResult.text}
+              </p>
+            )}
+          </div>
+
+          <div className="space-y-2 rounded-lg border border-black/10 bg-[#f6f7f2] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label>Profilkép-emlékeztető kiküldése</Label>
+                <p className="text-xs text-muted-foreground">
+                  Emlékeztető email azoknak a tartalomgyártóknak, akiknek nincs valódi
+                  profilképük (hiányzik vagy Google-kép). Egy felhasználó csak egyszer kap.
+                </p>
+              </div>
+              <Button variant="outline" onClick={runPhotoReminders} disabled={photoSending}>
+                {photoSending ? "Küldés…" : "Küldés"}
+              </Button>
+            </div>
+            {photoResult && (
+              <p
+                className={`text-xs ${photoResult.ok ? "text-green-700" : "text-red-600"}`}
+              >
+                {photoResult.text}
               </p>
             )}
           </div>
