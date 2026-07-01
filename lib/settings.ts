@@ -22,6 +22,8 @@ export const DEFAULT_SETTINGS = {
   // Kampány jóváhagyásakor automatikus Facebook-poszt a Creatorz oldalra.
   // Csak akkor posztol, ha az FB_PAGE_ID + FB_PAGE_ACCESS_TOKEN env is be van állítva.
   fb_autopost_enabled: false,
+  // Napi új regisztrációs cél (az admin áttekintőn célvonal + haladás).
+  daily_signup_goal: 5,
   // -----------------------------------------------------------------------
   // Jogi adatkezelő-adatok (admin-ról szerkeszthetők). Élesedéskor cégváltás
   // (magánszemély → EV → KFT) esetén csak ezeket kell módosítani, a jogi
@@ -56,6 +58,7 @@ export type SettingsMap = {
   public_view_ads: boolean;
   mobile_app_popup_enabled: boolean;
   fb_autopost_enabled: boolean;
+  daily_signup_goal: number;
   legal_entity_type: LegalEntityType;
   legal_name: string;
   legal_address: string;

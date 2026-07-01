@@ -53,6 +53,8 @@ type AdminSummary = {
   reportedReviewsN: number;
   new7N: number;
   new30N: number;
+  newTodayN: number;
+  dailyGoal: unknown;
   monthlyPrice: unknown;
 };
 
@@ -82,6 +84,11 @@ export default async function AdminOverviewPage() {
         (select count(*)::int from ${reviews} where ${reviews.reported} = true) as "reportedReviewsN",
         (select count(*)::int from ${users} where ${users.createdAt} >= ${weekIso}::timestamp) as "new7N",
         (select count(*)::int from ${users} where ${users.createdAt} >= ${monthIso}::timestamp) as "new30N",
+        (select count(*)::int from ${users} where ${users.createdAt} >= ${todayStartIso}::timestamp) as "newTodayN",
+        coalesce(
+          (select ${settings.value} from ${settings} where ${settings.key} = 'daily_signup_goal' limit 1),
+          to_jsonb(5)
+        ) as "dailyGoal",
         coalesce(
           (select ${settings.value} from ${settings} where ${settings.key} = 'creator_subscription_price_huf' limit 1),
           to_jsonb(2490)
@@ -101,6 +108,9 @@ export default async function AdminOverviewPage() {
   const v = (value: number | undefined) => value ?? 0;
   const activeSubs = v(summary?.activeSubsN);
   const monthly = Number(summary?.monthlyPrice ?? 2490);
+  const goal = Math.max(1, Number(summary?.dailyGoal ?? 5) || 5);
+  const newToday = v(summary?.newTodayN);
+  const goalPct = Math.min(100, Math.round((newToday / goal) * 100));
 
   // 14 napos regisztrációs trend (hiányzó napok = 0)
   const trendMap = new Map(trendRows.map((r) => [r.d, r.n]));
@@ -113,7 +123,8 @@ export default async function AdminOverviewPage() {
       n: trendMap.get(key) ?? 0,
     });
   }
-  const maxN = Math.max(1, ...days.map((d) => d.n));
+  // A célvonal is beleszámít a skálába, hogy mindig látszódjon.
+  const maxN = Math.max(1, goal, ...days.map((d) => d.n));
 
   const kpis = [
     { label: "Összes felhasználó", value: v(summary?.usersN), icon: Users, tint: "bg-[#eef4dc] text-[#3f6212]" },
@@ -226,18 +237,68 @@ export default async function AdminOverviewPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex h-36 items-end gap-1.5">
+            {/* Oszlop-sáv fix magassággal — a célvonal a napi célt jelöli */}
+            <div className="relative h-36">
+              <div
+                className="pointer-events-none absolute inset-x-0 z-10 border-t border-dashed border-[#3f6212]/60"
+                style={{ bottom: `${(goal / maxN) * 100}%` }}
+              >
+                <span className="absolute -top-2.5 right-0 rounded bg-[#eef4dc] px-1.5 py-0.5 text-[10px] font-semibold text-[#3f6212]">
+                  Napi cél: {goal}
+                </span>
+              </div>
+              <div className="flex h-full items-end gap-1.5">
+                {days.map((d, i) => (
+                  <div key={i} className="flex h-full flex-1 items-end">
+                    <div
+                      className={
+                        "w-full rounded-t bg-gradient-to-t transition-all " +
+                        (d.n >= goal ? "from-accent to-accent" : "from-accent/60 to-accent/90")
+                      }
+                      style={{ height: `${(d.n / maxN) * 100}%`, minHeight: d.n > 0 ? "3px" : "0" }}
+                      title={`${d.label}. — ${d.n} regisztráció`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="mt-1 flex gap-1.5">
               {days.map((d, i) => (
-                <div key={i} className="flex flex-1 flex-col items-center gap-1">
-                  <div
-                    className="w-full rounded-t bg-gradient-to-t from-accent/70 to-accent transition-all group-hover:opacity-90"
-                    style={{ height: `${(d.n / maxN) * 100}%`, minHeight: d.n > 0 ? "4px" : "0" }}
-                    title={`${d.n} regisztráció`}
-                  />
-                  <span className="text-[10px] text-muted-foreground">{d.label}</span>
-                </div>
+                <span key={i} className="flex-1 text-center text-[10px] text-muted-foreground">
+                  {d.label}
+                </span>
               ))}
             </div>
+
+            {/* Mai napi cél — haladás */}
+            <div className="mt-4 rounded-xl border border-black/10 bg-[#f6f7f2] p-3">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-semibold">Mai napi cél</span>
+                <span
+                  className={
+                    newToday >= goal ? "font-bold text-[#3f6212]" : "text-muted-foreground"
+                  }
+                >
+                  {newToday} / {goal} új regisztráció
+                </span>
+              </div>
+              <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/10">
+                <div
+                  className="h-full rounded-full bg-accent transition-all"
+                  style={{ width: `${goalPct}%` }}
+                />
+              </div>
+              {newToday >= goal ? (
+                <p className="mt-1.5 text-xs font-semibold text-[#3f6212]">
+                  Mai cél teljesítve — szép munka!
+                </p>
+              ) : (
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Még {goal - newToday} kell a mai célhoz.
+                </p>
+              )}
+            </div>
+
             <div className="mt-3 flex gap-6 text-sm">
               <span>
                 <strong className="text-[#3f6212]">{v(summary?.new7N)}</strong>{" "}

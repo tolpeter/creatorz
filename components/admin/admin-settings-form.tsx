@@ -95,6 +95,7 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
     { key: "creator_subscription_price_huf", label: "Havi előfizetés ára (Ft)" },
     { key: "feature_7day_price_huf", label: "7 napos kiemelés ára (Ft)" },
     { key: "feature_30day_price_huf", label: "30 napos kiemelés ára (Ft)" },
+    { key: "daily_signup_goal", label: "Napi regisztrációs cél (fő)" },
   ];
 
   return (
