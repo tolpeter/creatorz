@@ -56,33 +56,24 @@ const HERO_WORDS = ["A", "Creatorz", "története"];
 export function AboutPage() {
   return (
     <div className="relative -mb-6 -mt-6 ml-[calc(50%-50vw)] mr-[calc(50%-50vw)] overflow-hidden bg-white">
-      {/* ================= HERO (dark) ================= */}
-      <section className="relative isolate overflow-hidden bg-[#0a0a0a] text-white">
-        {/* animált blob háttér */}
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <div className="animate-blob absolute -left-20 top-[-10%] h-72 w-72 rounded-full bg-accent/20 blur-[90px]" />
-          <div
-            className="animate-blob absolute right-[-6%] top-[20%] h-80 w-80 rounded-full bg-emerald-400/15 blur-[100px]"
-            style={{ animationDelay: "-6s" }}
+      {/* ================= HERO (dark) — háttérkép + szöveg fölötte ================= */}
+      <section className="relative isolate flex min-h-[92vh] flex-col overflow-hidden bg-[#0a0a0a] text-white">
+        {/* háttérkép (alkotók: influencerek, modellek, fotósok, videósok) */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <Image
+            src="/images/rolunk-hero.webp"
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="select-none object-cover object-center"
           />
-          <div
-            className="animate-blob absolute bottom-[-20%] left-1/3 h-72 w-72 rounded-full bg-accent/15 blur-[90px]"
-            style={{ animationDelay: "-11s" }}
-          />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(163,230,53,0.10),transparent_55%)]" />
-          {/* finom rács */}
-          <div
-            className="absolute inset-0 opacity-[0.06]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-              backgroundSize: "56px 56px",
-              maskImage: "radial-gradient(circle at 50% 30%, black, transparent 75%)",
-            }}
-          />
+          {/* olvashatóság-overlay-ek */}
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/92 via-[#0a0a0a]/45 to-[#0a0a0a]/85" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_42%,rgba(10,10,10,0.6),transparent_62%)]" />
         </div>
 
-        <div className="mx-auto max-w-5xl px-6 pb-10 pt-24 text-center sm:pt-32">
+        <div className="mx-auto flex max-w-5xl flex-1 flex-col items-center justify-center px-6 py-28 text-center sm:py-32">
           <span className="animate-slide-up inline-flex items-center gap-1.5 rounded-full border border-accent/35 bg-accent/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.14em] text-accent">
             <Sparkles className="h-3.5 w-3.5" /> Rólunk
           </span>
@@ -124,19 +115,6 @@ export function AboutPage() {
               Alkotók böngészése
             </Link>
           </div>
-        </div>
-
-        {/* hero fotó — alkotók (influencerek, modellek, fotósok, videósok) */}
-        <div className="relative mx-auto w-full max-w-[1500px] px-4 pb-2 sm:px-6">
-          <Image
-            src="/images/rolunk-hero.webp"
-            alt="Creatorz alkotók — influencerek, modellek, fotósok és videósok egy közösségben"
-            width={1916}
-            height={821}
-            priority
-            sizes="(max-width: 1500px) 100vw, 1500px"
-            className="animate-float h-auto w-full select-none"
-          />
         </div>
 
         {/* alsó ív */}
