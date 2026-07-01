@@ -8,12 +8,41 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { updateSetting } from "@/app/actions/admin";
+import { updateSetting, testFacebookConnection } from "@/app/actions/admin";
 import type { LegalEntityType, SettingsMap } from "@/lib/settings";
 
 export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
   const [s, setS] = useState<SettingsMap>(initial);
   const [, startTransition] = useTransition();
+  const [fbTesting, setFbTesting] = useState(false);
+  const [fbResult, setFbResult] = useState<{ ok: boolean; text: string } | null>(null);
+
+  async function runFbTest() {
+    setFbTesting(true);
+    setFbResult(null);
+    try {
+      const res = await testFacebookConnection();
+      if (res.ok) {
+        setFbResult({
+          ok: true,
+          text: `Sikeres! Kiment egy teszt-poszt${res.pageName ? ` a(z) „${res.pageName}” oldalra` : ""}. Nézd meg a Facebook-oldalon (a teszt-bejegyzés törölhető).`,
+        });
+        toast.success("Facebook kapcsolat OK");
+      } else {
+        const envInfo = `FB_PAGE_ID: ${res.env.pageId ? "megvan" : "HIÁNYZIK"}, FB_PAGE_ACCESS_TOKEN: ${res.env.token ? "megvan" : "HIÁNYZIK"}`;
+        setFbResult({
+          ok: false,
+          text: `Hiba (${res.step ?? "?"}): ${res.error ?? "ismeretlen"} — ${envInfo}`,
+        });
+        toast.error("Facebook kapcsolat hiba");
+      }
+    } catch (e) {
+      setFbResult({ ok: false, text: `Váratlan hiba: ${(e as Error).message}` });
+      toast.error("Hiba a teszt közben");
+    } finally {
+      setFbTesting(false);
+    }
+  }
 
   function saveBool(key: keyof SettingsMap, value: boolean) {
     setS((prev) => ({ ...prev, [key]: value }));
@@ -88,6 +117,28 @@ export function AdminSettingsForm({ initial }: { initial: SettingsMap }) {
               />
             </div>
           ))}
+
+          <div className="mt-2 space-y-2 rounded-lg border border-black/10 bg-[#f6f7f2] p-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <Label>Facebook kapcsolat tesztelése</Label>
+                <p className="text-xs text-muted-foreground">
+                  Kitesz egy törölhető teszt-posztot a Creatorz oldalra, és megmutatja a pontos
+                  hibát, ha valami nincs rendben (env, token, jogosultság).
+                </p>
+              </div>
+              <Button variant="outline" onClick={runFbTest} disabled={fbTesting}>
+                {fbTesting ? "Tesztelés…" : "Teszt"}
+              </Button>
+            </div>
+            {fbResult && (
+              <p
+                className={`text-xs ${fbResult.ok ? "text-green-700" : "text-red-600"}`}
+              >
+                {fbResult.text}
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
 

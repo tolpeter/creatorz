@@ -57,6 +57,64 @@ export async function deleteUser(userId: string) {
   return { success: true };
 }
 
+/**
+ * Facebook auto-poszt kapcsolat diagnosztika. Nem posztol kampányt, csak
+ * validálja a tokent és egy törölhető teszt-bejegyzést tesz ki. A konkrét
+ * Graph API hibaüzenetet visszaadja, hogy az admin lássa, mi a baj.
+ */
+export async function testFacebookConnection(): Promise<{
+  ok: boolean;
+  step?: string;
+  error?: string;
+  pageName?: string;
+  postId?: string;
+  env: { pageId: boolean; token: boolean };
+}> {
+  if (!(await requireAdmin()))
+    return { ok: false, error: "Csak admin", env: { pageId: false, token: false } };
+
+  const pageId = process.env.FB_PAGE_ID;
+  const token = process.env.FB_PAGE_ACCESS_TOKEN;
+  const env = { pageId: Boolean(pageId), token: Boolean(token) };
+  if (!pageId || !token) {
+    return {
+      ok: false,
+      step: "env",
+      error:
+        "Hiányzó env változó (FB_PAGE_ID és/vagy FB_PAGE_ACCESS_TOKEN). Állítsd be a Vercelben, majd Redeploy.",
+      env,
+    };
+  }
+
+  const GRAPH = "https://graph.facebook.com/v21.0";
+  try {
+    // 1) Token + Page ID validálása (GET, nem posztol).
+    const r = await fetch(
+      `${GRAPH}/${pageId}?fields=name,id&access_token=${encodeURIComponent(token)}`,
+    );
+    const j = (await r.json().catch(() => ({}))) as {
+      name?: string;
+      error?: { message?: string };
+    };
+    if (!r.ok || j.error) {
+      return { ok: false, step: "validate", error: j?.error?.message || `HTTP ${r.status}`, env };
+    }
+
+    // 2) Valós teszt-poszt (törölhető) — ez ellenőrzi a pages_manage_posts jogot.
+    const { postToFacebookPage } = await import("@/lib/facebook/post");
+    const res = await postToFacebookPage({
+      message:
+        "Teszt: a Creatorz automata Facebook-poszt beállítása működik. Ez a bejegyzés nyugodtan törölhető.",
+    });
+    if (!res.posted) {
+      return { ok: false, step: "post", error: res.error, pageName: j.name, env };
+    }
+    return { ok: true, pageName: j.name, postId: res.id, env };
+  } catch (e) {
+    return { ok: false, step: "network", error: (e as Error).message, env };
+  }
+}
+
 export async function updateSetting(
   key: string,
   value: boolean | number | string,
