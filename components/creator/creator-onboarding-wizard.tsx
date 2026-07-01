@@ -163,6 +163,14 @@ export function CreatorOnboardingWizard({
       if (v.languages.length < 1) return "Válassz legalább egy nyelvet";
     }
     if (step === 2) {
+      // Legalább 1 közösségi platform kötelező (a 4 közül).
+      const anySocial = [
+        v.instagramUrl,
+        v.tiktokUrl,
+        v.facebookUrl,
+        v.youtubeUrl,
+      ].some((u) => u.trim());
+      if (!anySocial) return "Adj meg legalább egy közösségi profilt (a 4 közül).";
       // Ha egy social URL ki van töltve, a követőszám is kötelező (vagy
       // szinkronból, vagy manuálisan megadva).
       const missing = (
@@ -555,8 +563,9 @@ export function CreatorOnboardingWizard({
         {step === 2 && (
           <>
             <p className="text-sm text-muted-foreground">
-              Ez a lépés kihagyható, később a profilodnál is megteheted. Ha
-              kitöltesz egy linket, a követőszám megadása kötelező.
+              Adj meg <span className="font-semibold text-foreground">legalább egy</span>{" "}
+              közösségi profilt a négy közül (kötelező). Ha kitöltesz egy linket,
+              a követőszám megadása is kötelező.
             </p>
 
             {/* TikTok — automata szinkron (a követőszámot az Összekapcsol tölti ki) */}

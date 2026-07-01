@@ -256,7 +256,10 @@ export async function completeSocialSignup(input: z.input<typeof socialSchema>) 
         userId: appUserId,
         username,
         displayName: googleName,
-        avatarUrl: googleAvatar || null,
+        // A Google-avatart NEM vesszük át: gyakran placeholder (nincs valódi
+        // kép), vagy lejáró/törő link. Így az onboarding kötelezővé teszi a
+        // valós profilkép feltöltését a saját tárhelyünkre.
+        avatarUrl: null,
         profileKind,
         creatorType: profileKind === "ugc" ? creatorType : "ugc",
       })

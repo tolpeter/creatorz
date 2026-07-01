@@ -582,6 +582,16 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
     return { error: "Ez a felhasználónév már foglalt" };
   }
 
+  // Legalább 1 közösségi platform kötelező (a 4 közül).
+  const hasSocial = Boolean(
+    d.instagramUrl || d.tiktokUrl || d.facebookUrl || d.youtubeUrl,
+  );
+  if (!hasSocial) {
+    return {
+      error: "Adj meg legalább egy közösségi profilt (a 4 közül).",
+    };
+  }
+
   const missingCount = [
     { label: "Instagram", url: d.instagramUrl, count: d.instagramFollowers },
     { label: "TikTok", url: d.tiktokUrl, count: d.tiktokFollowers },
