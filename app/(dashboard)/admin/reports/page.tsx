@@ -7,6 +7,7 @@ import { reviews, brandProfiles, creatorProfiles, reports, users } from "@/lib/d
 import { RatingStars } from "@/components/shared/rating-stars";
 import { ReviewModerationActions } from "@/components/admin/review-moderation-actions";
 import { ReportActions } from "@/components/admin/report-actions";
+import { ReportReplyBox } from "@/components/admin/report-reply-box";
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { formatHuDate } from "@/lib/utils/format";
 import { REPORT_REASONS } from "@/lib/constants";
@@ -29,6 +30,7 @@ export default async function AdminReportsPage() {
         note: reports.note,
         createdAt: reports.createdAt,
         reportedUserId: reports.reportedUserId,
+        reporterUserId: reports.reporterUserId,
         reporterEmail: reporter.email,
       })
       .from(reports)
@@ -97,6 +99,10 @@ export default async function AdminReportsPage() {
                   </div>
                   <ReportActions reportId={r.id} reportedUserId={r.reportedUserId} />
                 </div>
+                <ReportReplyBox
+                  reporterUserId={r.reporterUserId}
+                  reporterEmail={r.reporterEmail}
+                />
               </div>
             ))}
           </div>

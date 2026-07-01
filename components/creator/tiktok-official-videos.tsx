@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { ExternalLink, Play } from "lucide-react";
+import {
+  TikTokPlayerModal,
+  extractTikTokId,
+} from "@/components/creator/tiktok-player-modal";
 
 type TikTokVideo = {
   id: string;
@@ -29,7 +36,14 @@ export function TikTokOfficialVideos({
   handle?: string | null;
 }) {
   const list = videos.filter((v) => v.coverUrl && v.shareUrl).slice(0, 9);
+  const [playing, setPlaying] = useState<{ id: string; url: string | null } | null>(null);
   if (list.length === 0) return null;
+
+  function open(v: TikTokVideo) {
+    const id = /^\d{6,}$/.test(v.id) ? v.id : extractTikTokId(v.shareUrl);
+    if (id) setPlaying({ id, url: v.shareUrl });
+    else if (v.shareUrl) window.open(v.shareUrl, "_blank", "noopener,noreferrer");
+  }
 
   return (
     <section className="rounded-[1.75rem] border border-black/10 bg-[#070807] p-6 text-white shadow-sm">
@@ -51,14 +65,13 @@ export function TikTokOfficialVideos({
         {list.map((v) => {
           const views = fmtViews(v.viewCount);
           return (
-            <a
+            <button
               key={v.id}
-              href={v.shareUrl ?? "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative block overflow-hidden rounded-xl bg-white/5"
+              type="button"
+              onClick={() => open(v)}
+              className="group relative block cursor-pointer overflow-hidden rounded-xl bg-white/5"
               style={{ aspectRatio: "9 / 16" }}
-              title={v.title ?? "TikTok videó"}
+              title={v.title ?? "TikTok videó lejátszása"}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -79,10 +92,18 @@ export function TikTokOfficialVideos({
               <span className="absolute bottom-2 right-2 text-white/70 opacity-0 transition-opacity group-hover:opacity-100">
                 <ExternalLink className="h-3.5 w-3.5" />
               </span>
-            </a>
+            </button>
           );
         })}
       </div>
+
+      {playing && (
+        <TikTokPlayerModal
+          videoId={playing.id}
+          shareUrl={playing.url}
+          onClose={() => setPlaying(null)}
+        />
+      )}
     </section>
   );
 }

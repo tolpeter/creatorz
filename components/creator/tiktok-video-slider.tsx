@@ -2,6 +2,10 @@
 
 import { useRef, useState, type PointerEvent } from "react";
 import { ExternalLink, Play } from "lucide-react";
+import {
+  TikTokPlayerModal,
+  extractTikTokId,
+} from "@/components/creator/tiktok-player-modal";
 
 export type TikTokSliderVideo = {
   id: string;
@@ -26,6 +30,14 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
   const [dragging, setDragging] = useState(false);
   // Ha egy thumbnail nem tölt be (pl. a proxy 404/502), play-placeholderre váltunk.
   const [broken, setBroken] = useState<Set<string>>(new Set());
+  // Helyben lejátszott videó (modal). Ha nincs kinyerhető ID, új lapon nyílik.
+  const [playing, setPlaying] = useState<{ id: string; url: string } | null>(null);
+
+  function openVideo(url: string) {
+    const id = extractTikTokId(url);
+    if (id) setPlaying({ id, url });
+    else window.open(url, "_blank", "noopener,noreferrer");
+  }
 
   if (!visible.length) return null;
 
@@ -102,14 +114,13 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
           }`}
         >
           {visible.map((video) => (
-            <a
+            <button
               key={video.id}
-              href={video.url}
-              target="_blank"
-              rel="noopener noreferrer"
+              type="button"
               draggable={false}
-              title={video.title ?? "TikTok videó megtekintése"}
-              className="group relative block w-[42vw] max-w-[200px] shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-black shadow-lg sm:w-[180px]"
+              onClick={() => openVideo(video.url)}
+              title={video.title ?? "TikTok videó lejátszása"}
+              className="group relative block w-[42vw] max-w-[200px] shrink-0 cursor-pointer overflow-hidden rounded-2xl border border-white/10 bg-black text-left shadow-lg sm:w-[180px]"
             >
               {video.thumbnailUrl && !broken.has(video.id) ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -146,10 +157,18 @@ export function TikTokVideoSlider({ videos }: { videos: TikTokSliderVideo[] }) {
                   {video.title}
                 </span>
               )}
-            </a>
+            </button>
           ))}
         </div>
       </div>
+
+      {playing && (
+        <TikTokPlayerModal
+          videoId={playing.id}
+          shareUrl={playing.url}
+          onClose={() => setPlaying(null)}
+        />
+      )}
     </div>
   );
 }
