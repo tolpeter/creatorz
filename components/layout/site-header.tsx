@@ -6,12 +6,10 @@ import { MobileNavMenu } from "@/components/layout/mobile-nav-menu";
 
 const LINKS: { label: string; href: string; bold?: boolean }[] = [
   { label: "Alkotók", href: "/creators", bold: true },
-  { label: "Márkák", href: "/#markak" },
-  { label: "Hogyan működik", href: "/#hogyan" },
   { label: "Kampányok", href: "/ads", bold: true },
-  { label: "Aktuális fejlesztések", href: "/status" },
-  { label: "Blog", href: "/blog" },
+  { label: "Hogyan működik", href: "/#hogyan" },
   { label: "Rólunk", href: "/rolunk" },
+  { label: "Aktuális fejlesztések", href: "/status" },
   { label: "Kapcsolat", href: "/kapcsolat" },
 ];
 
