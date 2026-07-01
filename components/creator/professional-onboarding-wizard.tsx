@@ -93,7 +93,8 @@ export function ProfessionalOnboardingWizard({
 
   function validateStep(): string | null {
     if (step === 0) {
-      if (!v.avatarUrl) return "Tölts fel egy profilképet";
+      if (!v.avatarUrl || /googleusercontent\.com/i.test(v.avatarUrl))
+        return "Tölts fel egy valódi profilképet";
       if (lastName.trim().length < 2) return "Add meg a vezetékneved (min. 2 karakter)";
       if (firstName.trim().length < 2) return "Add meg a keresztneved (min. 2 karakter)";
       if (generateUsername(v.username).length < 3)

@@ -555,9 +555,11 @@ export async function completeCreatorOnboarding(input: z.input<typeof onboarding
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Érvénytelen adatok" };
   }
-  // Profilkép mostantól kötelező (a meglévő képet is elfogadjuk).
-  if (!parsed.data.avatarUrl && !creator.profile.avatarUrl) {
-    return { error: "Tölts fel egy profilképet (kötelező)" };
+  // Profilkép kötelező, és SOHA nem fogadunk el Google-ból átvett képet —
+  // valódi feltöltés kell a saját tárhelyünkre (a Google-URL placeholder/lejáró).
+  const effectiveAvatar = parsed.data.avatarUrl || creator.profile.avatarUrl || "";
+  if (!effectiveAvatar || /googleusercontent\.com/i.test(effectiveAvatar)) {
+    return { error: "Tölts fel egy valódi profilképet (kötelező)." };
   }
   const d = {
     ...parsed.data,

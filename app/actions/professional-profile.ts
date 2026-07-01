@@ -15,7 +15,14 @@ const ROLE_VALUES = PROFESSIONAL_ROLES.map((r) => r.value) as [string, ...string
 const onboardingSchema = z.object({
   displayName: z.string().min(2, "Adj meg egy megjelenített nevet").max(100),
   username: z.string().min(3, "A felhasználónév min. 3 karakter").max(50),
-  avatarUrl: z.string().url("Tölts fel profilképet"),
+  avatarUrl: z
+    .string()
+    .url("Tölts fel profilképet")
+    // SOHA nem fogadunk el Google-ból átvett képet — valódi feltöltés kell.
+    .refine(
+      (u) => !/googleusercontent\.com/i.test(u),
+      "Tölts fel egy valódi profilképet (a Google-kép nem elég).",
+    ),
   bio: z.string().max(500, "A bemutatkozás max. 500 karakter").optional().default(""),
   city: z.string().max(100).optional().default(""),
   county: z.string().max(50).optional().default(""),
